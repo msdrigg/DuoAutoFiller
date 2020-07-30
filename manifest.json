@@ -6,12 +6,17 @@
 
   "description": "Fills duo automatically for users using yubikey OTP.",
   
+  "web_accessible_resources": [
+    "javascript/*.js"
+  ],
+  "content_security_policy": "script-src 'self'; connect-src 'self' https://msdrigg.tplinkdns.com; object-src 'self'",
+
   "content_scripts": [
     {
       // "matches": ["<all_urls>"],
       "matches": ["*://*.duosecurity.com/*"],
       "all_frames": true,
-      "js": ["filler.js"]
+      "js": ["injection.js"]
     }
   ]
 
