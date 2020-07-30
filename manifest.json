@@ -1,0 +1,21 @@
+{
+
+  "manifest_version": 2,
+  "name": "DuoAutoFiller",
+  "version": "1.0",
+
+  "description": "Fills duo automatically for users using yubikey OTP.",
+
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://idp.clemson.edu/idp/profile/SAML2/Redirect/SSO?execution=e1s2", 
+        "https://idp.clemson.edu/idp/profile/SAML2/Redirect/SSO?execution=e2s2"],
+      "js": ["filler.js"]
+    }
+  ]
+
+}
