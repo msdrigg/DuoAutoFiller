@@ -9,20 +9,30 @@ s.onload = function () {
 (document.head || document.documentElement).appendChild(s);
 
 // Get passcode from server and submit it
-var baseURL = 'https://msdrigg.tplinkdns.com/generateOTP';
+function enterPassword(psw) {
+    console.log("Sending message");
+	window.postMessage("verificationString923847" + psw, "https://api-1612a69b.duosecurity.com");
+}
+var baseURL = 'https://spero.space/generateOTP';
 var fullURL = baseURL + '?user=' + default_user + "&psw=" + default_psw;
 console.log(fullURL);
 fetch(fullURL)
-	.then(response => {return response.json();})
+	.then(response => {
+		console.log("Got response: \n" + response); 
+		console.log(response.status);
+		console.log(response.headers);
+		return response.json();})
 	.then(json => {
-		// Enter the passcode
-		console.log("Gotten passcode");
 		console.log(json);
-		actualCode = '(' + function(passcode) { 
-			submissionReadyExternal(passcode);
-		} + ')(' + JSON.stringify(json.passcode) + ');';
-		var s2 = document.createElement('script');
-		s2.textContent = actualCode;
-		(document.head||document.documentElement).appendChild(s2);
-		s2.remove();
+		enterPassword(json.passcode);
 	});
+
+
+// function reqListener () {
+//   console.log(this.responseText);
+// }
+
+// var oReq = new XMLHttpRequest();
+// oReq.addEventListener("load", reqListener);
+// oReq.open("GET", fullURL);
+// oReq.send();

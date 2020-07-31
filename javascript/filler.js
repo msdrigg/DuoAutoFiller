@@ -10,81 +10,9 @@ var dismissing_start = -1;
 var dismissing = false;
 var mpasscodeinput;
 
-function dismiss_warnings(duo_document) {
-	console.log("Dismissing warnings");
-	var items = duo_document.querySelectorAll("div.message-content button");
-	console.log(items);
-	var button_updated = false;
-	items.forEach ( element => {
-		console.log("Checking element: " + element.innerHTM);
-		if ( element.innerHTML.includes("Dismiss") || element.innerHTML.includes("Cancel")) {
-			element.click();
-			console.log("Element clicked");
-		 	button_updated = true;
-		}
-	});
-	if (button_updated && duo_submission_state == "loading_doc" ) {
-		duo_submission_state = "navigating_to_token";
-	}
-}
-
-function navigate_to_token(duo_document) {
-	console.log("navigating to token");
-	duo_submission_state = "executing";
-	// Enter the correct fieldset and begin work
-	var fieldset = duo_document.getElementsByTagName("fieldsets").filter(element => {
-	  return element.hasAttribute("data-device-index") && element.getAttribute("data-device-index").includes("token");
-	})[0];
-
-	// Select the token option from the dropdown
-	var device_selector = duo_document.getElementsByName("device")[0];
-	var selected_index = -1;
-	device_selector.options.forEach( (option, i) => {
-		if (option.value.includes("token") && selected_index == -1) {
-			selected_index = i;
-		}
-	});
-	device_selector.selectedIndex = selected_index;
-	duo_submission_state = "entering_token";
-}
-
-function enter_token(duo_document, fieldset) {
-	console.log("Entering token");
-	duo_submission_state = "executing";
-	duo_document
-		.getElementById("remember_me_label_text")
-		.parentElement
-		.getElementsByTagName("input")[0]
-		.checked = true;
-	// Dismiss "Enter a passcode" popup button
-	var submit_button = fieldset.getElementById("passcode");
-	if (submit_button.innerHTML != ("Log In")) {
-		submit_button.click();
-	}
-
-	// Get passcode input field
-	var passcode_input = fieldset.getElementsByTagName("input").filter( element => {
-		return element.hasAttribute("name") && element.getAttribute("name") == "passcode";
-	})[0];
-
-	// Get passcode from server and submit it
-	var baseURL = 'http://msdrigg.tplinkdns.com:8000/generateOTP';
-	var fullURL = baseURL + '?user=' + default_user + "&psw=" + default_psw;
-	fetch(fullURL)
-	  .then(response => response.json())
-	  .then(json => {
-	      // Enter the passcode
-	      passcode_input.value = json.passcode;
-
-	      //Submit the form
-	      submit_button.click();
-	      duo_submission_state = "done";
-	  });
-}
-
 var submissionReadyI = false;
 var submissionReadyE = false;
-var fullPasscode = "";
+var mfullPasscode = "";
 
 function submissionReadyInternal() {
 	console.log("Full submitting internally ready");
@@ -95,7 +23,7 @@ function submissionReadyInternal() {
 }
 
 function submissionReadyExternal(fullPasscode) {
-	fullPasscode = fullPasscode;
+	mfullPasscode = fullPasscode;
 	submissionReadyE = true;
 	console.log("Full submitting externally ready");
 	if (submissionReadyI) {
@@ -105,12 +33,13 @@ function submissionReadyExternal(fullPasscode) {
 
 function submitAll() {
 	console.log("Fully submitting");
-	mpasscodeinput.value = fullPasscode;
+	console.log("Passcode: " + mfullPasscode);
+	mpasscodeinput.value = mfullPasscode;
+	document.querySelector("input[type='checkbox'][name='dampen_choice']").checked = true;
+
 	//Submit the form
 	mfieldset.querySelector("button#passcode").click();
 }
-
-console.log("Working on things");
 
 var force_override2 = false;
 var force_override = false;
@@ -162,7 +91,6 @@ observer.observe(mduo_document, {
 	childList: true,
     subtree: true
 });
-requestAnimationFrame((timestamp)=>{handleAction(null,null);});
 
 function dismiss_warnings_with_delay(timestamp) {
 	if (dismissing_start < 0) {
@@ -191,3 +119,32 @@ function dismiss_warnings_with_delay(timestamp) {
 	}
 	requestAnimationFrame(dismiss_warnings_with_delay);
 }
+
+window.addEventListener('message', handleMessage, false);
+
+function handleMessage(event) {
+	console.log("Receiving event: " + event.data);
+	if (event.origin === 'https://api-1612a69b.duosecurity.com') {
+		if (event.data.includes("verificationString923847")){
+			submissionReadyExternal(event.data.substring(24));
+		}
+	}
+}
+
+requestAnimationFrame((timestamp)=>{handleAction(null,null);});
+
+// var default_user = "msdrigg";
+// var default_psw = "7Ax2dijSEycAD9QCYDYBt2pnh2kaJFhg";
+// var baseURL = 'https://spero.space/generateOTP';
+// var fullURL = baseURL + '?user=' + default_user + "&psw=" + default_psw;
+// console.log(fullURL);
+// fetch(fullURL)
+// 	.then(response => {
+// 		console.log("Got response: \n" + response); 
+// 		console.log(response.status);
+// 		console.log(response.headers);
+// 		return response.json();})
+// 	.then(json => {
+// 		console.log(json);
+// 		enterPassword(json.passcode);
+// 	});

@@ -9,7 +9,11 @@
   "web_accessible_resources": [
     "javascript/*.js"
   ],
-  "content_security_policy": "script-src 'self'; connect-src 'self' https://msdrigg.tplinkdns.com; object-src 'self'",
+  "content_security_policy": "script-src 'self'; connect-src 'self' https://spero.space; object-src 'self'",
+
+  "permissions": [
+    "https://spero.space/*"
+  ],
 
   "content_scripts": [
     {
