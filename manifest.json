@@ -7,22 +7,34 @@
   "description": "Fills duo automatically for users using yubikey OTP.",
   
   "web_accessible_resources": [
-    "javascript/*.js"
+    "javascript/*.js",
+    "html/*.html",
+    "css/*.css"
   ],
-  "content_security_policy": "script-src 'self'; connect-src 'self' https://spero.space; object-src 'self'",
 
   "permissions": [
-    "https://spero.space/*"
+    "https://spero.space/*",
+    "storage"
   ],
+
+  "icons": {
+    "32": "icons/icon-32.png",
+    "16": "icons/icon-16.png"
+  },
 
   "content_scripts": [
     {
-      // "matches": ["<all_urls>"],
       "matches": ["*://*.duosecurity.com/*"],
       "all_frames": true,
-      "js": ["injection.js"]
+      "js": ["/javascript/injection.js"]
     }
   ],
+
+  "browser_action" : {
+    "default_icon": "icons/icon-32.png",
+    "default_title": "AutoDuo",
+    "default_popup": "html/login.html"
+  },
 
   "browser_specific_settings": {
     "gecko": {

@@ -10,29 +10,21 @@ s.onload = function () {
 
 // Get passcode from server and submit it
 function enterPassword(psw) {
-    console.log("Sending message");
-	window.postMessage("verificationString923847" + psw, "https://api-1612a69b.duosecurity.com");
+	var re = new RegExp("https://api-[0-9a-f]*\\.duosecurity\\.com");
+	if (re.test(window.origin)) {
+		window.postMessage("verificationString923847" + psw, "*");
+	}
+	else {
+		console.log("ERROR: Window origin could not be verified: " + window.origin);
+	}
 }
+
+
 var baseURL = 'https://spero.space/generateOTP';
 var fullURL = baseURL + '?user=' + default_user + "&psw=" + default_psw;
-console.log(fullURL);
 fetch(fullURL)
 	.then(response => {
-		console.log("Got response: \n" + response); 
-		console.log(response.status);
-		console.log(response.headers);
 		return response.json();})
 	.then(json => {
-		console.log(json);
 		enterPassword(json.passcode);
 	});
-
-
-// function reqListener () {
-//   console.log(this.responseText);
-// }
-
-// var oReq = new XMLHttpRequest();
-// oReq.addEventListener("load", reqListener);
-// oReq.open("GET", fullURL);
-// oReq.send();

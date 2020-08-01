@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="/css/main.css">
+		<script src="/javascript/interaction.js"></script>
+	</head>
+
+	<body>
+		<div id="login-page" class="current">
+			<h1>Login</h1>
+			<form id="login-form" action="/login">
+				<label>Username<input type="text" id="username" name="username"></label>
+				<label>Password<input type="password" id="password" name="password"></label>
+				<button type="submit" class="major">Login</button>
+			</form>
+			<button type="button" class="minor" id="opensignup-button">Sign Up</button>
+			<button type="button" class="minor" id="openforgotpassword-button">Forgot Password</button>
+		</div>
+		<div id="signup-page" class="hidden">
+			<h1>Sign Up</h1>
+			<form id="signup-form" action="/login">
+				<label>Username<input type="text" id="username" name="username"></label>
+				<label>Password<input type="password" id="password" name="password"></label>
+				<label>Re-enter Password<input type="password" id="password2" name="password2"></label>
+				<label>Full Name<input type="text" id="name" name="name"></label>
+				<label>Email<input type="text" id="email" name="email"></label>
+				<button type="submit" class="major">Sign Up</button>
+			</form>
+			<button type="button" class="minor" id="openlogin-button">Cancel</button>
+		</div>
+		<div id="newkey-page" class="hidden">
+			<h1>New Key</h1>
+			<form id="newkey-form" action="/login">
+				<label>Key Name<input type="text" id="keyName" name="keyName"></label>
+				<label>Public ID<input type="text" id="publicID" name="publicID"></label>
+				<label>Private ID<input type="text" id="privateID" name="privateID"></label>
+				<label>Secret Key<input type="text" id="secret" name="secret"></label>
+				<button type="submit" class="major">Enter</button>
+			</form>
+			<button type="button" class="minor" id="openhome-button">Cancel</button>
+		</div>
+		<div id="home-page" class="hidden">
+			<h1>Home</h1>
+			<div class="information-wrapper">
+				<p class="Header" id="currentkeyheader">Current Key</p>
+				<p class="content" id="currentKeyName">Loading</p>
+			</div>
+			<button type="button" class="major" id="logout-button">Log Out</button>
+			<button type="button" class="major" id="opennewkey-button">New Key</button>
+			<button type="button" class="minor" id="deletekey-button">Delete Current Key</button>
+		</div>
+	</body>
+</html>
