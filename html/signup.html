@@ -2,22 +2,53 @@
 <html>
 	<head>
 		<meta charset="utf-8">
+        <title>AutoDuo</title>
 		<link rel="stylesheet" href="/css/main.css">
+		<script src="/javascript/helper.js"></script>
+		<script src="/javascript/externalHandler.js"></script>
+		<script src="/javascript/signupSpecific.js"></script>
 	</head>
-
 	<body>
-		<div display="none">
-			<h1>Sign Up</h1>
+		<div class="main-content">
+            <div class="header">
+                <h1>Sign Up</h1>
+            </div>
 			<form id="signup-form">
-				<label>Username<input type="text" id="username" name="username"></label>
-				<label>Password<input type="password" id="password" name="password"></label>
-				<label>Re-enter Password<input type="password" id="password2" name="password2"></label>
-				<label>Full Name<input type="text" id="name" name="name"></label>
-				<label>Email<input type="text" id="email" name="email"></label>
-				<button type="submit" class="major">Sign Up</button>
+                <section>
+				<label>Username</label>
+                <input type="text" name="username" required maxlength="30">
+                </section>
+                <section>
+				<label>Password</label>
+                <input type="password" name="password1" required maxlength="128" minlength="8" pattern="^.*(?=.*[a-zA-Z])(?=.*\d).*$">
+                </section>
+                <section>
+				<label>Re-enter Password</label>
+                <input type="password" name="password2" required maxlength="128" minlength="8" pattern="^.*(?=.*[a-zA-Z])(?=.*\d).*$">
+                </section>
+                <section>
+				<label>First Name</label>
+                <input type="text" name="first_name" required maxlength="30">
+                </section>
+                <section>
+				<label>Last Name</label>
+                <input type="text" name="last_name" required maxlength="40">
+                </section>
+                <section>
+				<label>Email</label>
+                <input type="email" name="email" required>
+                </section>
+                <div class="button-wrapper">
+                    <button type="submit" class="major">Sign Up</button>
+                    <button type="button" class="minor" operation="closepage">Cancel</button>
+                </div>
 			</form>
-			<button type="button" class="minor" id="openlogin-button">Cancel</button>
-			<script src="/javascript/interaction.js"></script>
 		</div>
+        <div id="message-menu" class="hidden">
+            <div id="message-content">
+            </div>
+            <div id="message-response" class="button-wrapper">
+            </div>
+        </div>
 	</body>
 </html>

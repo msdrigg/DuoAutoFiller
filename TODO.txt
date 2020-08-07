@@ -1,0 +1,13 @@
+TODO
+
+1) Write tests for server
+    a) Users models and functions
+    b) Yubikeys models and functions
+    c) Users views
+    d) Yubikeys views
+
+2) Deploy server on Raspberry Pi
+    Default SQLite server
+    Connect to uWSGI, nginx
+        No static, same as flask server except new startup command
+    Test function

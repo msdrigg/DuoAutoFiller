@@ -1,7 +1,16 @@
-var default_user = "msdrigg";
-var default_psw = "7Ax2dijSEycAD9QCYDYBt2pnh2kaJFhg";
-
+var baseURL = 'https://spero.space/yubikeys/generate-otp';
 var s = document.createElement('script');
+function AuthenticationHeaders(token) {
+    if (token) {
+        return {
+            'Authorization': 'Token ' + token,
+        };
+    }
+    else {
+        throw new Error("No token provided");
+    }
+}
+var currentToken = "";
 s.src = browser.extension.getURL('/javascript/filler.js');
 s.onload = function () {
 	this.remove();
@@ -18,13 +27,26 @@ function enterPassword(psw) {
 		console.log("ERROR: Window origin could not be verified: " + window.origin);
 	}
 }
-
-
-var baseURL = 'https://spero.space/generateOTP';
-var fullURL = baseURL + '?user=' + default_user + "&psw=" + default_psw;
-fetch(fullURL)
-	.then(response => {
-		return response.json();})
-	.then(json => {
-		enterPassword(json.passcode);
-	});
+browser.storage.sync.get({"token": null})
+    .then(token => {
+        if (typeof token !== "undefined" && token != null) {
+            fetch(baseURL, {
+                    method: "GET",
+                    headers: AuthenticationHeaders(token.token),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.response === "failure"){
+                        throw new Error(data.reason);
+                    }
+                    if (data.response === "success") {
+                        enterPassword(data.passcode);
+                    }
+                    else {
+                        throw new Error(data);
+                    }
+                })
+                .catch(error => console.error("Error getting key: " + error));
+        }
+    })
+    .catch(error => console.error(error));

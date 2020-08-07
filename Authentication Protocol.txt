@@ -1,0 +1,7 @@
+Security Protocol
+SERVER-SIDE
+Tokens are random 32 length strings
+Codes are valid forever
+
+CLIENT-SIDE
+Client saves token and username in persistant storage ONLY

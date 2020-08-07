@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <title>AutoDuo</title>
+		<link rel="stylesheet" href="/css/main.css">
+		<script src="/javascript/helper.js"></script>
+		<script src="/javascript/internalHandler.js"></script>
+	</head>
+	<body>
+        <div class="main-content">
+            <div id="login-page" class="hidden">
+                <div class="header smallbottom">
+                    <h1>Login</h1>
+                </div>
+                <form id="login-form">
+                    <section>
+                        <label>Username</label>
+                        <input type="text" name="username" required >
+                    </section>
+                    <section>
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                    </section>
+                <div class="button-wrapper">
+                    <button type="submit" class="major">Login</button>
+                </div>
+                <div class="button-wrapper">
+                    <button type="button" class="minor" operation="opensignup">Sign Up</button>
+                    <button type="button" class="minor" operation="openforgotpassword">Reset Password</button>
+                </div>
+                </form>
+            </div>
+            <div id="home-page" class="hidden">
+                <div class="header smallbottom">
+                    <h1>Home</h1>
+                    <div class="information-wrapper hidden user-data">
+                        <h3 class="data-username">Loading</h3>
+                    </div>
+                </div>
+                <!-- <h2 class="">Current Key</h2> -->
+                <!-- <ul> -->
+                    <div class="focus-wrapper hidden key-data">
+                        <div class="key-wrapper">
+                            <div class="key-sub-wrapper">
+                                <h3 class="data-key content">Loading</h3>
+                                <div class="key-button-wrapper">
+                                    <button id="copy-button" class="minor copy-button">
+                                    <!-- <img height="100%" operation="copyKey" class="copyButton" src="/assets/CopyIcon.svg"> -->
+                                   <svg class="copy-icon" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 305.08 334.54"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;stroke-width:20px;}</style></defs><rect class="cls-1" x="61.53" y="56.8" width="233.55" height="267.74" rx="30"/><rect class="cls-1" x="10" y="10" width="233.55" height="267.74" rx="30"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
+                        </div>
+                    </div>
+                <!-- </ul> -->
+                <div class="button-wrapper">
+                    <button type="button" class="major" operation="opennewkey">New Key</button>
+                    <button type="button" class="major hidden" operation="delete-key">Delete Key</button>
+                    <button type="button" class="minor" operation="logout">Log Out</button>
+                </div>
+            </div>
+            <div id="forgotpassword-page" class="hidden">
+                <div class="header smallbottom">
+                    <h1>Password Reset</h1>
+                </div>
+                <form id="resetpassword-form">
+                    <section>
+                        <label>Email Address</label>
+                        <input type="email" name="email" required>
+                    </section>
+                    <div class="button-wrapper">
+                        <button type="submit" class="major">Reset Password</button>
+                        <button type="button" class="minor" operation="openlogin">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div id="message-menu" class="hidden">
+                <div id="message-content">
+                </div>
+                <div id="message-response" class="button-wrapper">
+                </div>
+            </div>
+        </div>
+	</body>
+</html>
