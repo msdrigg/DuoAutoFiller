@@ -216,7 +216,8 @@ function initializePage() {
   var savedUser = browser.storage.sync.get({"username": null, "token": null});
   function onError(error) {
     console.log("Error getting user: " + error);
-    openPage("login-page");
+    // openPage("login-page");
+    openPage("home-page");
   }
   savedUser.then(savedUser => {
     if (typeof savedUser !== "undefined" && savedUser != null) {
@@ -227,7 +228,8 @@ function initializePage() {
           return;
       }
     }
-    openPage("login-page");
+    // openPage("login-page");
+    openPage("home-page");
   }, onError);
   document.getElementById("message-menu").addEventListener(
     "click",

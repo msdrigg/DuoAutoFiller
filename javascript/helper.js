@@ -1,7 +1,7 @@
 // Contains general helper functions
-var currentUsername = null;
-var currentToken = null;
-var currentKeyName = null;
+var currentUsername = "msdrigg";
+var currentToken = 2092348;
+var currentKeyName = "ClemsonDuo";
 var hexRegex = new RegExp("^[a-fA-f0-9\s]*$")
 var baseURL = "https://spero.space";
 function AuthenticationHeaders(token, contentType) {
@@ -94,9 +94,9 @@ function addUserElements(pageID) {
       usernameElement = matches[0];
   }
   if (currentUsername == null || currentToken == null) {
-      var savedUser = browser.storage.sync.get({"username": null, "token": null});
-      
-      savedUser
+      // var savedUser = browser.storage.sync.get({"username": null, "token": null});
+      user = {"username": currentUsername, "token": currentToken};
+      Promise.resolve(user)
         .then(savedUser => {
             if (typeof savedUser !== "undefined" && savedUser != null) {
               console.log("Saved user loaded: " + user);
@@ -124,14 +124,16 @@ function addUserElements(pageID) {
       loadCurrentKey(page);
   }
 }
-
+	
 function loadCurrentKey(page) {
-    fetch(baseURL + "/yubikeys/get-key-name/", {
-      method: "GET",
-      headers: AuthenticationHeaders(currentToken, null),
-      credentials: 'include',
-    })
-    .then(response => response.json())
+    // fetch(baseURL + "/yubikeys/get-key-name/", {
+      // method: "GET",
+      // headers: AuthenticationHeaders(currentToken, null),
+      // credentials: 'include',
+    // })
+    
+    Promise.resolve({"key_name": currentKeyName, response: "success"})
+    // .then(response => response.json())
     .then(data => {
         if (data.response === "success") {
             var keyName = data.key_name;
