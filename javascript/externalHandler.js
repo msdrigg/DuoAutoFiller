@@ -3,16 +3,9 @@
     // closes the page, returning it to the last active tab. 
     // maybe it does this by default
 function closePage(currentURL) {
-    var tabQuery = browser.tabs.query({
-        currentWindow: true,
-        url: currentURL,
-    });
+    var tabQuery = browser.tabs.getCurrent();
     tabQuery
-        .then(tabs => {
-            for (tab of tabs) {
-                return browser.tabs.remove(tab.id);
-            }
-        })
+        .then(tab => browser.tabs.remove(tab.id))
         .catch(error => {
             console.error("Error removing external page: \n" + error);
         });

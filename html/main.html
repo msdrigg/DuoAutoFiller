@@ -6,56 +6,71 @@
 		<link rel="stylesheet" href="/css/main.css">
 		<script src="/javascript/helper.js"></script>
 		<script src="/javascript/internalHandler.js"></script>
-         <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet"> 
+        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet"> 
 	</head>
 	<body>
+        <div class="header">
+            <!-- LOGO AND BACK BUTTON GOES HERE -->
+        </div>
         <div class="main-content">
             <div id="login-page" class="hidden">
-                <div class="header smallbottom">
+                <div class="title">
                     <h1>Login</h1>
                 </div>
                 <form id="login-form">
-                    <section>
-                        <label>Username</label>
-                        <input type="text" name="username" required >
-                    </section>
-                    <section>
-                        <label>Password</label>
-                        <input type="password" name="password" required>
-                    </section>
-                <div class="button-wrapper">
-                    <button type="submit" class="major">Login</button>
-                </div>
+                    <div class="form-part">
+                        <section>
+                            <label for="username">Username</label>
+                            <input autocomplete="username" type="text" name="username" required >
+                            <!-- PUT REMEMBER EMAIL LINK HERE -->
+                            <div class="simple-checkbox">
+                                <input name="remember-email" type="checkbox" checked><label for="remember-email">Remember Email</label>
+                            </div>
+                        </section>
+                        <section>
+                            <label>Password</label>
+                            <button class="subtle" operation="openforgotpassword">Forgot Password</button>
+                            <input autocomplete="password" type="password" name="password" required>
+                            <div class="simple-checkbox">
+                                <input name="show-password" type="checkbox" checked><label for="show-password">Show Password</label>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="button-wrapper">
+                        <button type="submit" class="major">Login</button>
+                    </div>
+                </form>
                 <div class="button-wrapper">
                     <button type="button" class="minor" operation="opensignup">Sign Up</button>
-                    <button type="button" class="minor" operation="openforgotpassword">Reset Password</button>
                 </div>
-                </form>
             </div>
             <div id="home-page" class="hidden">
-                <div class="header smallbottom">
+                <div class="title">
                     <h1>Home</h1>
-                    <div class="information-wrapper hidden user-data">
-                        <h3 class="data-username">Loading</h3>
+                </div>
+                <!-- <div class="information-wrapper hidden user-data"> -->
+                    <!-- <h3 class="data-username">Loading</h3> -->
+                <!-- </div> -->
+                <div class="focus-wrapper hidden key-data">
+                    <div class="search">
+                        <label>Seach...</label>
+                    </div>
+                    <div class="key-wrapper">
+                        <div class="key-sub-wrapper">
+                            <h3 class="data-key content">Loading</h3>
+                            <div class="key-button-wrapper">
+                                <button id="copy-button" class="minor copy-button">
+                                    <svg class="copy-icon" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 305.08 334.54"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;stroke-width:20px;}</style></defs><rect class="cls-1" x="61.53" y="56.8" width="233.55" height="267.74" rx="30"/><rect class="cls-1" x="10" y="10" width="233.55" height="267.74" rx="30"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
                     </div>
                 </div>
-                    <div class="focus-wrapper hidden key-data">
-                        <div class="key-wrapper">
-                            <div class="key-sub-wrapper">
-                                <h3 class="data-key content">Loading</h3>
-                                <div class="key-button-wrapper">
-                                    <button id="copy-button" class="minor copy-button">
-                                   <svg class="copy-icon" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 305.08 334.54"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;stroke-width:20px;}</style></defs><rect class="cls-1" x="61.53" y="56.8" width="233.55" height="267.74" rx="30"/><rect class="cls-1" x="10" y="10" width="233.55" height="267.74" rx="30"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
-                        </div>
-                    </div>
                 <div class="button-wrapper">
-                    <button type="button" class="major" operation="opennewkey">New Key</button>
-                    <button type="button" class="major hidden" operation="delete-key">Delete Key</button>
-                    <button type="button" class="minor" operation="logout">Log Out</button>
+                    <button type="button" class="minor" operation="opennewkey">New Key</button>
+                    <!-- <button type="button" class="major hidden" operation="delete-key">Delete Key</button> -->
+                    <button type="select" class="minor"><label for="Loading</button>
                 </div>
             </div>
             <div id="forgotpassword-page" class="hidden">

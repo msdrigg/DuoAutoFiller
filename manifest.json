@@ -1,30 +1,34 @@
 {
 
   "manifest_version": 2,
-  "name": "DuoAutoFiller",
-  "version": "1.1",
+  "name": "AutoAuthenticator",
+  "version": "1.2",
 
-  "description": "Fills duo automatically for users using yubikey OTP.",
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "64": "icons/icon.svg"
+  },
+
+  "description": "Automatically Generates and Fills 2FA Keys",
   
   "web_accessible_resources": [
     "javascript/*.js",
     "html/*.html",
     "css/*.css",
     "assets/*.svg",
-    "assets/*.png"
+    "assets/*.png",
+    "icons/*.png",
+    "icons/*.svg"
   ],
 
   "permissions": [
     "https://spero.space/*",
     "storage",
-    "tabs",
+    "activeTab",
     "clipboardWrite"
   ],
-
-  "icons": {
-    "32": "icons/icon-32.png",
-    "16": "icons/icon-16.png"
-  },
 
   "content_scripts": [
     {
@@ -35,8 +39,8 @@
   ],
 
   "browser_action" : {
-    "default_icon": "icons/icon-32.png",
-    "default_title": "AutoDuo",
+    "default_icon": "icons/icon.svg",
+    "default_title": "AutoAuthenticator",
     "default_popup": "html/main.html"
   },
 

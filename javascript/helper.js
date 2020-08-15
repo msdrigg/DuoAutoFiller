@@ -94,9 +94,9 @@ function addUserElements(pageID) {
       usernameElement = matches[0];
   }
   if (currentUsername == null || currentToken == null) {
-      // var savedUser = browser.storage.sync.get({"username": null, "token": null});
-      user = {"username": currentUsername, "token": currentToken};
-      Promise.resolve(user)
+      var savedUser = browser.storage.sync.get({"username": null, "token": null});
+      // user = {"username": currentUsername, "token": currentToken};
+      Promise.resolve(savedUser)
         .then(savedUser => {
             if (typeof savedUser !== "undefined" && savedUser != null) {
               console.log("Saved user loaded: " + user);
@@ -126,14 +126,14 @@ function addUserElements(pageID) {
 }
 	
 function loadCurrentKey(page) {
-    // fetch(baseURL + "/yubikeys/get-key-name/", {
-      // method: "GET",
-      // headers: AuthenticationHeaders(currentToken, null),
-      // credentials: 'include',
-    // })
+    fetch(baseURL + "/yubikeys/get-key-name/", {
+      method: "GET",
+      headers: AuthenticationHeaders(currentToken, null),
+      credentials: 'include',
+    })
     
-    Promise.resolve({"key_name": currentKeyName, response: "success"})
-    // .then(response => response.json())
+    // Promise.resolve({"key_name": currentKeyName, response: "success"})
+    .then(response => response.json())
     .then(data => {
         if (data.response === "success") {
             var keyName = data.key_name;

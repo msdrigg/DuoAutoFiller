@@ -228,8 +228,7 @@ function initializePage() {
           return;
       }
     }
-    // openPage("login-page");
-    openPage("home-page");
+    openPage("login-page");
   }, onError);
   document.getElementById("message-menu").addEventListener(
     "click",
