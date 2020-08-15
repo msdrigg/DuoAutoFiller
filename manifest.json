@@ -5,10 +5,10 @@
   "version": "1.2",
 
   "icons": {
-    "48": "icons/icon.svg",
-    "96": "icons/icon.svg",
-    "32": "icons/icon.svg",
-    "64": "icons/icon.svg"
+    "48": "assets/LogoIconLarge.svg",
+    "96": "assets/LogoIconLarge.svg",
+    "32": "assets/LogoIconSmall.svg",
+    "64": "assets/LogoIconLarge.svg"
   },
 
   "description": "Automatically Generates and Fills 2FA Keys",
@@ -39,7 +39,7 @@
   ],
 
   "browser_action" : {
-    "default_icon": "icons/icon.svg",
+    "default_icon": "assets/LogoIconSmall.svg",
     "default_title": "AutoAuthenticator",
     "default_popup": "html/main.html"
   },
