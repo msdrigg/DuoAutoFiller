@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"></meta>
+        <title>AutoAuthenticate</title>
+		<link rel="stylesheet" href="/css/main.css"></link>
+		<script src="/javascript/helper.js"></script>
+		<script src="/javascript/externalHandler.js"></script>
+		<script src="/javascript/newkeySpecific.js"></script>
+	</head>
+	<body>
+        <div class="header">
+            <div>
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="back" operation="back" class="minor tiny">
+                    <label for="back">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
+            <div class="title">
+                <h1 id="main-title">
+                    Account Options
+                </h1>
+                <!-- TODO: Make this rely on "selected" css property rather than javascript -->
+                    <!-- also check out hover highlighting -->
+                <div class="dropdown">
+                    <button id="dropdown-user" type="dropdown" class="minor rightside">
+                        <img class="icon" src="assets/UserIcon.svg">
+                        <label for="dropdown-user">Loading</label>
+                        <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                    </button>
+                    <div class="dropdown-content">
+                        <!-- TODO: ADD DROPDOWN LINKS HERE, PROTOTYPE THEM IN XD -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <form id="account-form">
+                <div class="form-part">
+                    <div class="title">
+                        <h2>
+                            Personal Information
+                        </h2>
+                    </div>
+                    <div>
+                        <section class="leftside">
+                            <label>First Name</label>
+                            <input name="first_name" type="text" inputmode="text" autocomplete="given-name" maxlength="30">
+                        </section>
+                        <section class="rightside">
+                            <label>Last Name</label>
+                            <input name="last_name" type="text" inputmode="text" autocomplete="family-name" maxlength="30">
+                        </section>
+                    </div>
+                </div>
+                <div class="form-part">
+                    <div class="title">
+                        <h2>
+                            Account Information
+                        </h2>
+                    </div>
+                    <section>
+                        <!-- TODO: Add little information icons or "Why?" hover elements to explain need for info -->
+                        <label for="account-email">Email</label>
+                        <input id="account-email" autocomplete="email" type="email" name="email" required maxlength="255">
+                    </section>
+                    <section>
+                        <label>Password</label>
+                        <p class="indented smaller">
+                            AutoAuthenticate does not store your password directly, 
+                            but you can change it.
+                        </p>
+                        <button class="tiny">Change Password</button>
+                    </section>
+                </div>
+                <button type="submit" class="major">Update Account</button>
+            </form>
+            <div id="message-menu" class="hidden override-disabled">
+                <div id="message-content">
+                </div>
+                <div id="message-response" class="button-wrapper">
+                </div>
+            </div>
+        </div>
+	</body>
+</html>

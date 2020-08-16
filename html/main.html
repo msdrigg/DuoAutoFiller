@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-        <title>AutoDuo</title>
+        <title>AutoAuthenticate</title>
 		<link rel="stylesheet" href="/css/main.css">
 		<script src="/javascript/helper.js"></script>
 		<script src="/javascript/internalHandler.js"></script>
@@ -10,52 +10,48 @@
 	</head>
 	<body>
         <div class="header">
-            <!-- LOGO AND BACK BUTTON GOES HERE -->
+            <div>
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="back" operation="back" class="minor tiny">
+                    <label for="back">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
             <div class="title">
-                <h1>
-                    <!-- MAIN TITLE GOES HERE -->
+                <h1 id="main-title">
+                    <!-- JAVASCRIPT: MAIN TITLE GOES HERE -->
                 </h1>
             </div>
         </div>
         <div class="main-content">
-        </div>
-        <div class="button-wrapper">
-        </div
             <div id="login-page" class="hidden">
                 <form id="login-form">
                     <div class="form-part">
                         <section>
-                            <label for="username">Username</label>
-                            <input autocomplete="username" type="text" name="username" required >
-                            <!-- PUT REMEMBER EMAIL LINK HERE -->
+                            <label for="login-email">Email</label>
+                            <input autocomplete="email" type="email" name="email" id="login-email" required >
                             <div class="simple-checkbox">
-                                <input name="remember-email" type="checkbox" checked><label for="remember-email">Remember Email</label>
+                                <input name="remember-email" type="checkbox" id="login-remember-email" checked>
+                                <label for="login-remember-email">Remember Email</label>
                             </div>
                         </section>
                         <section>
                             <label>Password</label>
-                            <button class="subtle" operation="openforgotpassword">Forgot Password</button>
+                            <button class="subtle rightside" operation="openforgotpassword">Forgot Password</button>
                             <input autocomplete="password" type="password" name="password" required>
                             <div class="simple-checkbox">
-                                <input name="show-password" type="checkbox" checked><label for="show-password">Show Password</label>
+                                <input name="show-password" type="checkbox" id="login-show-password" checked>
+                                <label for="login-show-password">Show Password</label>
                             </div>
                         </section>
                     </div>
-                    <div class="button-wrapper">
-                        <button type="submit" class="major">Login</button>
-                    </div>
+                    <button type="submit" class="major">Login</button>
                 </form>
-                <div class="button-wrapper">
-                    <button type="button" class="minor" operation="opensignup">Sign Up</button>
-                </div>
+                <button type="button" class="minor" operation="opensignup">Sign Up</button>
             </div>
             <div id="home-page" class="hidden">
-                <div class="title">
-                    <h1>Home</h1>
-                </div>
-                <!-- <div class="information-wrapper hidden user-data"> -->
-                    <!-- <h3 class="data-username">Loading</h3> -->
-                <!-- </div> -->
+                <!-- TODO: Fix all this -->
                 <div class="focus-wrapper hidden key-data">
                     <div class="search">
                         <label>Seach...</label>
@@ -72,29 +68,29 @@
                         <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
                     </div>
                 </div>
-                <div class="button-wrapper">
-                    <button type="button" class="minor" operation="opennewkey">New Key</button>
-                    <!-- <button type="button" class="major hidden" operation="delete-key">Delete Key</button> -->
-                    <button type="dropdown" class="minor">
-                        <label for="">Loading</label>
-                    </button>
-                </div>
+                <button type="button" class="minor" operation="opennewkey">New Key</button>
+                <!-- TODO: Make this rely on "selected" css property rather than javascript -->
+                    <!-- also check out hover highlighting -->
+                <button id="dropdown-user" type="dropdown" class="minor">
+                    <img class="icon" src="assets/UserIcon.svg">
+                    <label for="dropdown-user">Loading</label>
+                    <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                </button>
             </div>
             <div id="forgotpassword-page" class="hidden">
-                <div class="header smallbottom">
-                    <h1>Password Reset</h1>
-                </div>
                 <form id="resetpassword-form">
                     <section>
-                        <label>Email Address</label>
-                        <input type="email" name="email" required>
+                        <label for="resetpassword-email">Email Address</label>
+                        <input type="email" name="email" id="resetpassword-email" required>
                     </section>
-                    <div class="button-wrapper">
-                        <button type="submit" class="major">Reset Password</button>
-                        <button type="button" class="minor" operation="openlogin">Cancel</button>
-                    </div>
+                    <p class="explanation">
+                        Enter your email address and 
+                        we will send you recovery instructions.
+                    </p>
+                    <button type="submit" class="major">Send Recovery Email</button>
                 </form>
             </div>
+            <!-- TODO: Make this pop up rather than below -->
             <div id="message-menu" class="hidden">
                 <div id="message-content">
                 </div>

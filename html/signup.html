@@ -9,40 +9,74 @@
 		<script src="/javascript/signupSpecific.js"></script>
 	</head>
 	<body>
-		<div class="main-content">
-            <div class="header">
-                <h1>Sign Up</h1>
+        <div class="header">
+            <div>
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="back" operation="back" class="minor tiny">
+                    <label for="back">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
             </div>
-			<form id="signup-form">
-                <section>
-				<label>Username</label>
-                <input type="text" name="username" required maxlength="30">
-                </section>
-                <section>
-				<label>Password</label>
-                <input type="password" name="password1" required maxlength="128" minlength="8" pattern="^.*(?=.*[a-zA-Z])(?=.*\d).*$">
-                </section>
-                <section>
-				<label>Re-enter Password</label>
-                <input type="password" name="password2" required maxlength="128" minlength="8" pattern="^.*(?=.*[a-zA-Z])(?=.*\d).*$">
-                </section>
-                <section>
-				<label>First Name</label>
-                <input type="text" name="first_name" required maxlength="30">
-                </section>
-                <section>
-				<label>Last Name</label>
-                <input type="text" name="last_name" required maxlength="40">
-                </section>
-                <section>
-				<label>Email</label>
-                <input type="email" name="email" required>
-                </section>
-                <div class="button-wrapper">
-                    <button type="submit" class="major">Sign Up</button>
-                    <button type="button" class="minor" operation="closepage">Cancel</button>
+            <div class="title">
+                <h1 id="main-title">
+                    Account Options
+                </h1>
+                <!-- TODO: Make this rely on "selected" css property rather than javascript -->
+                    <!-- also check out hover highlighting -->
+                <div class="dropdown">
+                    <button id="dropdown-user" type="dropdown" class="minor rightside">
+                        <img class="icon" src="assets/UserIcon.svg">
+                        <label for="dropdown-user">Loading</label>
+                        <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                    </button>
+                    <div class="dropdown-content">
+                        <!-- TODO: ADD DROPDOWN LINKS HERE, PROTOTYPE THEM IN XD -->
+                    </div>
                 </div>
-			</form>
+            </div>
+        </div>
+		<div class="main-content">
+			<form id="signup-form">
+                <div class="form-part">
+                    <section>
+                        <label for="signup-email">Email</label>
+                        <input autocomplete="email" type="email" name="email" id="signup-email" required>
+                        <div class="simple-checkbox">
+                            <input name="remember-email" type="checkbox" id="signup-remember-email" checked>
+                            <label for="signup-remember-email">Remember Email</label>
+                        </div>
+                    </section>
+                    <section>
+                        <label for="signup-password">Password</label>
+                        <button class="subtle rightside" operation="open-changepassword">Forgot Password</button>
+                        <input autocomplete="new-password" type="password" name="password" id="signup-password" required>
+                        <div class="simple-checkbox">
+                            <input name="show-password" type="checkbox" id="signup-show-password" checked>
+                            <label for="signup-show-password">Show Password</label>
+                        </div>
+                        <ul>
+                            <li id="password-length-explanation">More than 8 characters</li>
+                            <li id="password-letter-explanation">Contains a letter</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <p>
+                            AutoAuthenticate encrypts your sensitive data. This means that 
+                            <span class="important">
+                                if you forget your password, 
+                                you may lose access to your account. 
+                            </span>
+                            <button class="subtle smaller" operation="openencryption">Read More.</button>
+                        </p>
+                        <div class="simple-checkbox">
+                            <input name="understand_risk" type="checkbox" id="signup-understand-risk">
+                            <label for="signup-understand-risk">I Understand</label>
+                        </div>
+                    </section>
+                </div>
+                <button type="submit" class="major">Sign Up</button>
+            </form>
 		</div>
         <div id="message-menu" class="hidden">
             <div id="message-content">

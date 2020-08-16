@@ -2,42 +2,108 @@
 <html>
 	<head>
 		<meta charset="utf-8"></meta>
-        <title>AutoDuo</title>
+        <title>AutoAuthenticate</title>
 		<link rel="stylesheet" href="/css/main.css"></link>
 		<script src="/javascript/helper.js"></script>
 		<script src="/javascript/externalHandler.js"></script>
 		<script src="/javascript/newkeySpecific.js"></script>
 	</head>
 	<body>
-        <div class="main-content">
-            <div class="header">
-                <h1>New Key</h1>
-                <div class="information-wrapper hidden user-data">
-                    <h3 class="data-username">Loading</h3>
+        <div class="header">
+            <div>
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="back" operation="back" class="minor tiny">
+                    <label for="back">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
+            <div class="title">
+                <h1 id="main-title">
+                    New Key
+                </h1>
+                <!-- TODO: Make this rely on "selected" css property rather than javascript -->
+                    <!-- also check out hover highlighting -->
+                <div class="dropdown">
+                    <button id="dropdown-user" type="dropdown" class="minor rightside">
+                        <img class="icon" src="assets/UserIcon.svg">
+                        <label for="dropdown-user">Loading</label>
+                        <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                    </button>
+                    <div class="dropdown-content">
+                        <!-- TODO: ADD DROPDOWN LINKS HERE, PROTOTYPE THEM IN XD -->
+                    </div>
                 </div>
             </div>
+        </div>
+        <div class="main-content">
             <form id="newkey-form">
-                <section>
-                    <label>Key Name</label>
-                    <input type="text" name="key_name" required maxlength="40">
-                </section>
-                <section>
-                    <label>Public ID</label>
-                    <input required hex name="public_id" type="text" inputmode="numeric" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17" placeholder="xx xx xx xx xx xx">
-                </section>
-                <section>
-                    <label>Private ID</label>
-                    <input required hex name="private_id" type="text" inputmode="numeric" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17" placeholder="xx xx xx xx xx xx">
-                </section>
-                <section>
-                    <label>Secret Key</label>
-                    <input required hex name="secret_key" type="text" inputmode="numeric" pattern="[0-9a-fA-f\s]{47,48}" autocomplete="one-time-code" mincorelength="32" maxlength="47" placeholder="xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx">
-                </section>
-                <h3>Warning: This will delete your current key</h3>
-                <div class="button-wrapper">
-                    <button type="submit" class="major">Enter</button>
-                    <button type="button" class="minor" operation="closepage">Cancel</button>
+                <div class="form-part">
+                    <div class="title">
+                        <h2>
+                            Site Information
+                        </h2>
+                    </div>
+                    <section>
+                        <!-- TODO: Add little information icons or "Why?" hover elements to explain need for info -->
+                        <label for="key-name">Key Name</label>
+                        <input id="key-name" type="text" name="key_name" required maxlength="40">
+                    </section>
+                    <section>
+                        <label for="url">URL</label>
+                        <input id="url" type="text" name="url" maxlength="255">
+                    </section>
+                    <section>
+                        <div class="simple-checkbox inline">
+                            <input name="enable-autofill" type="checkbox" id="enable-autofill" checked>
+                            <label for="enable-autofill">Enable Autofill</label>
+                        </div>
+                        <div class="simple-checkbox inline">
+                            <input name="enable-autologin" type="checkbox" id="enable-autologin">
+                            <label for="enable-autologin">Show Password</label>
+                        </div>
+                    </section>
                 </div>
+                <div class="form-part">
+                    <div class="title">
+                        <h2>
+                            Key Information
+                        </h2>
+                    </div>
+                    <div>
+                        <section class="leftside">
+                            <label>Public ID</label>
+                            <input required hex name="public_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                        </section>
+                        <section class="rightside>
+                            <label>Private ID</label>
+                            <input required hex name="private_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                        </section>
+                    </div>
+                    <section>
+                        <label>Secret Key</label>
+                        <input required hex name="secret_key" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{47,48}" autocomplete="one-time-code" mincorelength="32" maxlength="47">
+                    </section>
+                </div>
+                <div class="form-part">
+                    <div class="title">
+                        <h2>
+                            Advanced Settings
+                            <button class="subtle">Show</button>
+                        </h2>
+                    </div>
+                    <div class="hidden">
+                        <section class="leftside">
+                            <label>Usage Counter</label>
+                            <input placeholder="0" value="0" name="usage_counter" type="number" inputmode="numeric" max="32767" min="0">
+                        </section>
+                        <section>
+                            <label>Session Counter</label>
+                            <input placeholder="0" value="0" name="session_counter" type="number" inputmode="numeric" max="255" min="0">
+                        </section>
+                    </div>
+                </div>
+                <button type="submit" class="major">Add Key</button>
             </form>
             <div id="message-menu" class="hidden override-disabled">
                 <div id="message-content">

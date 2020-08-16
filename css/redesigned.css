@@ -1,0 +1,83 @@
+:root {
+/*BEGIN COLORS*/
+    --neutralMidDarkColor: #595758;
+    --neutralMidLightColor: #929BA0;
+    --neutralMidMidColor: #687278;
+    --neutralLightColor: #ffffff;
+    --neutralDarkColor: #393E41;
+    --accentColor: #ffc09f;
+    --accentColorDark: #FF955C;
+    --secondaryColor: #79addc;
+    --secondaryColorDark: #327FC3;
+    --mainColor: #6dbf50;
+    --textColor: #000;
+/*END COLORS*/
+    --desktop-font-size: 16px;
+    --mobile-font-size: 22px;
+}
+body {
+    background-color: var(--textColor);
+    color: var(--neutralDarkColor);
+    min-width: 250px;
+    font-family: sans-serif;
+    max-width: 500px;
+    margin: 50px;
+    font-size: var(--mobile-font-size);
+}
+label{
+    display: block;
+    font-size: 22px;
+    padding: 0;
+    margin: 0;
+    line-height: 22px;
+}
+input {
+    
+}
+img {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+}
+button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--neutralMidLightColor);
+  border: 1px solid var(--neutralMidDarkColor);
+  border-radius: 1000px;
+  color: var(--neutralMidDarkColor);
+  cursor: pointer;
+  margin: 0;
+}
+.rightside {
+    float: right;
+}
+.leftside {
+    float: left;
+}
+.icon {
+    height: var(--mobile-font-size);
+}
+.inner-spaced {
+    margin: 0 10px;
+}
+.major {
+  background-color: var(--mainColor);
+}
+.tiny {
+    width: max-content;
+    display: inline-block;
+    padding: 5px;
+}
+.fit-content {
+    width: max-content;
+}
+.indented {
+  margin: 0 0 0 5px;
+}
+.main-content {
+    display: block;
+    float: none;
+    margin: 10px auto;
+}
