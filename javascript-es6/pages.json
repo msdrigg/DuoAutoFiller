@@ -1,0 +1,30 @@
+{
+    "login": {
+        "external": false,
+        "title": "Login"
+    },
+    "home": {
+        "external": false,
+        "title": null
+    },
+    "signup": {
+        "external": true,
+        "title": Sign Up
+    },
+    "newkey": {
+        "external": true,
+        "title": New Key
+    },
+    "account": {
+        "external": true,
+        "title": "Account Options"
+    },
+    "recoverpassword": {
+        "external": false,
+        "title": Recover Password
+    },
+    "changepassword": {
+        "external": true,
+        "title": Change Password
+    }
+}

@@ -29,6 +29,10 @@
     "activeTab",
     "clipboardWrite"
   ],
+  
+  "background": {
+    "scripts": ["sync_storage.js"]
+  },
 
   "content_scripts": [
     {
@@ -36,7 +40,7 @@
       "all_frames": true,
       "js": ["/javascript/injection.js"]
     }
-  ],
+  ],    
 
   "browser_action" : {
     "default_icon": "assets/LogoIconSmall.svg",

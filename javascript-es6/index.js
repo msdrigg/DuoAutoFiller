@@ -14,38 +14,222 @@ async function openPageExternal(pageLoaction) {
     return browser.tabs.create({url: pageLocation});
 }
 
+async function submitForm(event){
+    // TODO: THIS
+}
+
+async function inputUpdated(event){
+    // TODO: THIS
+}
+
+async function inputChanged(event){
+    // TODO: THIS
+}
+
+async function buttonClick(event){
+    
+}
+
+function unloadUserData(page) {
+  var searchedArea = document;
+  if (typeof page !== "undefined" && page != null) {
+    searchedArea = page;
+  }
+  currentUsername = null;
+  currentToken = null;
+  for (let form of searchedArea.getElementsByTagName("form")) {
+      form.reset();
+  }
+  for (let element of searchedArea.getElementsByClassName("data-username")) {
+      clearChildren(element);
+      element.parentElement.classList.add("hidden");
+  }
+  unloadKeyData(searchedArea);
+}
+
+function unloadKeyData(page) {
+  currentKeyName = null;
+  var searchedArea = document;
+  if (typeof page !== "undefined" && page != null) {
+    searchedArea = page;
+  }
+  for (let element of searchedArea.getElementsByClassName("data-key")) {
+      clearChildren(element);
+      element.appendChild(document.createTextNode("No stored keys"));
+      element.parentElement.classList.remove("hidden");
+  }
+  let deleteButton = document.querySelector("button[operation='delete-key']");
+  if (typeof deleteButton !== "undefined" && deleteButton != null) {
+      deleteButton.classList.add("hidden");
+  }
+}
+
+async function addUserElements(pageId){
+  // User elements to page (current key name and username)
+  // Displays "No key" if no key currently available
+  var page = document;
+  if (typeof pageID !== "undefined" && pageID != null) {
+    page = document.getElementById(pageID);
+  }
+  
+  if (currentUsername == null || currentToken == null) {
+      return Promise.all([unloadKeyData(), unloadUserData()]);
+  }
+  else {
+      //TODO: Add username and key elements
+  }
+  let matches = document.getElementsByClassName("data-username");
+  let usernameElement = null;
+  if (matches == null || matches.length === 0) {
+      return;
+  }
+  else {
+      usernameElement = matches[0];
+  }
+  if (currentUsername == null || currentToken == null) {
+      var savedUser = browser.storage.sync.get({"username": null, "token": null});
+      // user = {"username": currentUsername, "token": currentToken};
+      Promise.resolve(savedUser)
+        .then(savedUser => {
+            if (typeof savedUser !== "undefined" && savedUser != null) {
+              console.log("Saved user loaded: " + user);
+              currentUsername = user.username;
+              currentToken = user.token;
+              clearChildren(usernameElement);
+              usernameElement.appendChild(document.createTextNode(currentUsername));
+              usernameElement.parentElement.classList.remove("hidden");
+              loadCurrentKey(page);
+            }
+            else {
+              throw new Error("Error getting user from database");
+            }
+          })
+        .catch (error => {
+          console.log("Error getting user: " + error);
+          logout();
+          displayMessage("Error getting Username: " + error, "error");
+      	});
+  }
+  else {
+      clearChildren(usernameElement);
+      usernameElement.appendChild(document.createTextNode(currentUsername));
+      usernameElement.parentElement.classList.remove("hidden");
+      loadCurrentKey(page);
+  }
+}
+	
+function loadKeys(page) {
+    fetch(baseURL + "/yubikeys/get-key-name/", {
+      method: "GET",
+      headers: AuthenticationHeaders(currentToken, null),
+      credentials: 'include',
+    })
+    
+    // Promise.resolve({"key_name": currentKeyName, response: "success"})
+    .then(response => response.json())
+    .then(data => {
+        if (data.response === "success") {
+            var keyName = data.key_name;
+            var yubikey = page.getElementsByClassName("data-key")[0];
+            clearChildren(yubikey);
+            yubikey.appendChild(document.createTextNode(keyName));
+            for (element of page.getElementsByClassName("focus-wrapper")) {
+                if (element.contains(yubikey)) {
+                    element.classList.remove("hidden");
+                }
+            }
+            currentKeyName = keyName;
+            let deleteButton = document.querySelector("button[operation='delete-key']");
+            if (typeof deleteButton !== "undefined" && deleteButton != null) {
+                deleteButton.classList.remove("hidden");
+            }
+        }
+        else if (data.response === "failure") {
+            // displayMessage("Getting key failed: " + data.reason);
+            unloadKeyData();
+        }
+        else {
+            displayMessage("Key unable to load key with result: " + JSON.stringify(data), 'warning');
+        }
+    })
+    .catch(error => console.error("Unable to load key with error: " + error, 'error'));
+}
+
+async function accessCachedKeys(query){
+    // Query is a json object of key-value pairs where
+    //    the query keys match attributes of the
+    //    cached content.
+    // Response is a json object containing 
+    //    All matching keys
+    // Cached keys are stored in a database of the format
+    // Key id: {
+        // name: Key name,
+        // site: key url,
+        // secret_key: encrypted secret key,
+        // private_id: encrypted private id,
+        // public_id: encrypted public_id,
+        // usage_counter: usage counter,
+        // session_counter: session counter
+    // }
+}
+
+async function handleError(error) {
+    
+}
+
+async function displayMessage(message, type){
+    
+}
+
+async function addFormListeners(section){
+  for (let form of section.getElementsByTagName("form")) {
+    form.addEventListener("submit", submitForm);
+  }
+}
+
+async function addButtonListeners(section){
+  for (let potentialButton of section.querySelectorAll("button[data-operation], span[data-operation]")){
+      potentialButton.addEventListener("click", buttonClick);
+  }
+}
+
+async function addInputListeners(section){
+  for (let input of section.getElementsByTagName("input")) {
+      input.addEventListener("change", inputChanged);
+      input.addEventListener("input", inputUpdated);
+  }
+}
+
+async function addPageElements(pageId){
+  let page = document.getElementById(pageId);
+  addFormListeners(page);
+  addInputListeners(page);
+  addButtonListeners(page);
+}
+
 async function loadPage(pageId) {
   if (pages[pageId].external) {
       return openPageExternal(pageId + ".html");
   }
   
-  var oldPage = document.querySelector("div.current");
+  var oldPage = document.querySelectorAll("div.current");
   if (typeof oldPage !== "undefined" && oldPage != null) {
-      var oldPageClassList = oldPage.classList;
-      oldPageClassList.remove("current");
-      oldPageClassList.add("hidden");
+      for (let page of oldPage) {
+          let oldPageClassList = page.classList;
+          oldPageClassList.remove("current");
+          oldPageClassList.add("hidden");
+      }
   }
-  var currentPage = document.getElementById(pageID);
-  currentPage.classList.add("current");
-  currentPage.classList.remove("hidden");
-  for (let form of currentPage.getElementsByTagName("form")) {
-      form.addEventListener("submit", submitForm);
-  }
-  for (let button of currentPage.getElementsByTagName("button")){
-    if (button.type === "button") {
-      button.addEventListener("click", buttonClick);
-    }
-  }
-  for (let input of currentPage.getElementsByTagName("input")) {
-      input.addEventListener("change", inputChange);
-  }
+  
+  var newPage = document.getElementById(pageID);
+  newPage.classList.add("current");
+  newPage.classList.remove("hidden");
+  
+  addPageElements(newPage);
   addUserElements(pageID);
+  
   if (message !== 'undefined' && message != null) {
-    displayMessage(message);
+    return displayMessage(message);
   }
-}
-
-async function handleError(error) {
-    
 }
 

@@ -15,7 +15,7 @@
         <div class="site-wrapper">
             <div class="header flexor">
                 <!--CSS: Make buttons hidden by default until javascript has loaded-->
-                <button id="back" operation="back" class="tiny flexor flex-center small-bottom-space">
+                <button id="back" data-operation="back" class="tiny flexor flex-center small-bottom-space">
                     <!-- <img class="icon" src="assets/ArrowIcon.svg"> -->
                     <svg class="icon" enable-background="new 0 0 32 32" height="32px" id="Layer_1_copy" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M7.701,14.276l9.586-9.585c0.879-0.878,2.317-0.878,3.195,0l0.801,0.8c0.878,0.877,0.878,2.316,0,3.194  L13.968,16l7.315,7.315c0.878,0.878,0.878,2.317,0,3.194l-0.801,0.8c-0.878,0.879-2.316,0.879-3.195,0l-9.586-9.587  C7.229,17.252,7.02,16.62,7.054,16C7.02,15.38,7.229,14.748,7.701,14.276z" fill="#515151"/></svg>
                     <label for="back" class="inner-spaced">Back</label>
@@ -23,12 +23,12 @@
                 <img class="logo" src="assets/LogoIconLarge.svg">
                 <span class="logo transient">AutoAuthenticate</span>
             </div>
-            <div class="title">
+            <div class="hidden">
                 <h1 id="main-title">
                     Login
                 </h1>
             </div>
-            <div id="login-page" class="hidden">
+            <div id="login-page" class="">
                 <form id="login-form">
                     <div class="form-part">
                         <section>
@@ -42,8 +42,8 @@
                         <section>
                             <div class="flexor flex-seperate">
                                 <label for="login-password">Password</label>
-                                <label class="subtle small-spacing" operation="open-changepassword">
-                                Forgot Password</label>
+                                <span class="subtle small-spacing" data-operation="open-changepassword">
+                                Forgot Password</span>
                             </div>
                             <input autocomplete="new-password" type="text" name="password" id="login-password" required>
                             <div class="simple-checkbox">
@@ -54,7 +54,7 @@
                     </div>
                     <button type="submit" class="major">Login</button>
                 </form>
-                <button type="button" class="minor" operation="opensignup">Create a New Account</button>
+                <button type="button" class="minor" data-operation="opensignup">Create a New Account</button>
             </div>
             <!-- <div id="home-page" class="hidden"> -->
             <div id="home-page" class="">
@@ -76,7 +76,7 @@
                         <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
                     </div>
                 </div>
-                <button type="button" class="minor" operation="opennewkey">New Key</button>
+                <button type="button" class="minor" data-operation="opennewkey">New Key</button>
                 <!-- TODO: Make this rely on "selected" css property rather than javascript -->
                     <!-- also check out hover highlighting -->
                 <button id="dropdown-user" type="dropdown" class="minor flexor flex-seperate dropdown">
@@ -89,11 +89,11 @@
                     <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
                 </button>
             </div>
-            <div id="forgotpassword-page" class="hidden">
-                <form id="resetpassword-form">
+            <div id="recoverpassword-page" class="hidden">
+                <form id="recoverpassword-form">
                     <section>
-                        <label for="resetpassword-email">Email Address</label>
-                        <input type="email" name="email" id="resetpassword-email" required>
+                        <label for="recoverpassword-email">Email Address</label>
+                        <input type="email" name="email" id="recoverpassword-email" required>
                     </section>
                     <p class="explanation">
                         Enter your email address and 
