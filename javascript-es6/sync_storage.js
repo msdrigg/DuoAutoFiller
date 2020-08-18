@@ -61,8 +61,8 @@ async function startSyncOperation(repeatCycle){
 
 async function syncStorage(){
     // Sync the storage.
-    // Request + check total hash
-    // Request + check key_ids + hash
-    // Request necessary keys and add them
-    // Update main hash
+        // Request and compare total hash
+        // Request and compare key_ids + hash
+        // Request necessary keys and add them
+        // Update main hash and key hashes
 }

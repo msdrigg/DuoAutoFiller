@@ -10,10 +10,6 @@ fetch("javascript/pages.json")
     })
     .catch(handleError);
 
-async function openPageExternal(pageLoaction) {
-    return browser.tabs.create({url: pageLocation});
-}
-
 async function submitForm(event){
     // TODO: THIS
 }
@@ -26,8 +22,98 @@ async function inputChanged(event){
     // TODO: THIS
 }
 
-async function buttonClick(event){
+async function logout(){
+    // TODO: THIS
+}
+
+async function askUser(){
     
+}
+
+async function deleteKey(key, showWarning) {
+    // Deletes given key and displays a message describing the status of the deletion
+    //    ("Key deleted" if key deleted and "No key to delete" if no key to delete)
+    //    Then it resets the #currentKeyName field
+    if (typeof showWarning === "undefined" || showWarning == null || showWarning){
+        let textEntry = currentKeyName
+        if (currentKeyName == null ) {
+            textEntry = "your key"
+        }
+        return askUser("Are you sure you want to delete " + currentKeyName + "?", [
+            {
+                "Delete Key": function() {
+                    deleteKey(key, false);
+                }
+            },
+            {
+                "Cancel": null
+            }
+        ]);
+    }
+    return fetch(baseURL + "/yubikeys/delete-key/?key_id=" + key.id, {
+      method: "DELETE",
+      headers: AuthenticationHeaders(currentToken, "application/json"),
+      body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.response === "success") {
+            displayMessage("Key Deleted", "success");
+            unloadKeyData(key);
+        }
+        else if (data.response === "failure") {
+            throw new Error(data.reason);
+            // displayMessage("Key delete failed: " + data.reason, "error");
+            // unloadKeyData(key);
+        }
+        else {
+            throw new Error(data);
+            // displayMessage("Key unable to delete with response: " + data, "error");
+        }
+    })
+    // .catch(error => displayMessage("Unable to delete key with error: " + error, 'error'));
+
+}
+
+async function buttonClick(event){
+    // This function processes any included operations and returns event
+    let btnAction = event.target.dataset.operation;
+    if (btnAction === "undefined" || btnAction == null) {
+        return event;
+    }
+    if (btnAction.includes("open")) {
+        var page = btnAction.substring(4);
+        openPage(page);
+    }
+    else {
+        switch (btnAction) {
+            case "logout":
+                await logout();
+                return 
+                break;
+            case "edit-key":
+                //Get key-id from the event's target
+                    // and then display the edit-key page 
+                    // same as new-key but with autofilled 
+                    // previous keys values and new title
+                break;
+            case "copy-key":
+                //  Copy the key and display a success message
+                break;
+            case "fill-key":
+                // TODO: Only show fill-option when element is fillable
+                // Put fill element inline input using injection like psw manager
+                // See if I can get through duo without clearing messages 
+                // Only autologin if checked, and never clear messages except
+                // dumb ones first time (not after)
+                break;
+            default:
+                console.log("Weird button pressed: " + event.target.id);
+                return event;
+        }
+    }
+    event.preventDefault();
+    return event;
 }
 
 function unloadUserData(page) {
@@ -207,7 +293,11 @@ async function addPageElements(pageId){
   addButtonListeners(page);
 }
 
-async function loadPage(pageId) {
+async function openPageExternal(pageLoaction) {
+    return browser.tabs.create({url: pageLocation});
+}
+
+async function openPage(pageId) {
   if (pages[pageId].external) {
       return openPageExternal(pageId + ".html");
   }
@@ -221,7 +311,7 @@ async function loadPage(pageId) {
       }
   }
   
-  var newPage = document.getElementById(pageID);
+  var newPage = document.getElementById(pageId + "-page");
   newPage.classList.add("current");
   newPage.classList.remove("hidden");
   
@@ -232,4 +322,3 @@ async function loadPage(pageId) {
     return displayMessage(message);
   }
 }
-
