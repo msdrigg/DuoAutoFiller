@@ -1,0 +1,54 @@
+Goals for Extension
+
+) Connect Javascrypt frontend up
+    a) Add user information, add keys as they get loaded
+        i) Add callback to add key, sort it using bineary searching
+        ii) Callback to change key if key updated
+    b) Handle any button presses
+    c) Handle input/form control
+        i) Add better custom validation, and possibly new css to show it
+    d) Reconfigure displayed message. Make it pull up
+
+) Fix broken html/css
+    a) Clean up css too
+
+) Add E2EE
+    a) P2SK package creating secure key, encrypting keys upon arrival
+    b) Add rest api for generating keys given POST key parameters
+        i) Eventually generate OTP's in javascript client-side
+        ii) Packages for this?
+    c) Add the dance between value key, encrypted vault key, session key
+
+) Add custom session and handle events like server-kick, server unreachable, etc
+
+) Add delete-key button on the edit-key page
+    
+) Setup Local Storage in an Indexed DB of keys
+    a) Setup searching by key_id, key_name, site
+    b) Setup syncing automatically with django backend
+        i) Request keys sorted by key_name initially
+
+) Add additional keys (RSA, RSA-Pin, U2F? FIDO? See lists.)
+        i) Switch pages with select menu not "dropdown"
+
+) Add select input for keep logged in time
+
+) Benchmark operations and optimize expensive actions
+
+) Javascript unit tests?
+
+
+Goals for Server
+
+) Rebuild Key functions/views
+    a) Yubikeys store current yubikey fields
+    b) Users can have more than one key
+    c) Fix views associated with this field
+    d) Add necessary views for server
+    e) Fix tests
+
+) Change hashing algorithm to match last-pass
+    a) Possibly tone down or change algorithms to work on ras-pi
+
+) Add custom session object with session authentication (secure cookie) (custom session time but default 2 weeks)
+    a) Write tests for this

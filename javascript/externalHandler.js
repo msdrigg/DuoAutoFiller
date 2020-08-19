@@ -1,7 +1,4 @@
 //Handles external pages
-    // When the page opens, it does one thing, and it 
-    // closes the page, returning it to the last active tab. 
-    // maybe it does this by default
 function closePage(currentURL) {
     var tabQuery = browser.tabs.getCurrent();
     tabQuery

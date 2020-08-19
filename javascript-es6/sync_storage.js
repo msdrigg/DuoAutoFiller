@@ -14,7 +14,10 @@
     // session_counter: session counter
 // }
 
+//Store keys in database storage encrypted
+
 const SYNC_ALARM_NAME = "autoauthenticate-sync-9858324374";
+let lastSyncTime = 0;
 
 async function checkKeyCache(){
     await let cachedKeys = accessCachedKeys();
@@ -61,8 +64,6 @@ async function startSyncOperation(repeatCycle){
 
 async function syncStorage(){
     // Sync the storage.
-        // Request and compare total hash
-        // Request and compare key_ids + hash
-        // Request necessary keys and add them
-        // Update main hash and key hashes
+        // Upload last_sync_time and server responds with all new changes
+        // Add new keys and update last_sync_time
 }

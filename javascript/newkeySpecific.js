@@ -44,7 +44,7 @@ function localizedFormSubmit(event) {
 
 function localizedInputHandler(event) {
     if (event.target.hasAttribute("hex")) {
-        var oldValue = (event.target.oldValue ? event.target.oldValue : "");
+        var oldValue = (event.target.dataset.oldValue ? event.target.dataset.oldValue : "");
         if (!hexRegex.test(event.target.input)) {
             event.target.classList.add("hex-fail");
         }
@@ -68,7 +68,7 @@ function localizedInputHandler(event) {
         }
         var outputValueSpaced = chunks.join(" ");
         event.target.value = outputValueSpaced;
-        event.target.oldValue = event.target.value;
+        event.target.dataset.oldValue = event.target.value;
         if (event.target.validity.patternMismatch){
             if (!hexRegex.test(inputValueNoSpace)) {
                 event.target.setCustomValidity("This field can only contain characters 0-9 and a-f.");

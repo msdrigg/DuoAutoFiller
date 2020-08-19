@@ -77,16 +77,16 @@
                     <div class="flexor flex-seperate flex-double">
                         <section class="double-input space-right media-unspace">
                             <label>Public ID</label>
-                            <input required hex name="public_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                            <input required data-listener="hex" name="public_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
                         </section>
                         <section class="double-input">
                             <label>Private ID</label>
-                            <input required hex name="private_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                            <input required data-listener="hex" name="private_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
                         </section>
                     </div>
                     <section>
                         <label>Secret Key</label>
-                        <input required hex name="secret_key" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{47,48}" autocomplete="one-time-code" mincorelength="32" maxlength="47">
+                        <input required data-listener="hex" name="secret_key" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{47,48}" autocomplete="one-time-code" mincorelength="32" maxlength="47">
                     </section>
                 </div>
                 <div class="form-part">
