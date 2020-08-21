@@ -23,12 +23,12 @@
                 <img class="logo" src="assets/LogoIconLarge.svg">
                 <span class="logo transient">AutoAuthenticate</span>
             </div>
-            <div class="hidden">
+            <div class="">
                 <h1 id="main-title">
-                    Login
+                    Key Chain
                 </h1>
             </div>
-            <div id="login-page" class="">
+            <div id="login-page" class="hidden">
                 <form id="login-form">
                     <div class="form-part">
                         <section>
@@ -59,22 +59,33 @@
             <!-- <div id="home-page" class="hidden"> -->
             <div id="home-page" class="">
                 <!-- TODO: Fix all this -->
-                <div class="focus-wrapper key-data">
+                <div class="focus-wrapper">
                 <!-- <div class="focus-wrapper hidden key-data"> -->
-                    <div class="search">
-                        <label>Seach...</label>
-                    </div>
-                    <div class="key-wrapper">
-                        <div class="key-sub-wrapper">
-                            <h3 class="data-key content">Loading</h3>
-                            <div class="key-button-wrapper">
-                                <button id="copy-button" class="minor copy-button">
-                                    <svg class="copy-icon" id="Layer_1_copy" data-name="Layer 1 copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 305.08 334.54"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;stroke-width:20px;}</style></defs><rect class="cls-1" x="61.53" y="56.8" width="233.55" height="267.74" rx="30"/><rect class="cls-1" x="10" y="10" width="233.55" height="267.74" rx="30">
-                                </button>
-                            </div>
-                        </div>
-                        <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
-                    </div>
+                        <!-- TOOD: Kill form submission, but search async everytime input is given (filtering out new each time, caching). Display completeness when enter pressed -->
+                    <form class="invisible">
+                        <input class="search" type="text" placeholder="Search...">
+                    </form>
+                    <ul class="key-list">
+                        <li class="key-wrapper flexor flex-seperate">
+                                <h3 class="key-name">Key Name</h3>
+                                <div class="spacer"></div>
+                                <!-- <div class="key-button-wrapper"> -->
+                                    <div>
+                                        <button id="fill-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/FillIcon.svg">
+                                        </button>
+                                        <button id="copy-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/CopyIcon.svg">
+                                            <!-- <svg class="copy-icon" id="Layer_1_copy" data-name="Layer 1 copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 305.08 334.54"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;stroke-width:20px;}</style></defs><rect class="cls-1" x="61.53" y="56.8" width="233.55" height="267.74" rx="30"/><rect class="cls-1" x="10" y="10" width="233.55" height="267.74" rx="30"> -->
+                                        </button>
+                                        <button id="copy-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/EditIcon.svg">
+                                        </button>
+                                    </div>
+                                <!-- </div> -->
+                                <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
+                        </li>
+                    </ul>
                 </div>
                 <button type="button" class="minor" data-operation="opennewkey">New Key</button>
                 <!-- TODO: Make this rely on "selected" css property rather than javascript -->

@@ -21,7 +21,6 @@
 }
 
 body {
-    /*user-select: none;*/
     transition: margin-top 200ms linear 0s;
     margin: 0;
     color: var(--textColor);
@@ -180,10 +179,7 @@ section {
 .space-right{
     margin-right: 35px;
 }
-input:focus {
-    box-shadow: none;
-}
-input:focus{
+input:not(.search):focus{
     box-shadow: inset 0 0 2px var(--neutralMidLightColor);
     border: 2px solid var(--mainColorLight);
     padding: 11px;
@@ -336,9 +332,6 @@ ul {
 }
 
 .slider-wrapper.closed {
-/*    max-height: 0; 
-    margin: 0; 
-    padding: 0; */
     bottom: -200px;
 }
 .specialized {
@@ -371,6 +364,89 @@ ul {
 .key-dropdown{
     min-width: 200px;
 }
+
+.copy-icon{
+    width: 30px;
+    height: 30px;
+    /*transform: translate(-1.5px,-4.5px);*/
+}
+.key-name{
+    margin: auto;
+  float: left;
+  flex: 1 1;
+  width: max-content;
+}
+.search {
+    letter-spacing: 2px;
+    border-radius: 8px 8px 0 0;
+    /*border-radius: 0;*/
+    background-color: var(--neutralFaintColor);
+    border: none;
+    right: 0;
+    left: 0;
+    color: var(--neutralDarkColor);
+    border-bottom: 1px solid var(--neutralMidDarkColor);
+    /*border-bottom: : 1px solid var(--neutralMidDarkColor);*/
+    margin: 0;
+    /*height: auto;*/
+    /*top: 0;*/
+    /*width: calc(100% - 2*15px);*/
+    padding: 12px;
+}
+/*.search:focus{
+    box-shadow: inset 0 0 2px 1px var(--neutralMidLightColor);
+}*/
+.invisible {
+    margin: 0;
+    padding: 0;
+    width: auto;
+    border: none;
+    background-color: inherit;
+    border-radius: 0;
+    letter-spacing: inherit;
+}
+.focus-wrapper {
+    border-radius: 10px;
+    padding: 0;
+    border: 1px solid var(--neutralMidDarkColor);
+    /*border-top: none;*/
+    overflow: auto;
+    max-height: 400px;
+}
+.key-button-wrapper{
+    float: right;
+    display: block;
+    height: 100%;
+    width: max-content;
+    padding: 10px 15px;
+    margin: 0 0 0 0;
+}
+li.key-wrapper{
+    min-height: 70px;
+    border-bottom: 1px solid var(--neutralMidDarkColor);
+    padding: 5px 20px;
+    /*align-items: stretch;*/
+}
+.spacer{
+    /*flex: 3 1;*/
+}
+ul.key-list {
+    list-style: none;
+    padding: 0;
+}
+.copy-button {
+    /*flex: 0 1;*/
+    float: right;
+    display: block;
+    border-radius: 30px;
+    height: 100%;
+    width: auto;
+    padding: 10px;
+    margin: 5px;
+    background-color: var(--neutralFaintColor);
+    border: 1px solid var(--neutralMidDarkColor);
+}
+
 div.flexor.flex-double{
     flex-direction: column;
 }
