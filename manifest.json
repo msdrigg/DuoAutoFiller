@@ -15,6 +15,9 @@
   
   "web_accessible_resources": [
     "javascript/*.js",
+    "javascript-es6/*.js",
+    "javascript-es6/*.json",
+    "javascript-es6/dist/bundle.js",
     "html/*.html",
     "css/*.css",
     "assets/*.svg",

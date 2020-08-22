@@ -6,6 +6,9 @@
         <base href="../">
         <link rel="stylesheet" href="css/redesigned.css"></link>
          <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet"> 
+                 <script src="javascript-es6/index.js"></script>
+        <script src="javascript-es6/index.js"></script>
+
 <!-- 		<script src="/javascript/helper.js"></script>
 		<script src="/javascript/externalHandler.js"></script>
 		<script src="/javascript/signupSpecific.js"></script>
@@ -15,14 +18,11 @@
         <div class="site-wrapper">
             <div class="header flexor">
                 <!--CSS: Make buttons hidden by default until javascript has loaded-->
-                <button role="navigation" id="back" data-operation="back" class="tiny flexor flex-center small-bottom-space">
-                    <!-- <img class="icon" src="assets/ArrowIcon.svg"> -->
-                    <svg class="icon" enable-background="new 0 0 32 32" height="32px" id="Layer_1" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M7.701,14.276l9.586-9.585c0.879-0.878,2.317-0.878,3.195,0l0.801,0.8c0.878,0.877,0.878,2.316,0,3.194  L13.968,16l7.315,7.315c0.878,0.878,0.878,2.317,0,3.194l-0.801,0.8c-0.878,0.879-2.316,0.879-3.195,0l-9.586-9.587  C7.229,17.252,7.02,16.62,7.054,16C7.02,15.38,7.229,14.748,7.701,14.276z" fill="#515151"/></svg>
+                <button role="navigation" id="main-back-button" data-operation="back" class="tiny flexor flex-center small-bottom-space right-space">
+                    <img class="icon" src="assets/ArrowIcon.svg">
                     <label for="back" class="inner-spaced">Back</label>
                 </button>
-                <!-- <img class="logo" src="assets/LogoIconLarge.svg"> -->
-                <svg class="logo" viewBox="0 0 23.694 23.694"><defs><style>.cls-1{stroke:#79addc;stroke-miterlimit:10;stroke-width:2px;}.cls-2{fill:url(#linear-gradient);}.cls-3{fill:url(#linear-gradient-2);}.cls-4{fill:#fff;}</style><linearGradient id="linear-gradient" x1="8.341" y1="14.579" x2="13.107" y2="6.325" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="0.004" stop-color="#fdfdfd"/><stop offset="0.117" stop-color="#bbbaba"/><stop offset="0.225" stop-color="#858383"/><stop offset="0.324" stop-color="#5b5858"/><stop offset="0.413" stop-color="#3c393a"/><stop offset="0.488" stop-color="#2a2627"/><stop offset="0.54" stop-color="#231f20"/><stop offset="0.997" stop-color="#fff"/></linearGradient><linearGradient id="linear-gradient-2" x1="10.365" y1="15.085" x2="13.106" y2="15.085" gradientUnits="userSpaceOnUse"><stop offset="0.495" stop-color="#fff"/><stop offset="0.727" stop-color="#b2b2b2"/><stop offset="0.911" stop-color="#7b7b7b"/><stop offset="1" stop-color="#666"/></linearGradient></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><rect class="cls-1" x="1" y="1" width="21.694" height="21.694" rx="10.847"/><path class="cls-2" d="M10.737,4.921a3.886,3.886,0,0,0-2.164,6.016L6.13,15.169l.593,2.213,2.213-.593L8.58,15.461l1.328-.355-.356-1.328,1.328-.356.5-.865a3.893,3.893,0,1,0-.643-7.636ZM12.1,6.454a1.146,1.146,0,1,1-.81,1.4A1.146,1.146,0,0,1,12.1,6.454Z"/><path class="cls-3" d="M10.37,15.072a2.05,2.05,0,0,1,1.371-.487A2.027,2.027,0,0,1,13.1,15.1a2.027,2.027,0,0,1-1.371.486A2.056,2.056,0,0,1,10.37,15.072Z"/><path class="cls-4" d="M7.962,7.675a3.887,3.887,0,0,0,4.129,4.882l2.443,4.232,2.213.593.593-2.213-1.328-.356.356-1.328L15.04,13.13,15.4,11.8l-.5-.865A3.894,3.894,0,1,0,7.962,7.675Zm2.478-.584a1.145,1.145,0,1,1,.684,1.468A1.144,1.144,0,0,1,10.44,7.091Z"/></g></g>
-                    </svg>
+                <img class="logo" src="assets/LogoIconLarge.svg">
                 <span class="logo transient">AutoAuthenticate</span>
             </div>
             <div class="title">
