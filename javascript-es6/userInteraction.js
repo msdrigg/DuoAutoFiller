@@ -13,6 +13,27 @@ fetch("javascript/pages.json")
     })
     .catch(handleError);
 
+
+
+async function accessCachedKeys(query){
+    // TODO: move this into sync_storage javascript file and use that solely
+    // Query is a json object of key-value pairs where
+    //    the query keys match attributes of the
+    //    cached content.
+    // Response is a json object containing 
+    //    All matching keys
+    // Cached keys are stored in a database of the format
+    // Key id: {
+        // name: Key name,
+        // site: key url,
+        // secret_key: encrypted secret key,
+        // private_id: encrypted private id,
+        // public_id: encrypted public_id,
+        // usage_counter: usage counter,
+        // session_counter: session counter
+    // }
+}
+
 async function submitForm(event){
     let form = event.target;
     if (typeof form.action === "undefined" || form.action == null){
@@ -106,6 +127,24 @@ async function inputUpdated(event){
                 event.target.setCustomValidity("");
             }
             break;
+        case "password":
+            if (event.target.value.length > 8) {
+                document.getElementById("password-length-explanation")
+                    .style.color = "green";
+            }
+            else if (event.target.classList.includes("changed") {
+                document.getElementById("password-length-explanation")
+                    .style.color = "red";
+            }
+            if (!/^.*[A-Za-z]/.test(event.target.value)){
+                document.getElementById("password-length-explanation")
+                    .style.color = "green";
+            }
+            else if (event.target.classList.includes("changed")){
+                document.getElementById("password-length-explanation")
+                    .style.color = "red";
+            }
+            break;
         case default:
             console.log("Weird event listener: " + event);
             break;
@@ -127,17 +166,44 @@ async function inputChanged(event){
                     inputField.type = "password";
                 }
                 break;
+            case "checkpassword":
+                if (event.target.validity.tooShort) {
+                    document.getElementById("password-length-explanation")
+                        .style.color = "red";
+                }
+                if (event.target.validity.patternMismatch) {
+                    document.getElementById("password-letter-explanation")
+                        .style.color = "red";
+                }
             default:
                 return event;
         }
     }
 }
 
-async function logout(){
-    // TODO: THIS
+async function authorizedFetch(location, kwargs){
+    let realKwargs = {}
+    if (typeof kwargs === "undefined" || kwargs == null){
+        realKwargs = kwargs;
+    }
+    realKwargs.credentials = 'include';
+    return fetch(baseURL + location, realHeaders);
 }
 
-async function askUser(){
+async function logout(){
+    // TODO: THIS
+    // Send server message to delete current session
+        // Display message upon failure, but log out anyway
+        // Provide "try again" button
+    // Redirect user to login page
+    return Promise.all([
+        authorizedFetch("/users/logout/", {method: "POST"}),
+        openPage("login")
+    ])
+        .catch(error => handleError(error));
+}
+
+async function askUser(message, buttons){
     
 }
 
@@ -352,32 +418,15 @@ function loadKeys(page) {
     .catch(error => console.error("Unable to load key with error: " + error, 'error'));
 }
 
-async function accessCachedKeys(query){
-    // Query is a json object of key-value pairs where
-    //    the query keys match attributes of the
-    //    cached content.
-    // Response is a json object containing 
-    //    All matching keys
-    // Cached keys are stored in a database of the format
-    // Key id: {
-        // name: Key name,
-        // site: key url,
-        // secret_key: encrypted secret key,
-        // private_id: encrypted private id,
-        // public_id: encrypted public_id,
-        // usage_counter: usage counter,
-        // session_counter: session counter
-    // }
-}
-
 async function handleError(error) {
     // Error is any object, string, or error. 
-    // Possibly index them and display code with short description
-    
+    //TODO: Index possible errors display code with short description
+    return displayMessage(error, "error");
 }
 
 async function displayMessage(message, type){
-    
+    // Display the message as a small slider with menu saying "dismiss"
+    return askUser(message, null, type);
 }
 
 async function addFormListeners(section){
