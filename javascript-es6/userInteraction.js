@@ -1,17 +1,10 @@
+let browser = ""
 // userInteraction.js
 // IF CHROME, TOGGLE THESE TWO LINE COMMENTS
 let browserProxy = browser;
 // let browserProxy = chrome;
 
 const LOGIN_ACTION = "/users/login/"
-
-let pages = "";
-fetch("javascript/pages.json")
-    .then(response=>response.json())
-    .then(data => {
-        pages = data;
-    })
-    .catch(handleError);
 
 async function submitForm(event){
     let form = event.target;
@@ -106,7 +99,7 @@ async function inputUpdated(event){
                 event.target.setCustomValidity("");
             }
             break;
-        case default:
+        default:
             console.log("Weird event listener: " + event);
             break;
     }
@@ -373,7 +366,8 @@ async function accessCachedKeys(query){
 async function handleError(error) {
     // Error is any object, string, or error. 
     // Possibly index them and display code with short description
-    
+    console.log("Error")
+    throw error;
 }
 
 async function displayMessage(message, type){
@@ -422,6 +416,7 @@ async function openPageExternal(pageLoaction) {
 }
 
 async function openPage(pageId) {
+  //TODO: Format page if opening main page externally
   if (pages[pageId].external) {
       return openPageExternal(pageId + ".html");
   }
@@ -437,6 +432,12 @@ async function openPage(pageId) {
   
   var newPage = document.getElementById(pageId + "-page");
   newPage.classList.add("current");
+  if (typeof pages[pageId].entry !== "undefined" && pages[pageId].entry){
+    document.getElementById("main-back-button").classList.add("hidden");
+  }
+  else {
+    document.getElementById("main-back-button").classList.remove("hidden");
+  }
   newPage.classList.remove("hidden");
   
   addPageElements(newPage);

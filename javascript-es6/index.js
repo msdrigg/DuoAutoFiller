@@ -1,25 +1,131 @@
+// let browser = "";
 // IF CHROME, TOGGLE THESE TWO LINE COMMENTS
 let browserProxy = browser;
 // let browserProxy = chrome;
 
 let pages = "";
-fetch("javascript/pages.json")
-    .then(response=>response.json())
-    .then(data => {
-        pages = data;
-    })
-    .catch(handleError);
+let currentUsername = "";
+let currentToken = "";
+
+const LOGIN_ACTION = "/users/login/"
 
 async function submitForm(event){
-    // TODO: THIS
+    let form = event.target;
+    if (typeof form.action === "undefined" || form.action == null){
+        return event;
+    }
+    event.preventDefault();
+    let submittedForm = new FormData();
+    for (input of form.getElementsByTagName("input")) {
+        if (typeof input.name !== "undefined" && input.name != null){
+            submittedForm.append(input.name, input.value.replace(/\s/g, ''));
+        }
+    }
+    var newKeyURL = baseURL + form.action;
+    return sentPromise = fetch(newKeyURL, {
+        method: "POST",
+        headers: AuthenticationHeaders(),
+        body: submittedForm
+    })
+    .then(response=>response.json())
+    .then(data=>{
+        if (data.response === "success") {
+            return formSubmitted(form);
+        }
+        else if (data.response === "failure"){
+            return handleError(data.reason);
+        }
+        else {
+            return handleError(data);
+        }
+    });
 }
 
+async function formSubmitted(form){
+    switch (form.dataset.operation) {
+        case "display-message":
+            return displayMessage("Form Uploaded!");
+        case "login":
+            let newForm = form.cloneNode(true);
+            newForm.action = LOGIN_ACTION;
+            return submitForm(form);
+        case "close":
+            return closePage(form.ownerDocument.URL);
+        default:
+            return;
+    }
+}
+
+
 async function inputUpdated(event){
-    // TODO: THIS
+    let eventListener = event.target.dataset.listener;
+    switch (eventListener) {
+        case "hex":
+            var oldValue = (event.target.dataset.oldValue ? event.target.dataset.oldValue : "");
+            if (!hexRegex.test(event.target.input)) {
+                event.target.classList.add("hex-fail");
+            }
+            else {
+                event.target.classList.remove("hex-fail");
+            }
+            var inputValueNoSpace = event.target.value.replace(/\s/g, '');
+            var chunks = [];
+            let i, len;
+            for (i = 0, len = inputValueNoSpace.length; i < len; i += 2) {
+                chunks.push(inputValueNoSpace.substring(i, i + 2));
+            }
+            let maxLength = 200000;
+            if (event.target.maxLength) {
+                maxLength = event.target.maxLength;
+            }
+            if (chunks.length > 0 && chunks[chunks.length - 1].length == 2 && 
+                chunks.length * 3 <= maxLength &&
+                oldValue.length < event.target.value.length) {
+                chunks.push("");
+            }
+            var outputValueSpaced = chunks.join(" ");
+            event.target.value = outputValueSpaced;
+            event.target.dataset.oldValue = event.target.value;
+            if (event.target.validity.patternMismatch){
+                if (!hexRegex.test(inputValueNoSpace)) {
+                    event.target.setCustomValidity("This field can only contain characters 0-9 and a-f.");
+                }
+                else {
+                    let minCoreLength = event.target.getAttribute("mincorelength");
+                    if (inputValueNoSpace.length < minCoreLength){
+                        event.target.setCustomValidity("This field must be at least " + minCoreLength + " characters (You are currently using " + inputValueNoSpace.length + " characters.");
+                    }
+                }
+            }
+            else {
+                event.target.setCustomValidity("");
+            }
+            break;
+        default:
+            console.log("Weird event listener: " + event);
+            break;
+    }
 }
 
 async function inputChanged(event){
-    // TODO: THIS
+    event.target.classList.add("changed");
+    let operation = event.target.dataset.operation;
+    if (operation) {
+        switch(operation){
+            case "showpassword":
+                let inputId = event.target.id.replace("show-", "");
+                let inputField = document.getElementById(inputId);
+                if (event.target.checked){
+                    inputField.type = "text";
+                }
+                else {
+                    inputField.type = "password";
+                }
+                break;
+            default:
+                return event;
+        }
+    }
 }
 
 async function logout(){
@@ -107,6 +213,10 @@ async function buttonClick(event){
                 // Only autologin if checked, and never clear messages except
                 // dumb ones first time (not after)
                 break;
+            case "back":
+                const currentPage = querySelector("div.current");
+                const nextPage = pages[currentPage.id.substr(0, currentPage.id.length - 5)].parent;
+                openPage(nextPage);
             default:
                 console.log("Weird button pressed: " + event.target.id);
                 return event;
@@ -194,7 +304,7 @@ async function addUserElements(pageId){
           console.log("Error getting user: " + error);
           logout();
           displayMessage("Error getting Username: " + error, "error");
-      	});
+        });
   }
   else {
       clearChildren(usernameElement);
@@ -203,7 +313,7 @@ async function addUserElements(pageId){
       loadCurrentKey(page);
   }
 }
-	
+  
 function loadKeys(page) {
     fetch(baseURL + "/yubikeys/get-key-name/", {
       method: "GET",
@@ -260,7 +370,9 @@ async function accessCachedKeys(query){
 }
 
 async function handleError(error) {
-    
+    // Error is any object, string, or error. 
+    // Possibly index them and display code with short description
+    console.error(error);
 }
 
 async function displayMessage(message, type){
@@ -282,22 +394,38 @@ async function addButtonListeners(section){
 async function addInputListeners(section){
   for (let input of section.getElementsByTagName("input")) {
       input.addEventListener("change", inputChanged);
-      input.addEventListener("input", inputUpdated);
+      if (input.dataset.listener) {
+        input.addEventListener("input", inputUpdated);
+      }
   }
 }
 
 async function addPageElements(pageId){
-  let page = document.getElementById(pageId);
+  let page = document;
+  if (pageId) {
+    page = document.getElementById(pageId);
+  }
   addFormListeners(page);
   addInputListeners(page);
   addButtonListeners(page);
 }
 
-async function openPageExternal(pageLoaction) {
+function closePage(currentURL) {
+    var tabQuery = browser.tabs.getCurrent();
+    tabQuery
+        .then(tab => browser.tabs.remove(tab.id))
+        .catch(error => {
+            console.error("Error removing external page: \n" + error);
+        });
+}
+
+async function openPageExternal(pageLocation) {
     return browser.tabs.create({url: pageLocation});
 }
 
-async function openPage(pageId) {
+async function openPage(pageId, message) {
+  let pageIdFull = pageId + "-page";
+  //TODO: Format page if opening main page externally
   if (pages[pageId].external) {
       return openPageExternal(pageId + ".html");
   }
@@ -310,15 +438,44 @@ async function openPage(pageId) {
           oldPageClassList.add("hidden");
       }
   }
+
+  document.getElementById("main-title")
+    .innerHTML = pages[pageId].title;
   
-  var newPage = document.getElementById(pageId + "-page");
+  var newPage = document.getElementById(pageIdFull);
   newPage.classList.add("current");
+  if (pages[pageId].parent != null && !pages[pageId].external){
+    document.getElementById("main-back-button").classList.remove("hidden");
+  }
+  else {
+    document.getElementById("main-back-button").classList.add("hidden");
+  }
   newPage.classList.remove("hidden");
   
-  addPageElements(newPage);
-  addUserElements(pageID);
+  addPageElements(pageIdFull);
+  addUserElements(pageIdFull);
   
   if (message !== 'undefined' && message != null) {
     return displayMessage(message);
   }
 }
+
+function initializePage(){
+  if (typeof document.body.dataset.internal !== "undefined" && document.body.dataset.internal === "true") {
+    fetch("javascript-es6/pages.json")
+      .then(response=>response.json())
+      .then(data => {
+          pages = data;
+          openPage("login");
+          
+      })
+      .catch(handleError);
+  }
+  else {
+    addPageElements();
+    addUserElements();
+    document.getElementById("main-back-button").classList.add("hidden");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);

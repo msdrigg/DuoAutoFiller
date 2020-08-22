@@ -20,8 +20,17 @@
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
-    "babelify": "^10.0.0"
+    "babel-polyfill": "^6.26.0",
+    "babelify": "^10.0.0",
+    "browserlist": "^1.0.1"
   },
+  "browserslist": [
+    "last 3 version",
+    ">= 5%",
+    "not IE 11",
+    "not IE_Mob 11",
+    "not dead"
+  ],
   "browserify": {
     "transform": [
       [

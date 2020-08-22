@@ -1,30 +1,37 @@
 {
     "login": {
         "external": false,
-        "title": "Login"
+        "title": "Login",
+        "parent": null
     },
     "home": {
         "external": false,
-        "title": null
+        "title": null,
+        "parent": "login"
     },
     "signup": {
         "external": true,
-        "title": Sign Up
+        "title": "Sign Up",
+        "parent": "login"
     },
     "newkey": {
         "external": true,
-        "title": New Key
+        "title": "New Key",
+        "parent": "home"
     },
     "account": {
         "external": true,
-        "title": "Account Options"
+        "title": "Account Options",
+        "parent": "home"
     },
     "recoverpassword": {
         "external": false,
-        "title": Recover Password
+        "title": "Recover Password",
+        "parent": "login"
     },
     "changepassword": {
         "external": true,
-        "title": Change Password
+        "title": "Change Password",
+        "parent": "account"
     }
 }
