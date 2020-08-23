@@ -42,7 +42,7 @@
                     </section>
                     <section>
                         <label for="signup-password">Password</label>
-                        <input autocomplete="new-password" type="text" data-listener="password" name="password" data-operation="checkpassword" id="signup-password" pattern="^(?=.*[A-Za-z]).*{9,}$" title="Please enter at leat one uppercase or lowercase letter" minlength="9" required>
+                        <input autocomplete="new-password" type="text" data-listener="password" name="password" data-operation="checkpassword" id="signup-password" pattern="(?=.*[A-Za-z]).{9,}" title="At least one uppercase or lowercase letter" minlength="9" required>
                         <div class="simple-checkbox">
                             <input data-operation="showpassword" name="show-password" type="checkbox" id="signup-show-password" checked>
                             <label class="inline small-spacing" for="signup-show-password">Show Password</label>

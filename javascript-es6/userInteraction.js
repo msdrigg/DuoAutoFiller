@@ -133,7 +133,7 @@ async function inputUpdated(event){
                 document.getElementById("password-length-explanation")
                     .style.color = "green";
             }
-            else if (event.target.classList.includes("changed") {
+            else if (event.target.classList.includes("changed")) {
                 document.getElementById("password-length-explanation")
                     .style.color = "red";
             }

@@ -6,8 +6,9 @@ let browserProxy = browser;
 let pages = "";
 let currentUsername = "";
 let currentToken = "";
+const baseURL = "https://spero.space";
 
-const LOGIN_ACTION = "/users/login/"
+const LOGIN_ACTION = "/users/login/";
 
 async function submitForm(event){
     let form = event.target;
@@ -99,6 +100,25 @@ async function inputUpdated(event){
             }
             else {
                 event.target.setCustomValidity("");
+            }
+            break;
+        case "password":
+            let lengthIndicator = document.getElementById("password-length-explanation");
+            let letterIndicator = document.getElementById("password-letter-explanation");
+            if (event.target.value.length > 8) {
+                lengthIndicator.style.color = "green";
+            }
+            else if (event.target.classList.contains("changed") || 
+                (lengthIndicator.style.color && lengthIndicator.style.color== "green")) {
+                lengthIndicator.style.color = "red";
+            }
+            if (new RegExp("^.*[A-Za-z]").test(event.target.value)){
+                document.getElementById("password-letter-explanation")
+                    .style.color = "green";
+            }
+            else if (event.target.classList.contains("changed") || 
+                (letterIndicator.style.color && letterIndicator.style.color== "green")) {
+                letterIndicator.style.color = "red";
             }
             break;
         default:
@@ -212,6 +232,18 @@ async function buttonClick(event){
                 // See if I can get through duo without clearing messages 
                 // Only autologin if checked, and never clear messages except
                 // dumb ones first time (not after)
+                break;
+            case "showadvanced":
+                console.log("Hi");
+                document
+                  .getElementById("advanced-settings")
+                  .classList.toggle("closed");
+                if (event.target.innerHTML == "Show"){
+                  event.target.innerHTML = "Hide";
+                }
+                else {
+                  event.target.innerHTML = "Show";
+                }
                 break;
             case "back":
                 const currentPage = querySelector("div.current");
@@ -388,6 +420,7 @@ async function addFormListeners(section){
 async function addButtonListeners(section){
   for (let potentialButton of section.querySelectorAll("button[data-operation], span[data-operation]")){
       potentialButton.addEventListener("click", buttonClick);
+      console.log(potentialButton);
   }
 }
 
