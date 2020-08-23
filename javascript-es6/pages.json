@@ -33,5 +33,11 @@
         "external": true,
         "title": "Change Password",
         "parent": "account"
+    },
+    "encryption": {
+        "external": true,
+        "title": "Encryption",
+        "parent": "signup",
+        "overrideBack": true
     }
 }

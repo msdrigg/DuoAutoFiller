@@ -156,6 +156,10 @@ async function askUser(){
     
 }
 
+function AuthenticationHeaders(token, mimeType){
+  return "";
+}
+
 async function deleteKey(key, showWarning) {
     // Deletes given key and displays a message describing the status of the deletion
     //    ("Key deleted" if key deleted and "No key to delete" if no key to delete)
@@ -214,9 +218,7 @@ async function buttonClick(event){
     else {
         switch (btnAction) {
             case "logout":
-                await logout();
-                return 
-                break;
+                return logout();
             case "edit-key":
                 //Get key-id from the event's target
                     // and then display the edit-key page 
@@ -246,9 +248,9 @@ async function buttonClick(event){
                 }
                 break;
             case "back":
-                const currentPage = querySelector("div.current");
+                const currentPage = document.querySelector("div.current");
                 const nextPage = pages[currentPage.id.substr(0, currentPage.id.length - 5)].parent;
-                openPage(nextPage);
+                return openPage(nextPage);
             default:
                 console.log("Weird button pressed: " + event.target.id);
                 return event;
@@ -459,6 +461,8 @@ async function openPageExternal(pageLocation) {
 async function openPage(pageId, message) {
   let pageIdFull = pageId + "-page";
   //TODO: Format page if opening main page externally
+  console.log(pageId);
+  console.log(pages);
   if (pages[pageId].external) {
       return openPageExternal(pageId + ".html");
   }
@@ -477,7 +481,7 @@ async function openPage(pageId, message) {
   
   var newPage = document.getElementById(pageIdFull);
   newPage.classList.add("current");
-  if (pages[pageId].parent != null && !pages[pageId].external){
+  if (pages[pageId].parent != null && (!pages[pageId].external || pages[pageId].overrideBack)){
     document.getElementById("main-back-button").classList.remove("hidden");
   }
   else {
@@ -485,8 +489,8 @@ async function openPage(pageId, message) {
   }
   newPage.classList.remove("hidden");
   
-  addPageElements(pageIdFull);
-  addUserElements(pageIdFull);
+  addPageElements();
+  addUserElements();
   
   if (message !== 'undefined' && message != null) {
     return displayMessage(message);
@@ -494,21 +498,25 @@ async function openPage(pageId, message) {
 }
 
 function initializePage(){
-  if (typeof document.body.dataset.internal !== "undefined" && document.body.dataset.internal === "true") {
-    fetch("javascript-es6/pages.json")
-      .then(response=>response.json())
-      .then(data => {
-          pages = data;
-          openPage("login");
-          
-      })
-      .catch(handleError);
-  }
-  else {
-    addPageElements();
-    addUserElements();
-    document.getElementById("main-back-button").classList.add("hidden");
-  }
+  fetch("javascript-es6/pages.json")
+    .then(response=>response.json())
+    .then(data => {
+        pages = data;
+        let initialPage = "login";
+        if (document.body.dataset.initialpage) {
+          initialpage = document.body.dataset.initialpage;
+        }
+        openPage(initialpage);
+        addPageElements();
+        addUserElements();
+        if (pages[pageId].parent != null && (!pages[pageId].external || pages[pageId].overrideBack)){
+            document.getElementById("main-back-button").classList.remove("hidden");
+        }
+        else {
+            document.getElementById("main-back-button").classList.add("hidden");
+        }
+    })
+    .catch(handleError);
 }
 
 document.addEventListener("DOMContentLoaded", initializePage);

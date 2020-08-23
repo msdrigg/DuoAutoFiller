@@ -188,16 +188,17 @@ section {
 .space-right{
     margin-right: calc(var(--main-font-size) * 17 / 11);
 }
-input:not(.search):focus{
-    box-shadow: inset 0 0 2px var(--neutralMidLightColor);
-    border: 2px solid var(--mainColorLight);
-    padding: 11px;
-}
 input.changed:valid {
     box-shadow: inset 0px 0px 1px 1px green;
 }
-input.changed:focus:invalid{
+input.changed:invalid{
     box-shadow: inset 0px 0px 1px 1px red;
+}
+input:not(.search):focus{
+    /*box-shadow: inset 0 0 2px 2px var(--mainColorLight);*/
+    /*box-shadow: none;*/
+    border: 2px solid var(--mainColorLight);
+    padding: 11px;
 }
 ul {
   margin: 2px 0;
