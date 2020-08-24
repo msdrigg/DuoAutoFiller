@@ -48,7 +48,7 @@
   "browser_action" : {
     "default_icon": "assets/LogoIconSmall.svg",
     "default_title": "AutoAuthenticator",
-    "default_popup": "html/main.html"
+    "default_popup": "html/main.html?location=internal9500"
   },
 
   "browser_specific_settings": {

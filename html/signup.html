@@ -8,11 +8,6 @@
          <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet"> 
                  <script src="javascript-es6/index.js"></script>
         <script src="javascript-es6/index.js"></script>
-
-<!-- 		<script src="/javascript/helper.js"></script>
-		<script src="/javascript/externalHandler.js"></script>
-		<script src="/javascript/signupSpecific.js"></script>
- -->
     </head>
 	<body>
         <div class="site-wrapper">
@@ -30,45 +25,47 @@
                     Sign Up
                 </h1>
             </div>
-			<form id="signup-form">
-                <div class="form-part">
-                    <section>
-                        <label for="signup-email">email</label>
-                        <input autocomplete="email" type="email" name="email" id="signup-email" required>
-                        <div class="simple-checkbox">
-                            <input name="remember-email" type="checkbox" id="signup-remember-email" checked>
-                            <label class="inline small-spacing" for="signup-remember-email">Remember email</label>
-                        </div>
-                    </section>
-                    <section>
-                        <label for="signup-password">Password</label>
-                        <input autocomplete="new-password" type="text" data-listener="password" name="password" data-operation="checkpassword" id="signup-password" pattern="(?=.*[A-Za-z]).{9,}" title="At least one uppercase or lowercase letter" minlength="9" required>
-                        <div class="simple-checkbox">
-                            <input data-operation="showpassword" name="show-password" type="checkbox" id="signup-show-password" checked>
-                            <label class="inline small-spacing" for="signup-show-password">Show Password</label>
-                        </div>
-                        <ul>
-                            <li id="password-length-explanation">More than 8 characters</li>
-                            <li id="password-letter-explanation">Contains a letter</li>
-                        </ul>
-                    </section>
-                    <section>
-                        <p class="explanation">
-                            AutoAuthenticate encrypts your sensitive data. This means that 
-                            <span class="important">
-                                if you forget your password, 
-                                you may lose access to your account. 
-                            </span>
-                            <span class="subtle" data-operation="openencryption">Read More.</span>
-                        </p>
-                        <div class="simple-checkbox">
-                            <input name="understand_risk" type="checkbox" id="signup-understand-risk" required>
-                            <label class="inline small-spacing" for="signup-understand-risk">I Understand</label>
-                        </div>
-                    </section>
-                </div>
-                <button type="submit" class="major">Sign Up</button>
-            </form>
+            <div id="signup-page" class="current">
+    			<form id="signup-form">
+                    <div class="form-part">
+                        <section>
+                            <label for="signup-email">email</label>
+                            <input autocomplete="email" type="email" name="email" id="signup-email" required>
+                            <div class="simple-checkbox">
+                                <input name="remember-email" type="checkbox" id="signup-remember-email" checked>
+                                <label class="inline small-spacing" for="signup-remember-email">Remember email</label>
+                            </div>
+                        </section>
+                        <section>
+                            <label for="signup-password">Password</label>
+                            <input autocomplete="new-password" type="text" data-listener="password" name="password" data-operation="checkpassword" id="signup-password" pattern="(?=.*[A-Za-z]).{9,}" title="At least one uppercase or lowercase letter" minlength="9" required>
+                            <div class="simple-checkbox">
+                                <input data-operation="showpassword" name="show-password" type="checkbox" id="signup-show-password" checked>
+                                <label class="inline small-spacing" for="signup-show-password">Show Password</label>
+                            </div>
+                            <ul>
+                                <li id="password-length-explanation">More than 8 characters</li>
+                                <li id="password-letter-explanation">Contains a letter</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <p class="explanation">
+                                AutoAuthenticate encrypts your sensitive data. This means that 
+                                <span class="important">
+                                    if you forget your password, 
+                                    you may lose access to your account. 
+                                </span>
+                                <span class="subtle" data-operation="openencryption">Read More.</span>
+                            </p>
+                            <div class="simple-checkbox">
+                                <input name="understand_risk" type="checkbox" id="signup-understand-risk" required>
+                                <label class="inline small-spacing" for="signup-understand-risk">I Understand</label>
+                            </div>
+                        </section>
+                    </div>
+                    <button type="submit" class="major">Sign Up</button>
+                </form>
+            </div>
             <div class="slider-wrapper closed">
                 <div id="message-menu" class="slider padded">
                     <div id="message-content" class="message-content explanation">

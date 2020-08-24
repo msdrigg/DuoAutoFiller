@@ -14,8 +14,8 @@
     // session_counter: session counter
 // }
 
-//Store keys in database storage encrypted
-
+// Store keys in database storage encrypted
+ 
 const SYNC_ALARM_NAME = "autoauthenticate-sync-9858324374";
 let lastSyncTime = 0;
 
@@ -30,11 +30,6 @@ async function loadKeyCache(existingKeys){
     // ServerResponse with array of
     //   key_id: content
     //   for all not-matching key_ids
-}
-
-async function setupSyncOperation(){
-    // Initialize all persistent variables (database acces, etc.)
-    // Replace if they are already here
 }
 
 async function stopSyncOperation(){
@@ -60,10 +55,4 @@ async function startSyncOperation(repeatCycle){
         await stopSyncOperation()
         return browser.alarms.create(SYNC_ALARM_NAME, {"periodInMinutes", 15});
     }
-}
-
-async function syncStorage(){
-    // Sync the storage.
-        // Upload last_sync_time and server responds with all new changes
-        // Add new keys and update last_sync_time
 }

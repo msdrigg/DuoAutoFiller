@@ -9,13 +9,14 @@ let currentToken = "";
 const baseURL = "https://spero.space";
 
 const LOGIN_ACTION = "/users/login/";
+const HTML_ROOT = "/html/";
 
 async function submitForm(event){
     let form = event.target;
     if (typeof form.action === "undefined" || form.action == null){
         return event;
     }
-    event.preventDefault();
+    // event.preventDefault();
     let submittedForm = new FormData();
     for (input of form.getElementsByTagName("input")) {
         if (typeof input.name !== "undefined" && input.name != null){
@@ -236,7 +237,6 @@ async function buttonClick(event){
                 // dumb ones first time (not after)
                 break;
             case "showadvanced":
-                console.log("Hi");
                 document
                   .getElementById("advanced-settings")
                   .classList.toggle("closed");
@@ -248,9 +248,11 @@ async function buttonClick(event){
                 }
                 break;
             case "back":
-                const currentPage = document.querySelector("div.current");
-                const nextPage = pages[currentPage.id.substr(0, currentPage.id.length - 5)].parent;
-                return openPage(nextPage);
+                return runIfExternal(()=>{history.back();}, ()=>{
+                  const currentPage = document.querySelector("div.current");
+                  const nextPage = pages[currentPage.id.substr(0, currentPage.id.length - 5)].parent;
+                  return openPage(nextPage);
+                });
             default:
                 console.log("Weird button pressed: " + event.target.id);
                 return event;
@@ -422,7 +424,6 @@ async function addFormListeners(section){
 async function addButtonListeners(section){
   for (let potentialButton of section.querySelectorAll("button[data-operation], span[data-operation]")){
       potentialButton.addEventListener("click", buttonClick);
-      console.log(potentialButton);
   }
 }
 
@@ -454,46 +455,49 @@ function closePage(currentURL) {
         });
 }
 
-async function openPageExternal(pageLocation) {
-    return browser.tabs.create({url: pageLocation});
-}
-
-async function openPage(pageId, message) {
-  let pageIdFull = pageId + "-page";
-  //TODO: Format page if opening main page externally
-  console.log(pageId);
-  console.log(pages);
-  if (pages[pageId].external) {
-      return openPageExternal(pageId + ".html");
-  }
-  
-  var oldPage = document.querySelectorAll("div.current");
-  if (typeof oldPage !== "undefined" && oldPage != null) {
-      for (let page of oldPage) {
-          let oldPageClassList = page.classList;
-          oldPageClassList.remove("current");
-          oldPageClassList.add("hidden");
-      }
-  }
-
-  document.getElementById("main-title")
-    .innerHTML = pages[pageId].title;
-  
-  var newPage = document.getElementById(pageIdFull);
-  newPage.classList.add("current");
-  if (pages[pageId].parent != null && (!pages[pageId].external || pages[pageId].overrideBack)){
-    document.getElementById("main-back-button").classList.remove("hidden");
+async function runIfExternal(ifTrue, ifFalse) {
+  // TODO: Get this fixed. Replace with "Run in activetab" if not possible
+  let url = new URL(window.location.href);
+  let location = url.searchParams.get("location");
+  if (typeof location !== "undefined" && location === "internal9500" ){
+    return ifFalse();
   }
   else {
-    document.getElementById("main-back-button").classList.add("hidden");
+    return ifTrue();
   }
-  newPage.classList.remove("hidden");
-  
-  addPageElements();
-  addUserElements();
-  
-  if (message !== 'undefined' && message != null) {
-    return displayMessage(message);
+}
+
+async function openPageExternal(pageLocation) {
+  return runIfExternal(()=>{window.location.href = pageLocation;}, 
+      ()=>{browser.tabs.create({url: pageLocation});});
+}
+
+async function openPage(pageId) {
+  let pageProperties = pages[pageId];
+  if (pageProperties.external) {
+      return openPageExternal(HTML_ROOT + pageId + ".html");
+  }
+  else {
+    let pageIdFull = pageId + "-page";
+    var oldPage = document.querySelectorAll("div.current");
+    if (typeof oldPage !== "undefined" && oldPage != null) {
+        for (let page of oldPage) {
+            let oldPageClassList = page.classList;
+            oldPageClassList.remove("current");
+            oldPageClassList.add("hidden");
+        }
+    }
+    document.getElementById("main-title")
+      .innerHTML = pageProperties.title;
+    var newPage = document.getElementById(pageIdFull);
+    newPage.classList.add("current");
+    if (pageProperties.parent != null && (!pageProperties.external || pageProperties.overrideBack)){
+      document.getElementById("main-back-button").classList.remove("hidden");
+    }
+    else {
+      document.getElementById("main-back-button").classList.add("hidden");
+    }
+    newPage.classList.remove("hidden");
   }
 }
 
@@ -502,14 +506,13 @@ function initializePage(){
     .then(response=>response.json())
     .then(data => {
         pages = data;
-        let initialPage = "login";
-        if (document.body.dataset.initialpage) {
-          initialpage = document.body.dataset.initialpage;
-        }
-        openPage(initialpage);
+        // console.log("Page loaded");
         addPageElements();
         addUserElements();
-        if (pages[pageId].parent != null && (!pages[pageId].external || pages[pageId].overrideBack)){
+        let pageId = document.querySelector("div.current").id;
+        pageId = pageId.substring(0, pageId.length - 5);
+        let pageProperties = pages[pageId];
+        if (pageProperties.parent != null && (!pageProperties.external || pageProperties.overrideBack)){
             document.getElementById("main-back-button").classList.remove("hidden");
         }
         else {

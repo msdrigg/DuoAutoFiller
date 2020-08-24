@@ -8,13 +8,8 @@
          <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet"> 
                  <script src="javascript-es6/index.js"></script>
         <script src="javascript-es6/index.js"></script>
-
-<!-- 		<script src="/javascript/helper.js"></script>
-		<script src="/javascript/externalHandler.js"></script>
-		<script src="/javascript/signupSpecific.js"></script>
- -->
     </head>
-	<body data-initialpage="encryption">
+	<body>
         <div class="site-wrapper">
             <div class="header flexor">
                 <!--CSS: Make buttons hidden by default until javascript has loaded-->
@@ -30,7 +25,7 @@
                     Encryption
                 </h1>
             </div>
-            <div id="encryption-page current">
+            <div id="encryption-page" class="current">
                 <p class="explanation">
                     AutoAuthenticate uses end-to-end encryption (E2EE). E2EE means that our servers never see your sensitive passwords or keys. All your data is encrypted in your browser with a key that only you know before it is stored externally on AutoAuthenticate's servers. When you log in on another device, you download this encrypted data and decrypt it on the browser. Even if our servers were to be hacked, hackers would only have access to encrypted data that would be useless without your password. This technique is the same used by cutting edge password managers and is trusted by the cybersecurity community worldwide.
                 </p>

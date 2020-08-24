@@ -2,42 +2,50 @@
     "login": {
         "external": false,
         "title": "Login",
-        "parent": null
+        "parent": null,
+        "file": "main"
     },
     "home": {
         "external": false,
         "title": null,
-        "parent": "login"
+        "parent": "login",
+        "file": "main"
     },
     "signup": {
         "external": true,
         "title": "Sign Up",
-        "parent": "login"
+        "parent": "login",
+        "file": "signup"
     },
     "newkey": {
         "external": true,
         "title": "New Key",
-        "parent": "home"
+        "parent": "home",
+        "file": "newkey"
     },
     "account": {
         "external": true,
         "title": "Account Options",
-        "parent": "home"
+        "parent": "home",
+        "file": "account"
     },
     "recoverpassword": {
         "external": false,
         "title": "Recover Password",
-        "parent": "login"
+        "parent": "login",
+        "file": "recoverpassword"
     },
     "changepassword": {
         "external": true,
         "title": "Change Password",
-        "parent": "account"
+        "parent": "account",
+        "file": "changepassword"
     },
     "encryption": {
         "external": true,
         "title": "Encryption",
         "parent": "signup",
-        "overrideBack": true
+        "overrideBack": true,
+        "file": "encryption"
     }
 }
