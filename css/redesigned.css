@@ -197,8 +197,8 @@ input.changed:invalid{
 input:not(.search):focus{
     /*box-shadow: inset 0 0 2px 2px var(--mainColorLight);*/
     /*box-shadow: none;*/
-    border: 2px solid var(--mainColorLight);
-    padding: 11px;
+    /* border: 2px solid var(--mainColorLight); */
+    /* padding: 11px; */
 }
 ul {
   margin: 2px 0;
@@ -501,6 +501,11 @@ span.subtle.media-unblock{
     }
     button {
         width: 100%;
+    }
+}
+@media (max-width: 400px) {
+    .site-wrapper {
+        min-width: 0px;
     }
 }
 /*@media (min-height: 800px) {
