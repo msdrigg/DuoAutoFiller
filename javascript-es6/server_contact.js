@@ -11,6 +11,14 @@ async function logout(){
     // TODO: THIS
 }
 
+async function uploadFormData(urlEnding, formData){
+    return fetch(baseURL + urlEnding, {
+        method: "POST",
+        credentials: 'include',
+        body: formData
+    })
+}
+
 export async function getCredentials(email, password) {
     return fetch(baseURL + "/users/login/", {
             credentials: 'include',
@@ -106,7 +114,6 @@ export async function deleteKey(key, showWarning) {
         }
     })
     // .catch(error => displayMessage("Unable to delete key with error: " + error, 'error'));
-
 }
 
 function loadKeys(page) {

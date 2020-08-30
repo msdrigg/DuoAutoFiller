@@ -1,3 +1,5 @@
+import uploadFormData from "server_contact"
+
 async function submitForm(event){
     let form = event.target;
     if (typeof form.action === "undefined" || form.action == null){
@@ -10,12 +12,7 @@ async function submitForm(event){
             submittedForm.append(input.name, input.value.replace(/\s/g, ''));
         }
     }
-    var newKeyURL = baseURL + form.action;
-    return sentPromise = fetch(newKeyURL, {
-        method: "POST",
-        headers: AuthenticationHeaders(),
-        body: submittedForm
-    })
+    return uploadFormData(form.action, submittedForm)
     .then(response=>response.json())
     .then(data=>{
         if (data.response === "success") {
