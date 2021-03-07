@@ -1,4 +1,4 @@
-# DuoAutoFiller
+# AutoAuthenticate
 ## Project Goals
 This project is a browser extension that can provide auto-authentication keys. 
 This product will provide Time-based one time passcodes, RSA SecureID passcodes, Yubikey passcodes and any other algorithms I can think to implement
