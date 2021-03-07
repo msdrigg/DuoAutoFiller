@@ -1,0 +1,59 @@
+{
+
+  "manifest_version": 2,
+  "name": "AutoAuthenticator",
+  "version": "1.2",
+
+  "icons": {
+    "48": "assets/LogoIconLarge.svg",
+    "96": "assets/LogoIconLarge.svg",
+    "32": "assets/LogoIconSmall.svg",
+    "64": "assets/LogoIconLarge.svg"
+  },
+
+  "description": "Automatically Generates and Fills 2FA Keys",
+  
+  "web_accessible_resources": [
+    "javascript/*.js",
+    "javascript-es6/*.js",
+    "javascript-es6/*.json",
+    "javascript-es6/dist/bundle.js",
+    "html/*.html",
+    "css/*.css",
+    "assets/*.svg",
+    "assets/*.png",
+    "icons/*.png",
+    "icons/*.svg"
+  ],
+
+  "permissions": [
+    "https://spero.space/*",
+    "storage",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  
+  "background": {
+    "scripts": ["sync_storage.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.duosecurity.com/*"],
+      "all_frames": true,
+      "js": ["/javascript/injection.js"]
+    }
+  ],    
+
+  "browser_action" : {
+    "default_icon": "assets/LogoIconSmall.svg",
+    "default_title": "AutoAuthenticator",
+    "default_popup": "html/main.html?location=internal9500"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "DuoAutoFiller@spero.space"
+    }
+  }
+}

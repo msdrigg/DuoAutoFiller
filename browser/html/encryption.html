@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <title>AutoAuthenticate</title>
+        <base href="../">
+        <link rel="stylesheet" href="css/redesigned.css"></link>
+         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet"> 
+                 <script src="javascript-es6/index.js"></script>
+        <script src="javascript-es6/index.js"></script>
+    </head>
+	<body>
+        <div class="site-wrapper">
+            <div class="header flexor">
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="main-back-button" data-operation="back" class="tiny flexor flex-center small-bottom-space right-space">
+                    <img class="icon" src="assets/ArrowIcon.svg">
+                    <label for="back" class="inner-spaced">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
+            <div class="title">
+                <h1 id="main-title">
+                    Encryption
+                </h1>
+            </div>
+<<<<<<< HEAD
+            <div id="default-page" class="current">
+=======
+            <div id="encryption-page" class="current">
+>>>>>>> 100207111650675b71e22122e18feca172673090
+                <p class="explanation">
+                    AutoAuthenticate uses end-to-end encryption (E2EE). E2EE means that our servers never see your sensitive passwords or keys. All your data is encrypted in your browser with a key that only you know before it is stored externally on AutoAuthenticate's servers. When you log in on another device, you download this encrypted data and decrypt it on the browser. Even if our servers were to be hacked, hackers would only have access to encrypted data that would be useless without your password. This technique is the same used by cutting edge password managers and is trusted by the cybersecurity community worldwide.
+                </p>
+                <p class="explanation">
+                    While this precaution provides security, they mean that we can not reset your password for you. If you forget your password, you may lose all of your keys. Take care to make a memorable password. We suggest using a combination of words and symbols like "Kevin?Monitors2Portugal3Bingo!"
+                </p>
+                <div class="slider-wrapper closed">
+                    <div id="message-menu" class="slider padded">
+                        <div id="message-content" class="message-content explanation">
+                        </div>
+                        <div id="message-response" class="message-buttons">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+</html>

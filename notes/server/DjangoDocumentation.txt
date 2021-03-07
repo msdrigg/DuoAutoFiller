@@ -1,0 +1,51 @@
+Django structure notes
+
+##TODO: 
+    Finish Yubikey model
+    Add email templates and a test file email backend
+    Test everything
+    Add admin's for all models
+
+
+Users app (not much different from default)
+    Views:
+        verify
+        gettoken
+        signup
+        resetpassword
+    Models:
+        User
+            FirstName, LastName
+            Username
+            Email
+            Password
+    Forms:
+        CreateForm
+    Admin:
+        Change form, listing all current tokens
+        Delete allowed
+    
+OTP app
+    Views:
+        generate
+        newkey
+        deletekey
+    Models:
+        Yubikey
+            User
+            Public ID
+            Private ID
+            Usage Counter
+            Session ID
+            Secret Key
+            Key Name
+    Forms:
+        CreateForm
+            Public ID
+            Private ID
+            Secret Key
+            Key Name
+    Admin:
+        Yubikey, change form
+        
+        

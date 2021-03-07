@@ -1,0 +1,86 @@
+TODO
+
+1) Write tests for server
+    c) Users views
+    d) Yubikeys views
+
+2) Deploy server on Raspberry Pi
+    Fix iptables
+
+3) Add End-To-End encryption to server-saved data
+
+4) Add multiple keys for users
+
+5) Add better interaction with specific keys for users
+
+6) Connect with unique UUID for each app (possibly use this to have
+    TIME TO LIVE on login)
+
+7) Reset tokens periodically? (7 days, or user-determined?)
+
+8) Rework signup form (email only, no repeats, no name)
+    Validation Email
+    Step by step, email first, privacy policy
+        I wont share data with anyone except 3rd parties who I 
+            need to use to get the thing working
+            I also will encrypt sensitive keys on my server
+
+9) Rework UI design, compare to apps, other add ons, websites
+    Gramerly signup is nice (form field hints top right)
+    Floating placeholders (placeholders float upward when user is entering)
+    Use autocomplete html on all fields well (also use this to look for divs for psws?)
+    Show passwords (Maybe by default with a hide password button)
+    Switch to a back button at the top rather than a cancel button
+    Consider using aria for disability, and <label for="whatever">
+    Group field elements (Private/Public key)
+    Remove repeated password, username, first/last name. Stick with just email
+    Make "Selected" act like "Hover" on buttons (or bolder shadow)
+    Match field length to field 
+    Better validation while typing (checklist that gets checked, or 
+        popup warning for invalid input)
+    Better format error messages (popup over html body)
+    Add css transitions
+    Remove placeholder text, but try floating labels
+    Make validation clear, no tooltip, wait for field confirmation to display errors
+    Put password and confirm parellel together. Make sign in and login reverse polarity
+    Make "submit" button say what it actually does
+    Disable double click of buttons where it could be a problem 
+    Add autofocus on first form element
+    Show password radio button automatically checked
+    Allow changing account information (adding name, changing password)
+    Make first/last name optional
+    Add delete user fully
+    make user ID case insensitive
+    
+
+10) Add static elements to website, privacy policy, developer contact
+
+11) Add marketing to main website, bragging about encryption
+
+12) Implement my own more-secure token validation
+
+13) Switch to local browser storage
+
+14) New E2EE and enhanced encryption
+    PBKDF2 for derived key derivation
+        Great npm package for this
+    Check out lastpass whitepaper for refresher
+    they user PBKDF2(Sha256, password, username, 100100, 256) for encryption key
+    and PBKDF2(sha256, password, username, 100101, 256) for server password storage
+        Only one extra hash applied, so no unnecessary hashing necessary client-side
+        Use this on top of djangos password hashing and storing
+    Are there browser speed-up functions I can use for hashing my own?
+
+15 Update javascript code to ES6 and use npm with require('package') and 
+    let and classes and all that crap
+
+16) Add handling of RSA keys (with and without pins)
+    Also: look for other OTP regimins to model
+    Also: Rebrand to a OTP simulator
+    RSA, HMAC, FIDO, U2F? Which can I do through an extension?
+
+13) Add autofill forms for non-duo websites (User -selected)
+
+14) Develop LOGO
+
+15) Add Refresh button, and background pre-loading actions

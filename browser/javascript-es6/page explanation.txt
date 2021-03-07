@@ -1,0 +1,6 @@
+Open page:
+	Open it in the right place (internal, external)
+	Then initialize page
+	(Two different steps)
+	Make sure back buttons and initial pages are initialized correctly
+	Get the html consistent

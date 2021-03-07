@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>AutoAuthenticate</title>
+        <base href="../">
+        <link rel="stylesheet" href="css/redesigned.css">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet">
+        <script src="javascript-es6/index.js"></script>
+    </head>
+    <body data-internal="true" data-initialpage="login">
+        <div class="site-wrapper">
+            <div class="header flexor">
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button id="main-back-button" data-operation="back" class="tiny flexor flex-center small-bottom-space right-space">
+                    <img class="icon" src="assets/ArrowIcon.svg">
+                    <label for="back" class="inner-spaced">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
+            <div class="hidden">
+                <h1 id="main-title">
+                    LOADING...
+                </h1>
+            </div>
+            <div id="login-page" class="current">
+                <form id="login-form">
+                    <div class="form-part">
+                        <section>
+                            <label for="login-email">Email</label>
+                            <input autocomplete="email" type="email" name="email" id="login-email" required>
+                            <div class="simple-checkbox">
+                                <input name="remember-email" type="checkbox" id="login-remember-email" checked>
+                                <label class="inline small-spacing" for="login-remember-email">Remember Email</label>
+                            </div>
+                        </section>
+                        <section>
+                            <div class="flexor flex-seperate">
+                                <label for="login-password">Password</label>
+                                <span class="subtle small-spacing" data-operation="openrecoverpassword">
+                                Forgot Password</span>
+                            </div>
+                            <input autocomplete="new-password" type="text" name="password" id="login-password" required>
+                            <div class="simple-checkbox">
+                                <input data-operation="showpassword" name="show-password" type="checkbox" id="login-show-password" checked>
+                                <label class="inline small-spacing" for="login-show-password">Show Password</label>
+                            </div>
+                        </section>
+                    </div>
+                    <button type="submit" class="major">Login</button>
+                </form>
+                <button type="button" class="minor" data-operation="opensignup">Create a New Account</button>
+            </div>
+            <!-- <div id="home-page" class="hidden"> -->
+            <div id="home-page" class="hidden">
+                <!-- TODO: Fix all this -->
+                <div class="focus-wrapper">
+                <!-- <div class="focus-wrapper hidden key-data"> -->
+                        <!-- TOOD: Kill form submission, but search async everytime input is given (filtering out new each time, caching). Display completeness when enter pressed -->
+                    <form class="invisible">
+                        <input class="search" type="text" placeholder="Search...">
+                    </form>
+                    <ul class="key-list">
+                        <li class="key-wrapper flexor flex-seperate">
+                                <h3 class="key-name">Key Name</h3>
+                                <div class="spacer"></div>
+                                <!-- <div class="key-button-wrapper"> -->
+                                    <div>
+                                        <button id="fill-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/FillIcon.svg">
+                                        </button>
+                                        <button id="copy-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/CopyIcon.svg">
+                                        </button>
+                                        <button id="copy-button" class="copy-button">
+                                            <img class="copy-icon" src="assets/EditIcon.svg">
+                                        </button>
+                                    </div>
+                                <!-- </div> -->
+                                <div id="copy-explanation" class="explanation hidden">Copy Next Passcode</div>
+                        </li>
+                    </ul>
+                </div>
+                <button type="button" class="minor" data-operation="opennewkey">New Key</button>
+                <!-- TODO: Make this rely on "selected" css property rather than javascript -->
+                    <!-- also check out hover highlighting -->
+                <button id="dropdown-user" type="dropdown" class="minor flexor flex-seperate dropdown">
+                    <div class="vert-container inline">
+                        <div class="icon-wrapper">
+                            <img class="icon vert-center inline" src="assets/UserIcon.svg">
+                        </div>
+                        <label for="dropdown-user" class="space-left vert-center">Loading</label>
+                    </div>
+                    <img class="icon rightside" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                </button>
+            </div>
+            <div id="recoverpassword-page" class="hidden">
+                <form id="recoverpassword-form">
+                    <section>
+                        <label for="recoverpassword-email">Email Address</label>
+                        <input type="email" name="email" id="recoverpassword-email" required>
+                    </section>
+                    <p class="explanation">
+                        Enter your email address and 
+                        we will send you recovery instructions.
+                    </p>
+                    <button type="submit" class="major">Send Recovery Email</button>
+                </form>
+            </div>
+            <div class="slider-wrapper closed">
+                <div id="message-menu" class="slider padded">
+                    <div id="message-content" class="message-content explanation">
+                    </div>
+                    <div id="message-response" class="message-buttons">
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+</html>

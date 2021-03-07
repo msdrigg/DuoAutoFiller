@@ -1,0 +1,269 @@
+:root {
+/*BEGIN COLORS*/
+    --neutralMidDarkColor: #595758;
+    --neutralMidLightColor: #929BA0;
+    --neutralMidMidColor: #687278;
+    --neutralLightColor: #ffffff;
+    --neutralDarkColor: #393E41;
+    --accentColor: #ffc09f;
+    --accentColorDark: #FF955C;
+    --secondaryColor: #79addc;
+    --secondaryColorDark: #327FC3;
+    --mainColor: #6dbf50;
+    --textColor: #000;
+/*END COLORS*/
+    --desktop-font-size: 16px;
+    --mobile-font-size: 22px;
+}
+body {
+    background-color: var(--neutralLightColor);
+    color: var(--textColor);
+    min-width: 250px;
+    min-width: 250px;
+    min-width: 250px;
+    font-family: sans-serif;
+}
+.restricted {
+    max-width:300px;
+}
+.main-content {
+    display: block;
+    float: none;
+    margin: 10px auto;
+    max-width: 500px;
+  
+}
+.information-wrapper {
+    float: right;
+    position: relative;
+    margin: 0 0 0 0;
+    height: 100%;
+    padding: 3px 5px;
+    color: var(--secondaryColor);
+    background-color: var(--neutralMidMidColor);
+    border-radius: 4px;
+}
+.focus-wrapper {
+    display: inline-block;
+    position: relative;
+    margin: 0 auto;
+    height: 100%;
+    width: 90%; /* fallback */
+    width: calc(100% - 30px); /* full width minus padding */
+    padding: 10px 15px;
+    vertical-align: middle;
+    /* color: var(--mainColor); */
+    background-color: var(--mainColor);
+    border-radius: 4px;
+    height: 45px;
+}
+input {
+  padding: 15px;
+  width: 90%; /* fallback */
+  width: calc(100% - 30px); /* full width minus padding */
+  border: 1px solid #ccc;
+  font-size: 22px; /* fallback */
+  font-size: var(--mobile-font-size);
+}
+h1 {
+  display: inline;
+  font-size: 28px;
+  margin: 0 0 0 0;
+    font-family: 'Oswald', sans-serif;    
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+}
+div.header {
+  padding: 0 0 0 0;
+  border-bottom: 1px solid #ccc;
+  margin: 0 0 20px 0;
+  padding: 0 0 5px 0;
+  display: block;
+}
+h3, h2 {
+  position: relative;
+  font-size: 24px;
+  margin: 0 0 0 0;
+  padding: 1px 2px;
+  font-family: sans-serif;
+}
+h2 {
+  font-size: 26px;
+  display: block;
+  float: left;
+  padding: 10px 0;
+  font-family: sans-serif;
+}
+.content {
+    float: right;
+    display: block;
+    position: relative;
+    height: 100%;
+    margin: 0 0 0 0;
+    padding: 10px 10px;
+    font-size: 24px;
+}
+.raise {
+    transform: translateY(-8px);
+}
+.key-sub-wrapper{
+    display: inline-block;
+    width: 100%;
+    padding: 0 0px;
+}
+section {
+    margin: 10px 0px;
+    border-radius: 4px;
+    max-width: 500px;
+}
+.explanation {
+    float: left;
+    position: absolute;
+    bottom: 0;
+    margin-top:px;
+    margin: 0 0 0 0;
+    padding: 8px 12px;
+    font-size: 16px;
+    font-weight:600;
+    vertical-align: middle;
+}
+.data-key {
+    float: left;
+    display: block;
+    position: absolute;
+    top: 50%;
+    margin-top:-26px;
+    height: 26px;
+}
+.key-button-wrapper{
+    float: right;
+    display: block;
+    height: 100%;
+    padding: 10px 15px;
+    margin: 0 0 0 0;
+}
+svg.copy-icon{
+    width: 15px;
+    height: 21px;
+    transform: translate(-1.5px,-4.5px);
+}
+.copy-button {
+    float: right;
+    display: block;
+    border-radius: 30px;
+    height: 33px;
+    width: 33px;
+    margin: 0 0 0 0;
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    margin-top:-16.5px;
+}
+
+form {
+    display: block;
+    float: none;
+    position: relative;
+    margin: 5px 0;
+}
+form section {
+  margin: 0 0 20px 0;
+  position: relative; /* for password toggle positioning */
+}
+.hidden {
+	display: none;
+}
+button {
+  display: inline;
+  background-color: var(--neutralMidLightColor);
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  color: #444;
+  cursor: pointer;
+  margin: 3px 0 0 0;
+  padding: 10px;
+}
+button:hover {
+  background-color: var(--neutralMidMidColor);
+  color: black;
+}
+div.button-wrapper {
+    display: flex;
+}
+button {
+    flex: 1 1 auto;
+}
+button.major {
+    background-color: var(--secondaryColor);
+    min-width: 40%;
+    flex-grow: 2;
+}
+.major:hover {
+    background-color: var(--secondaryColorDark);
+}
+label {
+  display: block;
+  /* font-size: 20px; */
+  /* font-size: var(--mobile-font-size); */
+  /* font-weight: 500; */
+  margin: 0 0 3px 0;
+}
+input:selected {
+    box-shadow: none;
+}
+input.changed:valid {
+    box-shadow: 0px 0px 1px 1px green;
+}
+input:focus:invalid{
+    box-shadow: none;
+}
+input.changed:focus:invalid{
+    box-shadow: 0px 0px 1px 1px red;
+}
+input.regex-fail::after {
+    content: "Input invalid";
+}
+  h1 {
+    font-size: 28px;
+    font-size: calc(2 * var(--desktop-font-size));
+    font-weight: 500;
+    margin: 0 0 80px 0;
+    
+  }
+  h3 {
+    font-size: 24px;
+    font-weight: calc(1.5 * var(--desktop-font-size));
+  }
+  body {
+    margin: 20px 50px;
+  }  
+  button {
+    font-size: 14px; /* fallback */
+    font-size: var(--desktop-font-size);
+  }
+  h1 {
+    font-size: 28px;
+    font-size: calc(2 * var(--desktop-font-size));
+    font-weight: 500;
+    margin: 0 0 80px 0;
+  }
+  h3 {
+    font-size: 24px;
+    font-weight: calc(1.5 * var(--desktop-font-size));
+  }
+  input {
+    font-size: 14px; /* fallback */
+    font-size: var(--desktop-font-size);
+  }
+  label {
+    font-size: 14px; /* fallback */
+    font-size: var(--desktop-font-size);
+  }
+  body {
+    margin: 35px 50px;
+  }
+@media (min-width: 800px) {
+}
+/* Need to implement: All form validation with explanations */
+                   /* Button message types: "error", "warning", "default", "success" */

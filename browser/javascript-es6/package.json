@@ -1,0 +1,47 @@
+{
+  "name": "javascript-es6",
+  "version": "1.0.0",
+  "description": "ES6 Backend for AutoAuthenticator",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify index.js -o dist/bundle.js",
+    "watch": "watchify index.js -o dist/bundle.js -v"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msdrigg/DuoAutoFiller"
+  },
+  "author": "Martin Driggers",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/preset-env": "^7.11.0",
+    "browserify": "^16.5.2",
+    "crypto": "^1.0.1",
+    "watchify": "^3.11.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "babel-polyfill": "^6.26.0",
+    "babelify": "^10.0.0",
+    "browserlist": "^1.0.1"
+  },
+  "browserslist": [
+    "last 3 version",
+    ">= 5%",
+    "not IE 11",
+    "not IE_Mob 11",
+    "not dead"
+  ],
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "@babel/preset-env"
+          ]
+        }
+      ]
+    ]
+  }
+}

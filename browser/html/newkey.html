@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <title>AutoAuthenticate</title>
+        <base href="../">
+        <link rel="stylesheet" href="css/redesigned.css"></link>
+         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Nunito:wght@600&family=Open+Sans&family=Oswald:wght@300&display=swap" rel="stylesheet"> 
+        <script src="javascript-es6/index.js"></script>
+        <!-- <script src="javascript/helper.js"></script> -->
+        <!-- <script src="/javascript/externalHandler.js"></script> -->
+        <!-- <script src="/javascript/newkeySpecific.js"></script> -->
+    </head>
+	<body>
+        <div class="site-wrapper">
+            <div class="header flexor">
+                <!--CSS: Make buttons hidden by default until javascript has loaded-->
+                <button role="navigation" id="back" data-operation="back" class="tiny flex-center flexor small-bottom-space right-space">
+                    <img class="icon" src="assets/ArrowIcon.svg">
+                    <label for="back" class="inner-spaced">Back</label>
+                </button>
+                <img class="logo" src="assets/LogoIconLarge.svg">
+                <span class="logo transient">AutoAuthenticate</span>
+            </div>
+            <div class="title">
+                <h1 id="main-title">
+                    New Key
+                    <button id="dropdown-user" type="dropdown" class="tiny dropdown vert-container rightside">
+                            <p>
+                            <div class="leftside">
+                                <div class="icon-wrapper">
+                                    <img class="icon vert-center inline" src="assets/UserIcon.svg">
+                                </div>
+                            </div>
+                            <label for="dropdown-user" class="rightside">Loading</label>
+                        </p>
+                        <img class="icon outside-right" style="transform: rotate(270deg)" src="assets/ArrowIcon.svg">
+                    </button>
+                </h1>
+            </div>
+            <div id="newkey-page" class="current">
+                <form id="newkey-form">
+                    <div class="form-part">
+                        <div class="title">
+                            <h2>
+                                Site Information
+                            </h2>
+                        </div>
+                        <section>
+                            <!-- TODO: Add little information icons or "Why?" hover elements to explain need for info -->
+                            <label for="key-name">Key Name</label>
+                            <input id="key-name" type="text" name="key_name" required maxlength="40">
+                        </section>
+                        <section>
+                            <label for="url">URL</label>
+                            <input id="url" type="text" name="url" maxlength="255">
+                        </section>
+                        <section>
+                            <div class="simple-checkbox inline">
+                                <input name="enable-autofill" type="checkbox" id="enable-autofill" checked>
+                                <label class="inline small-spacing" for="enable-autofill">Enable Autofill</label>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="form-part">
+                        <div class="title">
+                            <h2>
+                                Key Information
+                            </h2>
+                        </div>
+                        <div class="flexor flex-seperate flex-double">
+                            <section class="double-input space-right media-unspace">
+                                <label>Public ID</label>
+                                <input required data-listener="hex" name="public_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                            </section>
+                            <section class="double-input">
+                                <label>Private ID</label>
+                                <input required data-listener="hex" name="private_id" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{17,18}" autocomplete="one-time-code" mincorelength="12" maxlength="17">
+                            </section>
+                        </div>
+                        <section>
+                            <label>Secret Key</label>
+                            <input required data-listener="hex" name="secret_key" type="text" inputmode="text" pattern="[0-9a-fA-f\s]{47,48}" autocomplete="one-time-code" mincorelength="32" maxlength="47">
+                        </section>
+                    </div>
+                    <div class="form-part">
+                        <div class="title">
+                            <h2>
+                                <span class="space-right">Advanced Settings</span>
+                                <!-- TODO: Make a better UI for this -->
+                                <span data-operation="showadvanced" class="specialized media-unblock small-spacing">Show</span>
+                            </h2>
+                        </div>
+                        <!-- <div class="hidden flexor flex-seperate flex-double"> -->
+                        <div id="advanced-settings" class="flexor flex-seperate flex-double optional closed">
+                            <section class="double-input space-right media-unspace">
+                                <label>Usage Counter</label>
+                                <input placeholder="0" value="0" name="usage_counter" type="number" inputmode="numeric" max="32767" min="0">
+                            </section>
+                            <section class="double-input">
+                                <label>Session Counter</label>
+                                <input placeholder="0" value="0" name="session_counter" type="number" inputmode="numeric" max="255" min="0">
+                            </section>
+                        </div>
+                    </div>
+                    <button type="submit" class="major">Add Key</button>
+                </form>
+            </div>
+            <div class="slider-wrapper closed">
+                <div id="message-menu" class="slider padded">
+                    <div id="message-content" class="message-content explanation">
+                    </div>
+                    <div id="message-response" class="message-buttons">
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+</html>
