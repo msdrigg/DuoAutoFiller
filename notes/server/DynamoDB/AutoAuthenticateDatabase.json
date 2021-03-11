@@ -1,0 +1,280 @@
+{
+  "ModelName": "AutoAuthenticateDatabase",
+  "ModelMetadata": {
+    "Author": "msdrigg",
+    "DateCreated": "Mar 10, 2021, 10:35 PM",
+    "DateLastModified": "Mar 11, 2021, 02:52 AM",
+    "Description": "Database for auto authenticate ",
+    "AWSService": "Amazon DynamoDB",
+    "Version": "2.0"
+  },
+  "DataModel": [
+    {
+      "TableName": "AutoAuthenticateUnified",
+      "KeyAttributes": {
+        "PartitionKey": {
+          "AttributeName": "Pk",
+          "AttributeType": "S"
+        },
+        "SortKey": {
+          "AttributeName": "SkCombined",
+          "AttributeType": "S"
+        }
+      },
+      "NonKeyAttributes": [
+        {
+          "AttributeName": "KeyData",
+          "AttributeType": "B"
+        },
+        {
+          "AttributeName": "Context",
+          "AttributeType": "M"
+        },
+        {
+          "AttributeName": "GSIPK",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "UseCounter",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "GSICombined",
+          "KeyAttributes": {
+            "PartitionKey": {
+              "AttributeName": "Pk",
+              "AttributeType": "S"
+            },
+            "SortKey": {
+              "AttributeName": "GSIPK",
+              "AttributeType": "S"
+            }
+          },
+          "Projection": {
+            "ProjectionType": "INCLUDE",
+            "NonKeyAttributes": [
+              "Context"
+            ]
+          }
+        }
+      ],
+      "TableData": [
+        {
+          "Pk": {
+            "S": "U#msdrigg@clemson.edu"
+          },
+          "SkCombined": {
+            "S": "M#"
+          },
+          "KeyData": {
+            "B": "40928092384"
+          },
+          "Context": {
+            "M": {
+              "Phone": 1319023,
+              "JoinDate": 1239809238
+            }
+          }
+        },
+        {
+          "Pk": {
+            "S": "S#24908fsdfj209"
+          },
+          "SkCombined": {
+            "S": "M#"
+          },
+          "KeyData": {
+            "B": "23490fsdf0942398"
+          },
+          "Context": {
+            "M": {
+              "Name": "Chrome2"
+            }
+          },
+          "GSIPK": {
+            "S": "U#msdrigg@clemson.edu"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#msdrigg@clemson.edu"
+          },
+          "SkCombined": {
+            "S": "K#234c7sdj234"
+          },
+          "KeyData": {
+            "B": "8dfsaoiu409385sadf"
+          },
+          "Context": {
+            "M": {
+              "Protocol": "TOTP",
+              "Name": "Msdrigg",
+              "Site": "discord.com"
+            }
+          },
+          "GSIPK": {
+            "S": "D#23409842"
+          },
+          "UseCounter": {
+            "S": "0"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#msdrigg@clemson.edu"
+          },
+          "SkCombined": {
+            "S": "K#234c723409"
+          },
+          "KeyData": {
+            "B": "asdfku2o34i90d8fsf"
+          },
+          "Context": {
+            "M": {
+              "Protocol": "YUBIKEY",
+              "Name": "GreenBow",
+              "Site": "youtube.com"
+            }
+          },
+          "GSIPK": {
+            "S": "D#23442351"
+          },
+          "UseCounter": {
+            "S": "3"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#dimensionalsquirrel@gmail.com"
+          },
+          "SkCombined": {
+            "S": "K#2384ufd823"
+          },
+          "KeyData": {
+            "B": "asdflkjfdaosduf98023"
+          },
+          "Context": {
+            "M": {
+              "Protocol": "TOTP",
+              "Name": "spam",
+              "Site": "google.com"
+            }
+          },
+          "GSIPK": {
+            "S": "D#23423455"
+          },
+          "UseCounter": {
+            "S": "543"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#dimensionalsquirrel@gmail.com"
+          },
+          "SkCombined": {
+            "S": "M#"
+          },
+          "KeyData": {
+            "B": "asfdas2314rjlksafj2k3"
+          },
+          "Context": {
+            "M": {
+              "JoinDate": 1239809238
+            }
+          }
+        },
+        {
+          "Pk": {
+            "S": "S#asdf234fsdfftrt4"
+          },
+          "SkCombined": {
+            "S": "M#"
+          },
+          "KeyData": {
+            "B": "gsdfertwert435345"
+          },
+          "Context": {
+            "M": {
+              "Name": "Chrome3"
+            }
+          },
+          "GSIPK": {
+            "S": "U#msdrigg@clemson.edu"
+          }
+        },
+        {
+          "Pk": {
+            "S": "S#asdfwqer34f34r"
+          },
+          "SkCombined": {
+            "S": "M#"
+          },
+          "KeyData": {
+            "B": "sdf34r34radf34rf3r"
+          },
+          "Context": {
+            "M": {
+              "Name": "Laptop"
+            }
+          },
+          "GSIPK": {
+            "S": "U#dimensionalsquirrel@gmail.com"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#dimensionalsquirrel@gmail.com"
+          },
+          "SkCombined": {
+            "S": "K#asdflkj34rjaslkdf"
+          },
+          "KeyData": {
+            "B": "asdfkj3o4ijalskdfjlka"
+          },
+          "Context": {
+            "M": {
+              "Protocol": "RSA",
+              "Name": "ds",
+              "Site": "github.com"
+            }
+          },
+          "GSIPK": {
+            "S": "D#23412345"
+          },
+          "UseCounter": {
+            "S": "1"
+          }
+        },
+        {
+          "Pk": {
+            "S": "U#msdrigg@clemson.edu"
+          },
+          "SkCombined": {
+            "S": "K#asdfklijf4oijaosidf"
+          },
+          "KeyData": {
+            "B": "sdfoij34oifjoasjdfaf"
+          },
+          "Context": {
+            "M": {
+              "Protocol": "TOTP",
+              "Name": "msdrigg",
+              "Site": "github.com"
+            }
+          },
+          "GSIPK": {
+            "S": "D#324134213"
+          },
+          "UseCounter": {
+            "S": "0"
+          }
+        }
+      ],
+      "DataAccess": {
+        "MySql": {}
+      }
+    }
+  ]
+}

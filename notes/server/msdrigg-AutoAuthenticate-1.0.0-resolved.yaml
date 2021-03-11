@@ -1,0 +1,295 @@
+---
+openapi: 3.0.0
+info:
+  title: Auto Authenticate
+  description: |
+    This is the aws backend to the auto-authenticate project.
+  termsOfService: https://duckduckgo.com
+  contact:
+    email: dimensionalsquirrel@gmail.com
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  version: 1.0.0
+externalDocs:
+  description: Check out our
+  url: https://github.com/msdrigg/autoauthenticate/
+servers:
+- url: https://virtserver.swaggerhub.com/msdrigg/AutoAuthenticate/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://petstore.swagger.io/v2
+security:
+- session_auth: []
+tags:
+- name: key
+  description: Access and update authentication keys
+  externalDocs:
+    description: Find out more
+    url: https://github.com/msdrigg/autoauthenticate/
+- name: user
+  description: Users and accounts
+paths:
+  /user/signup:
+    post:
+      tags:
+      - user
+      summary: Create user
+      requestBody:
+        description: A JSON object containing email and authKey
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        "201":
+          description: User created
+        "409":
+          description: User already exists
+      security: []
+  /user/login:
+    post:
+      tags:
+      - user
+      summary: Login user initially
+      responses:
+        "200":
+          description: |
+            Successfully authenticated. The session ID is returned in a cookie named "SESSIONID". Use this cookie in subsequent requests
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: SESSIONID=abscsdr23094u; Path=/; HttpOnly
+        "400":
+          description: Invalid username/password supplied
+      security:
+      - user_auth: []
+  /user/refreshSession:
+    post:
+      tags:
+      - user
+      summary: Retrieve session key
+      responses:
+        "200":
+          description: Session found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        "401":
+          description: Invalid session
+  /user/remove:
+    delete:
+      tags:
+      - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      responses:
+        "200":
+          description: User deleted
+        "400":
+          description: Invalid username supplied
+        "401":
+          description: Not logged in
+        "404":
+          description: User not found
+      security:
+      - user_auth: []
+        session_auth: []
+  /user/update/email:
+    post:
+      tags:
+      - user
+      summary: Update user email
+      description: This can only be done by the logged in user.
+      requestBody:
+        description: Updated user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        "200":
+          description: User email updated
+        "409":
+          description: Email already exists for this user
+  /user/update/password:
+    post:
+      tags:
+      - user
+      summary: Update user password
+      description: This can only be done by the logged in user.
+      requestBody:
+        description: Updated user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        "200":
+          description: User email updated
+        "409":
+          description: Email already exists for this user
+  /user/logout:
+    post:
+      tags:
+      - user
+      summary: Logout user
+      responses:
+        "200":
+          description: User logged out
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: SESSIONID=; Path=/; HttpOnly
+        "400":
+          description: Invalid username/password supplied
+  /key:
+    put:
+      tags:
+      - key
+      summary: Update an existing key
+      operationId: updateKey
+      requestBody:
+        $ref: '#/components/requestBodies/Key'
+      responses:
+        "200":
+          description: Key updated
+        "401":
+          description: User authorization invalid
+        "405":
+          description: Validation exception
+    post:
+      tags:
+      - key
+      summary: Add a new key
+      requestBody:
+        $ref: '#/components/requestBodies/Key'
+      responses:
+        "200":
+          description: Key added
+        "401":
+          description: User authorization invalid
+        "405":
+          description: Invalid input
+  /key/findSinceTimestamp:
+    get:
+      parameters:
+      - name: epochSeconds
+        in: query
+        description: Get items since this epoch seconds
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Keys retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Key'
+        "401":
+          description: User authorization invalid
+  /key/downloadAndUse:
+    post:
+      tags:
+      - key
+      summary: Add a new key
+      requestBody:
+        $ref: '#/components/requestBodies/Key'
+      responses:
+        "200":
+          description: Key usage updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        "401":
+          description: User authorization invalid
+        "405":
+          description: Invalid input
+components:
+  schemas:
+    Context:
+      type: object
+      properties:
+        name:
+          type: string
+        protocol:
+          type: string
+        site:
+          type: string
+          format: hostname
+        JoinDate:
+          type: string
+          format: date-time
+        Version:
+          type: string
+    Key:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+          format: byte
+        usageCounter:
+          type: integer
+          format: int64
+        lastContentUpdate:
+          type: string
+          format: date-time
+    User:
+      required:
+      - email
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+        key:
+          type: string
+          format: byte
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+          format: byte
+        context:
+          $ref: '#/components/schemas/Context'
+        email:
+          type: string
+        expiration:
+          type: string
+          format: date-time
+  requestBodies:
+    Key:
+      description: Key object in json format
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Key'
+      required: true
+  securitySchemes:
+    user_auth:
+      type: http
+      scheme: basic
+    session_auth:
+      type: apiKey
+      name: SessionID
+      in: cookie
