@@ -10,8 +10,6 @@ const sort_key_prefixes = {
     "session": "s#",
 };
 
-function get
-
 const item_types = [ "key", "metadata", "session" ];
 
 function process_incoming_item (item, itemType) {
@@ -32,9 +30,4 @@ function process_incoming_item (item, itemType) {
         case item_identifiers.session:
             
     }
-}
-
-
-function process_key (user) {
-    
 }
