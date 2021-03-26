@@ -1,0 +1,31 @@
+{
+  "name": "lambda_node",
+  "version": "1.0.0",
+  "description": "Lambda functions supporting AutoAuthenticate",
+  "main": "api.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/msdrigg/AutoAuthenticate.git"
+  },
+  "keywords": [
+    "password",
+    "2fa",
+    "e2e"
+  ],
+  "author": "Scott Driggers",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/msdrigg/AutoAuthenticate/issues"
+  },
+  "homepage": "https://github.com/msdrigg/AutoAuthenticate#readme",
+  "dependencies": {
+    "aws-sdk": "^2.863.0",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
+}
