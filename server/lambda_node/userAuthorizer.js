@@ -11,13 +11,13 @@ exports.handler = async (event, context) => {
     if (authorization !== undefined) {
         authString = httpUtils.decodeUnicode(authorization.split(" ")[1]);
     } else {
-        return getJSONAuthorization(false);
+        return httpUtils.getJSONAuthorization(false);
     }
 
     let authParts = authString.split(":");
 
     if (authParts.length != 2) {
-        return getJSONAuthorization(false);
+        return httpUtils.getJSONAuthorization(false);
     }
 
     let userEmail = authParts[0];
@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
     }
 
     if (user === undefined) {
-        return getJSONAuthorization(false);
+        return httpUtils.getJSONAuthorization(false);
     }
     let passwordSalt = user.passwordInfo.salt;
     let hashFunction = user.passwordInfo.hashFunction;

@@ -31,6 +31,13 @@
  * @property {string} [salt] String salting the password
  */
 
+/**
+ * @typedef UserUpdater
+ * @property {UserContext=} [context] user.context fields to add/overwrite
+ * @property {string=} [email] user.email to overwrite
+ * @property {string=} [passwordHash] user.password to overwrite
+ */
+
 // SESSION OBJECTS
 /**
  * @typedef FrontendSession
@@ -96,6 +103,7 @@
  * @property {string} [region] Set when networkoing error occurs to identify the region
  */
 
+// AUTHORIZATION OBJECTS
 /**
  * @typedef LambdaAuthorization
  * @property {boolean} isAuthorized
@@ -106,4 +114,5 @@
  * @typedef AuthorizationContext
  * @property {string} userEmail
  */
+
 export const unused = {};

@@ -14,7 +14,7 @@ exports.handler = async (event, _context) => {
     let sessionId = httpUtils.getCookieValue(event.cookies, constants.SESSION_COOKIE_NAME);
 
     if (emailEncoded === undefined || sessionId === undefined) {
-        return getJSONAuthorization(false);
+        return httpUtils.getJSONAuthorization(false);
     }
 
     let email = httpUtils.decodeUnicode(emailEncoded);
@@ -40,11 +40,11 @@ exports.handler = async (event, _context) => {
                     await sessions.deleteSession(email, sessionId);
                 }
             }
-            return getJSONAuthorization(false);
+            return httpUtils.getJSONAuthorization(false);
         } else {
-            return getJSONAuthorization(true, userEmail);
+            return httpUtils.getJSONAuthorization(true, userEmail);
         }
     } else {
-        return getJSONAuthorization(false);
+        return httpUtils.getJSONAuthorization(false);
     }
 }

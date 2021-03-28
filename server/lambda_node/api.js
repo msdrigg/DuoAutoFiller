@@ -17,21 +17,26 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
  */
 exports.handler = async (event, context) => {
     let pathParts = event.rawPath.split('/').slice(1);
-
     let remainingPathParts = pathParts.slice(1);
+
+    let body = event.body;
+    let authorizer = context.authorizer;
 
     try {
         switch (pathParts[0]) {
             case 'key':
-                return await keys.handleKeyRequest(remainingPathParts, event, context);
+                return await keys.handleKeyRequest(remainingPathParts, body, authorizer, dynamo);
 
             case 'user':
-                return await users.handleUserRequest(remainingPathParts, event, context);
+                return await users.handleUserRequest(remainingPathParts, body, authorizer, dynamo);
 
             default:
                 throw new Error(`Unsupported path "${pathParts[0]}"`);
         }
     } catch (err) {
-        return httpUtils.getErrorResponseObject(err.message, 400);
+        let errorResponse = err;
+        errorResponse.alternateStatusCode = err.statusCode;
+        errorResponse.statusCode = 400;
+        return errorResponse;
     }
 };
