@@ -5,7 +5,7 @@
 /**
  * @typedef FrontendUser
  * @property {string} [email] Users email in plain text
- * @property {PasswordInfo} [passwordInfo] The information to validate a users password securely
+ * @property {string} [passwordHash] The information to validate a users password securely
  * @property {Date} [signupDate] The date that the user signed up
  * @property {UserContext} [context] Useful context on the user
  */
@@ -51,6 +51,7 @@
  * @typedef DatabaseSession
  * @property {string} PKCombined
  * @property {string} SKCombined
+ * @property {string} key
  * @property {SessionContext} context
  * @property {string} temporal
  */
@@ -63,7 +64,7 @@
 // KEY OBJECTS
 /**
  * @typedef FrontendKey
- * @property {string} encryptedData
+ * @property {string} key // Encrypted
  * @property {string} id
  * @property {KeyContext} context
  * @property {Date} lastContentUpdate 
