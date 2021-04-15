@@ -1,0 +1,385 @@
+{
+  "ModelName": "AutoAuthenticateDatabase",
+  "ModelMetadata": {
+    "Author": "msdrigg",
+    "DateCreated": "Mar 10, 2021, 10:35 PM",
+    "DateLastModified": "Apr 15, 2021, 03:47 AM",
+    "Description": "Database for auto authenticate ",
+    "AWSService": "Amazon DynamoDB",
+    "Version": "2.0"
+  },
+  "DataModel": [
+    {
+      "TableName": "AutoAuthenticateUnified",
+      "KeyAttributes": {
+        "PartitionKey": {
+          "AttributeName": "PKCombined",
+          "AttributeType": "S"
+        },
+        "SortKey": {
+          "AttributeName": "SKCombined",
+          "AttributeType": "S"
+        }
+      },
+      "NonKeyAttributes": [
+        {
+          "AttributeName": "context",
+          "AttributeType": "M"
+        },
+        {
+          "AttributeName": "temporal",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "useCounter",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "passwordInfo",
+          "AttributeType": "M"
+        },
+        {
+          "AttributeName": "key",
+          "AttributeType": "S"
+        }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "GSITemporal",
+          "KeyAttributes": {
+            "PartitionKey": {
+              "AttributeName": "PKCombined",
+              "AttributeType": "S"
+            },
+            "SortKey": {
+              "AttributeName": "temporal",
+              "AttributeType": "S"
+            }
+          },
+          "Projection": {
+            "ProjectionType": "INCLUDE",
+            "NonKeyAttributes": [
+              "context"
+            ]
+          }
+        }
+      ],
+      "TableData": [
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "M#"
+          },
+          "context": {
+            "M": {
+              "Phone": {
+                "N": "342349084"
+              },
+              "BackupEmail": {
+                "S": "oniellclarar3@gmail.com"
+              },
+              "JoinDate": {
+                "N": "1239809238"
+              }
+            }
+          },
+          "temporal": {
+            "S": "124412878"
+          },
+          "passwordInfo": {
+            "M": {
+              "storedHash": {
+                "S": "ash3ck3mdak3ja0932fa"
+              },
+              "salt": {
+                "S": "abd5c45a5d4e5f"
+              },
+              "hashFunction": {
+                "S": "sha512"
+              }
+            }
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "S#24908fsdfj209"
+          },
+          "context": {
+            "M": {
+              "Name": {
+                "S": "Chrome2"
+              }
+            }
+          },
+          "temporal": {
+            "S": "341234512"
+          },
+          "key": {
+            "S": "23490fsdf0942398"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "K#234c7sdj234"
+          },
+          "context": {
+            "M": {
+              "Protocol": {
+                "S": "TOTP"
+              },
+              "Name": {
+                "S": "Msdrigg"
+              },
+              "Site": {
+                "S": "discord.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "23409842"
+          },
+          "useCounter": {
+            "S": "0"
+          },
+          "key": {
+            "S": "8dfsaoiu409385sadf"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "K#234c723409"
+          },
+          "context": {
+            "M": {
+              "Protocol": {
+                "S": "YUBIKEY"
+              },
+              "Name": {
+                "S": "Greenbow"
+              },
+              "Site": {
+                "S": "yummyuummy.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "42345623"
+          },
+          "useCounter": {
+            "S": "3"
+          },
+          "key": {
+            "S": "asdfku2o34i90d8fsf"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "dimensionalsquirrel@gmail.com"
+          },
+          "SKCombined": {
+            "S": "K#2384ufd823"
+          },
+          "context": {
+            "M": {
+              "Protocol": {
+                "S": "TOTP"
+              },
+              "Name": {
+                "S": "spam"
+              },
+              "Site": {
+                "S": "google.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "23423455"
+          },
+          "useCounter": {
+            "S": "543"
+          },
+          "key": {
+            "S": "asdflkjfdaosduf98023"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "dimensionalsquirrel@gmail.com"
+          },
+          "SKCombined": {
+            "S": "M#"
+          },
+          "context": {
+            "M": {
+              "Phone": {
+                "N": "2342343"
+              },
+              "BackupEmail": {
+                "S": "oniellclarar3@gmail.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "1239809238"
+          },
+          "passwordInfo": {
+            "M": {
+              "storedHash": {
+                "S": "42341asdfafsd"
+              },
+              "salt": {
+                "S": "asdf2er3rf"
+              },
+              "hashFunction": {
+                "S": "sha512"
+              }
+            }
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "S#asdf234fsdfftrt4"
+          },
+          "context": {
+            "M": {
+              "Name": {
+                "S": "Chrome3"
+              }
+            }
+          },
+          "temporal": {
+            "S": "1239809238"
+          },
+          "key": {
+            "S": "gsdfertwert435345"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "dimensionalsquirrel@gmail.com"
+          },
+          "SKCombined": {
+            "S": "S#asdfwqer34f34r"
+          },
+          "context": {
+            "M": {
+              "Name": {
+                "S": "Laptop"
+              }
+            }
+          },
+          "temporal": {
+            "S": "1239809238"
+          },
+          "key": {
+            "S": "sdf34r34radf34rf3r"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "dimensionalsquirrel@gmail.com"
+          },
+          "SKCombined": {
+            "S": "K#asdflkj34rjaslkdf"
+          },
+          "context": {
+            "M": {
+              "Protocol": {
+                "S": "RSA"
+              },
+              "Name": {
+                "S": "ds"
+              },
+              "Site": {
+                "S": "github.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "23412345"
+          },
+          "useCounter": {
+            "S": "1"
+          },
+          "key": {
+            "S": "asdfkj3o4ijalskdfjlka"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "msdrigg@clemson.edu"
+          },
+          "SKCombined": {
+            "S": "K#asdfklijf4oijaosidf"
+          },
+          "context": {
+            "M": {
+              "Protocol": {
+                "S": "TOTP"
+              },
+              "Name": {
+                "S": "msdrigg"
+              },
+              "Site": {
+                "S": "github.com"
+              }
+            }
+          },
+          "temporal": {
+            "S": "324134213"
+          },
+          "useCounter": {
+            "S": "0"
+          },
+          "key": {
+            "S": "sdfoij34oifjoasjdfaf"
+          }
+        },
+        {
+          "PKCombined": {
+            "S": "emptydude@email.com"
+          },
+          "SKCombined": {
+            "S": "M#a456asdf56"
+          },
+          "context": {
+            "M": {}
+          },
+          "temporal": {
+            "S": "124412878"
+          },
+          "passwordInfo": {
+            "M": {
+              "storedHash": {
+                "S": "asdf2r2345fqdf"
+              },
+              "salt": {
+                "S": "abd5c45a5d4e5f"
+              },
+              "hashFunction": {
+                "S": "sha256"
+              }
+            }
+          }
+        }
+      ],
+      "DataAccess": {
+        "MySql": {}
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-import httpUtils from "../utils/httpUtils";
-import constants from "../utils/constants";
+import * as httpUtils from "../utils/httpUtils";
+import * as constants from "../utils/constants";
 
 const typedefs = require("../utils/typedefs");
 
@@ -55,7 +55,7 @@ async function createUser(userEmail, passwordHash, context, dynamo) {
         PKCombined: userEmail,
         SKCombined: "M#",
         context: context,
-        temporal = new Date().toISOString,
+        temporal: new Date().toISOString,
         passwordInfo: {
             storedHash: httpUtils.hashSalted(passwordHash, constants.DEFAULT_HASH_FUNCTION),
             hashFunction: constants.DEFAULT_HASH_FUNCTION,
@@ -146,9 +146,9 @@ async function updateUser(userEmail, changes, dynamo) {
                 PKCombined: userEmailAuthorized,
                 SKCombined: "M#"
             },
-            UpdateExpression=updateExpression,
-            ExpressionAttributeNames=expressionAttributeNames,
-            ExpressionAttributeValues=expressionAttributeValues,
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW",
         }).promise();
 

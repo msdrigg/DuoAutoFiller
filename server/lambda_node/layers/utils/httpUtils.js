@@ -56,7 +56,7 @@ function encodeUnicode(unicodeString) {
  * @returns {string} The random string value of provided length (in hex)
  */
 function getRandomString(length){
-    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length)
+    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
 
 /**
@@ -75,7 +75,7 @@ function getCookieValue(cookies, cookieName) {
         let cookieSplit = emailCookie.split(";")[0].split("=");
 
         if (cookieSplit.length > 1 && cookieSplit[1]) {
-            return cookieSplit[1]
+            return cookieSplit[1];
         } else {
             return "";
         }
@@ -93,7 +93,7 @@ function getCookieValue(cookies, cookieName) {
  * @returns {string} The cookie string header value
  */
 function getCookieString(cookieName, cookieValue, expirationDate) {
-    let baseCookieString = `${cookieName}=${cookieValue};`
+    let baseCookieString = `${cookieName}=${cookieValue};`;
     if (expirationDate === undefined) {
         return baseCookieString;
     } else {
