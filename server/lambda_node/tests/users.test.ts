@@ -1,24 +1,25 @@
 import {describe, expect, afterEach, beforeEach, it} from '@jest/globals';
-import userAccess from "./../layers/db_access/userAccess.js";
-
-const AWS = require('aws-sdk');
-
-import { GetItemInput,
+import userAccess from "./../layers/db_access/userAccess";
+import AWS = require('aws-sdk');
+import { 
+  GetItemInput,
   PutItemInput,
   DeleteItemInput,
   DocumentClient,
   Converter,
 } from 'aws-sdk/clients/dynamodb';
-import { DatabaseUser, FrontendUser } from '../layers/utils/typedefs';
 import DynamoDB = require('aws-sdk/clients/dynamodb');
+import { FrontendUser } from '../layers/model/users';
 
 var fs = require('fs');
 
 AWS.config.update({
     region: "us-east-1",
-    endpoint: "http://localhost:8000",
-    accessKeyId: "xxxxxx",
-    secretAccessKey: "xxxxxx"
+    dynamodb: {
+      endpoint: "http://localhost:8000",
+      accessKeyId: "xxxxxx",
+      secretAccessKey: "xxxxxx"
+    }
 });
 
 let dynamodb = new AWS.DynamoDB();
@@ -77,10 +78,11 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDB) {
     WriteCapacityUnits: 10
   };
 
-  console.log("About to run db.createTable\n",JSON.stringify(dataModelFormatted, null, 2));
+  //console.log("About to run db.createTable\n",JSON.stringify(dataModelFormatted, null, 2));
 
   let data = await dynamodb.createTable(dataModelFormatted).promise()
-  console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
+  console.log("Created table.")
+  //console.log("Table description JSON:", JSON.stringify(data, null, 2));
 }
 
 function formatKeySchema(dataModel) {
@@ -121,9 +123,8 @@ describe('createUser', function () {
         let frontUser: FrontendUser = {
           email: "validEmail@address.com",
           passwordHash: "ase423lk4fdj",
-          context: {
-            name: "valid man"
-          }
+          context: {name: "valid man"},
+          signupDate: new Date()
         };
         expect(userAccess.createUser(
           frontUser.email,
@@ -146,7 +147,8 @@ describe('createUser', function () {
           passwordHash: "ase423lk4fdj",
           context: {
             name: "valid man"
-          }
+          },
+          signupDate: new Date()
         }
         expect(userAccess.createUser(
           frontUser.email,
