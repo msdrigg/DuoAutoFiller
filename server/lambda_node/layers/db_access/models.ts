@@ -13,6 +13,7 @@ export interface DatabaseUser extends DatabaseRow {
 
 export interface DatabaseKey extends DatabaseRow {
     context: KeyContext,
+    key: string,
     useCounter: number,
     temporal: number,
 }

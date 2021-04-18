@@ -26,7 +26,6 @@ let config: DynamoDBClientConfig = {
     }
 }
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-
 let testDataModel = loadTestData('./tests/testData/testDatabase.json');
 
 beforeAll(() => {
@@ -140,3 +139,38 @@ describe('getUser', function () {
   );
 });
 
+describe('deleteUser', function () {
+  it.skip("Deletes user successfully",
+    async () => {
+      expect.assertions(1);
+      
+      let validUser: DatabaseUser = testDataModel.TableData
+        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
+      await expect(userAccess.getUser(
+        validUser.PKCombined, documentClient
+      )).resolves.toStrictEqual({
+        email: validUser.PKCombined,
+        context: validUser.context
+      });
+    }
+  );
+});
+
+describe('updateUser', function () {
+  it.skip("Updates user context successfully",
+    async () => {
+      expect.assertions(1);
+      
+      let validUser: DatabaseUser = testDataModel.TableData
+        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
+      await expect(userAccess.getUser(
+        validUser.PKCombined, documentClient
+      )).resolves.toStrictEqual({
+        email: validUser.PKCombined,
+        context: validUser.context
+      });
+    }
+  );
+});
