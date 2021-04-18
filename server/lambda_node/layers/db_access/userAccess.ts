@@ -1,8 +1,10 @@
 import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
-import { DocumentClient, GetItemOutput, PutItemInput, PutItemOutput } from "aws-sdk/clients/dynamodb";
-import { AWSError } from "aws-sdk";
-import { FrontendUser, UserUpdate } from "../model/users";
+import { CoreUser, UserUpdate } from "../model/users";
+import { getCoreUser } from "./mapping";
+import { DatabaseUser } from "./models";
+import { ErrorResponse, ResultOrError } from "../model/common";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, PutCommandOutput, UpdateCommand, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
 
 /**
  * Gets the user metadata cooresponding to this userEmail and sessionId.
@@ -11,38 +13,41 @@ import { FrontendUser, UserUpdate } from "../model/users";
  * @param {DocumentClient} [dynamo] Client for accessing dynamodb
  * 
  * @throws {AWSError} Any dynamodb error other than ResourceNotFound
- * @returns {FrontendUser|undefined} The user 
+ * @returns {CoreUser|undefined} The user 
  */
-async function getUser(userEmail: string, dynamo: DocumentClient) {
+async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
     // Function to get user given the email, and return the user (undefined if no user exists)
-    let user: DatabaseUser;
-    let result = await dynamo.get({
+    let params: GetCommand = new GetCommand( {
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
             SKCombined: "M#"
         }
-    }).promise().catch(function (err: AWSError) {
-        console.log("Getting error in call to getuser")
-        if (err.code == "ResourceNotFound") {
-            return undefined;
-        }
-        throw err;
     });
-    user = result.Item as DatabaseUser;
+    let result = await dynamo.send(params).then(function(response): ResultOrError<CoreUser> {
+        if (response.Item === undefined) {
+            return {
+                statusCode: 404,
+                message: "User not found in database"
+            };
+        }
+        let databaseUser = response.Item as unknown as DatabaseUser;
+        return {
+            email: databaseUser.PKCombined,
+            context: databaseUser.context
+        }
+    }, function (err: InternalServerError): ErrorResponse {
+        if (err.code == "ResourceNotFound") {
+            return {
+                statusCode: 404,
+                reason: err,
+                message: "User not found in database"
+            };
+        }
+        return err as unknown as ErrorResponse;
+    });
 
-    if (user === undefined) {
-        return undefined
-    }
-
-    console.log("gotten user in getUser")
-    console.log(user)
-    return {
-        email: userEmail,
-        passwordInfo: user.passwordInfo,
-        context: user.context,
-        signupDate: new Date(user.temporal)
-    };
+    return result;
 }
 
 /**
@@ -56,7 +61,7 @@ async function getUser(userEmail: string, dynamo: DocumentClient) {
  * @throws {typedefs.DynamoError} Any dynamodb error creating the user
  * @returns {typedefs.FrontendUser|undefined} The user created, undefined if the user fails to be created
  */
-async function createUser(userEmail: string, passwordHash: string, context: Object, dynamo: DocumentClient) {
+async function createUser(userEmail: string, passwordHash: string, context: Object, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
     let newPasswordSalt = httpUtils.getRandomString(40);
     let backendUser: DatabaseUser = {
         PKCombined: userEmail,
@@ -69,30 +74,35 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
             salt: newPasswordSalt
         }
     }
+    console.log("Creating user: ", JSON.stringify(backendUser, null, 2))
 
-    let dynamoParams: DocumentClient.PutItemInput = {
+    let putCommand: PutCommand = new PutCommand({
         TableName: constants.TABLE_NAME,
         Item: backendUser,
-        ConditionExpression: 'PKCombined <> :userEmail',
-        ExpressionAttributeValues: {
-            ':userEmail': backendUser.PKCombined
-        },
-        ReturnValues: "ALL_NEW"
-    }
+        ConditionExpression: 'attribute_not_exists(PKCombined) OR attribute_not_exists(SKCombined)',
+    })
 
-    await dynamo
-        .put(dynamoParams)
-        .promise()
-        .then(function (output: PutItemOutput) {
-            return 
-        })
-        .catch(function (err: AWSError) {
+    let result: ResultOrError<CoreUser> = await dynamo
+        .send(putCommand)
+        .then(function (_output: PutCommandOutput) {
+            return getCoreUser(backendUser);
+        }).catch(function (err: AWSError) {
             if (err.code == 'ConditionalCheckFailedException' ) {
-                return ;
+                let response: ErrorResponse = {
+                    statusCode: 409,
+                    reason: err,
+                    message: "User with provided email already exists"
+                }
+                return response;
             } else {
-                throw err;
+                return {
+                    statusCode: err.statusCode,
+                    reason: err,
+                    message: "Error adding user to database"
+                };
             }
-        })
+        });
+    return result;
 }
 
 /**
@@ -105,16 +115,20 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
  * @throws {typedefs.DynamoError} Any dynamodb error creating the user
  * @returns {typedefs.FrontendUser|typedefs.ErrorResponse} The user updated, or an error if there was no supplied changes
  */
-async function updateUser(userEmail: string, changes: UserUpdate, dynamo: DocumentClient) {
+async function updateUser(userEmail: string, changes: UserUpdate, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>>{
     // For updates to email or psw, we need to re-encrypt all encryptedData,
     // invalidate all sessions, and change user password hash and email
 
-    let user: FrontendUser;
 
     if (!changes.context && !changes.email && !changes.passwordHash) {
-        return httpUtils.getErrorResponseObject("No changes given", 400);
+        return {
+            statusCode: 400,
+            message: "No user updates given in request",
+            reason: null
+        };
     }
 
+    let user: CoreUser;
     if (changes.context) {
         // Update user context
         // Request: {$context variables to update}
@@ -126,15 +140,11 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Docume
             }, {});
         
         if (!Object.keys(updatedContext).length) {
-            let result: GetItemOutput = await dynamo.get({
-                TableName: constants.TABLE_NAME,
-                Key: {
-                    PKCombined: userEmail,
-                    SKCombined: "M#"
-                }
-            }).promise();
-
-            return result.Item;
+            let response: ErrorResponse = {
+                message: "No items to update in context",
+                statusCode: 400,
+            };
+            return response;
         } 
         
         let updateExpression = "SET";
@@ -150,7 +160,7 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Docume
         }
         updateExpression = updateExpression.slice(1);
 
-        let dynamoResult = await dynamo.update({
+        let updateCommand = new UpdateCommand({
             TableName: constants.TABLE_NAME,
             Key: {
                 PKCombined: userEmail,
@@ -160,9 +170,10 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Docume
             ExpressionAttributeNames: expressionAttributeNames,
             ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW",
-        }).promise();
+        })
+        let dynamoResult: UpdateCommandOutput = await dynamo.send(updateCommand);
 
-        user = dynamoResult.Attributes;
+        user = getCoreUser(dynamoResult.Attributes as unknown as DatabaseUser);
     }
 
 

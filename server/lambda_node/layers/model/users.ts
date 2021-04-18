@@ -1,12 +1,15 @@
-export type FrontendUser = {
-    email: string,
+export interface AuthUser extends CoreUser {
     passwordHash: string,
-    signupDate: Date,
+}
+
+export interface CoreUser {
+    email: string,
     context: Object
 }
+
 export interface PasswordInfo {
     storedHash: string,
-    hashFunction: HashFunction,
+    hashFunction: string,
     salt: string
 }
 
@@ -15,7 +18,8 @@ export enum HashFunction {
 }
 
 export interface UserUpdate {
+    email: string,
     context?: Object,
-    email?: string,
+    newEmail?: string,
     passwordHash?: string,
 }

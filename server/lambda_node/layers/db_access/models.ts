@@ -1,21 +1,23 @@
-interface DatabaseRow {
+import { PasswordInfo } from "../model/users";
+
+export interface DatabaseRow {
     PKCombined: string,
     SKCombined: string
 }
 
-interface DatabaseUser extends DatabaseRow {
+export interface DatabaseUser extends DatabaseRow {
     passwordInfo: PasswordInfo,
     context: Object,
     temporal: number
 }
 
-interface DatabaseKey extends DatabaseRow {
+export interface DatabaseKey extends DatabaseRow {
     context: KeyContext,
     useCounter: number,
     temporal: number,
 }
 
-interface DatabaseSession extends DatabaseRow {
+export interface DatabaseSession extends DatabaseRow {
     key: string,
     context: SessionContext,
     temporal: number

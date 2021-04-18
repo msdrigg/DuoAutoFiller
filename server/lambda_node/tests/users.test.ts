@@ -9,7 +9,9 @@ import {
   Converter,
 } from 'aws-sdk/clients/dynamodb';
 import DynamoDB = require('aws-sdk/clients/dynamodb');
-import { FrontendUser } from '../layers/model/users';
+import { AuthUser } from '../layers/model/users';
+import { ErrorResponse } from '../layers/model/common';
+import { DatabaseUser } from '../layers/db_access/models';
 
 var fs = require('fs');
 
@@ -36,13 +38,14 @@ async function setupTestDatabase(dataModel: any, dynamodb: DynamoDB) {
 async function cleanupTestDatabase(dataModel: any, dynamodb: DynamoDB) {
   await dynamodb.deleteTable({
     TableName: dataModel.TableName
-  }).promise();
-  console.log("Table deleted")
+  }).promise().then(result => new Promise(function(result) {
+    console.log("Table deleted")
+  }));
 }
 
 async function addTestItems(dataModel: any, dynamodb: DynamoDB) {
   for (const item of dataModel.TableData) {
-    let result = await dynamodb.putItem({
+    await dynamodb.putItem({
       TableName: dataModel.TableName,
       Item: item
     }).promise();
@@ -80,7 +83,7 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDB) {
 
   //console.log("About to run db.createTable\n",JSON.stringify(dataModelFormatted, null, 2));
 
-  let data = await dynamodb.createTable(dataModelFormatted).promise()
+  await dynamodb.createTable(dataModelFormatted).promise()
   console.log("Created table.")
   //console.log("Table description JSON:", JSON.stringify(data, null, 2));
 }
@@ -120,21 +123,27 @@ describe('createUser', function () {
     it("Creates user successfully",
       async () => {
         // Get valid frontendUser
-        let frontUser: FrontendUser = {
+        let frontUser: AuthUser = {
           email: "validEmail@address.com",
           passwordHash: "ase423lk4fdj",
           context: {name: "valid man"},
-          signupDate: new Date()
         };
         expect(userAccess.createUser(
           frontUser.email,
           frontUser.passwordHash,
           frontUser.context,
           documentClient
-        )).resolves.toReturn;
+        )).resolves.toEqual({
+          email: frontUser.email,
+          context: frontUser.context
+        });
+
         expect(userAccess.getUser(
           frontUser.email, documentClient
-        )).resolves.toBe(frontUser);
+        )).resolves.toBe({
+          email: frontUser.email,
+          context: frontUser.context
+        });
       }
     );
 
@@ -142,20 +151,23 @@ describe('createUser', function () {
       async () => {
         // Get a frontendUser from the datamodel
         let databaseUser = testDataModel.TableData.filter(it => it.SKCombined.S == "M#")[0];
-        let frontUser: FrontendUser = {
+        let frontUser: AuthUser = {
           email: databaseUser.PKCombined.S,
           passwordHash: "ase423lk4fdj",
           context: {
             name: "valid man"
           },
-          signupDate: new Date()
+        }
+        let errorResponse: ErrorResponse = {
+          message: "User with provided email already exists",
+          statusCode: 409,
         }
         expect(userAccess.createUser(
           frontUser.email,
           frontUser.passwordHash,
           frontUser.context,
           documentClient
-        )).resolves.toBe(undefined);
+        )).resolves.toEqual(errorResponse);
       }
     );
 });
@@ -164,50 +176,28 @@ describe('createUser', function () {
 describe('getUser', function () {
   it("Gets user successfully",
     async () => {
-      let validUser: DatabaseUser = Converter.unmarshall(
-        testDataModel.TableData.filter(it => it.SKCombined == "M#")[0]
-      ) as DatabaseUser;
+      let validUser: DatabaseUser = testDataModel.TableData
+        .map(it => Converter.unmarshall(it))
+        .filter(it => it.SKCombined == "M#")[0] as DatabaseUser;
+      console.log("Getting user: ", JSON.stringify(validUser, null, 2));
       expect(userAccess.getUser(
         validUser.PKCombined, documentClient
-      )).resolves.toBe(validUser);
+      )).resolves.toStrictEqual({
+        email: validUser.PKCombined,
+        context: validUser.context
+      });
     }
   );
 
   it("Gets user fails with not found",
     async () => {
+      let errorResponse: ErrorResponse = {
+        message: "User not found in database",
+        statusCode: 404,
+      }
       expect(userAccess.getUser(
         "INVALDEMAIL@NOTEXISTS.com", documentClient
-      )).resolves.toBe(undefined);
+      )).resolves.toEqual(errorResponse);
     }
   );
 });
-
-function testRefreshSession() {
-  // Test key returned
-  // Test dynamo fails
-}
-
-function testLogin() {
-  // Test dynamo fails
-  // Test session created
-  // Test cookies returned
-}
-
-function testUpdateUserContext() {
-  // Test update user context succeed
-  // Test update user context dynamo fails
-  // Test extra context
-}
-
-function testUpdateUserPassword() {
-  // Test fail at each dynamo step and recovery
-  // Test succeed
-  // Test large number of sessions and keys
-}
-
-function testUpdateUserEmail() {
-  // Test fail at each dynamo step and recovery
-  // Test succeed
-  // Test large number of sessions and keys
-  // Test email already exists
-}

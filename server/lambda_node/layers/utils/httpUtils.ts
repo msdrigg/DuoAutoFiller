@@ -1,20 +1,6 @@
 import crypto = require("crypto");
-import typedefs = require("./typedefs");
+import { LambdaAuthorization } from "../model/authorization";
 
-/**
- * Returns the error response object cooresponding to the provided message and code
- * 
- * @param {string} message
- * @param {number} code
- * 
- * @returns {typedefs.ErrorResponse} The error object with fields (body, statusCode)
- */
-function getErrorResponseObject(message: string, code: number) {
-    return {
-        body: {"ErrorMessage": message},
-        statusCode: code
-    };
-}
 
 /**
  * Decodes b64 string to unicode
@@ -23,7 +9,7 @@ function getErrorResponseObject(message: string, code: number) {
  * 
  * @returns {string} The unicode string cooresponding to the input
  */
-function decodeUnicode(encoded: string) {
+function decodeUnicode(encoded: string): string {
     // Going backwards: from bytestream, to percent-encoding, to original string.
     let binary = atob(encoded)
     const bytes = new Uint8Array(binary.length);
@@ -40,7 +26,7 @@ function decodeUnicode(encoded: string) {
  * 
  * @returns {string} The b64 string cooresponding to the unicode input
  */
-function encodeUnicode(unicodeString: string) {
+function encodeUnicode(unicodeString: string): string {
   const codeUnits = new Uint16Array(unicodeString.length);
   for (let i = 0; i < codeUnits.length; i++) {
     codeUnits[i] = unicodeString.charCodeAt(i);
@@ -55,7 +41,7 @@ function encodeUnicode(unicodeString: string) {
  * 
  * @returns {string} The random string value of provided length (in hex)
  */
-function getRandomString(length: number){
+function getRandomString(length: number): string{
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
 
@@ -67,7 +53,7 @@ function getRandomString(length: number){
  * 
  * @returns {string} The value cooresponding to the cookie name given, undefined if not found
  */
-function getCookieValue(cookies: Array<string>, cookieName: string) {
+function getCookieValue(cookies: Array<string>, cookieName: string): string {
     let emailCookie = cookies.find(cookie => cookie.startsWith(cookieName));
     if (emailCookie === undefined) {
         return undefined;
@@ -92,7 +78,7 @@ function getCookieValue(cookies: Array<string>, cookieName: string) {
  * 
  * @returns {string} The cookie string header value
  */
-function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date) {
+function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date): string {
     let baseCookieString = `${cookieName}=${cookieValue};`;
     if (expirationDate === undefined) {
         return baseCookieString;
@@ -110,7 +96,7 @@ function getCookieString(cookieName: string, cookieValue: string, expirationDate
  * 
  * @returns {string} The hex encoding of the resulting hash
  */
-function hashSalted(password: string, salt: string, hashFunction: string) {
+function hashSalted(password: string, salt: string, hashFunction: string): string {
     var hash = crypto.createHmac(hashFunction, salt); /** Hashing algorithm sha512 */
     hash.update(password);
     return hash.digest('hex');
@@ -124,24 +110,25 @@ function hashSalted(password: string, salt: string, hashFunction: string) {
  * 
  * @returns {typedefs.LambdaAuthorization} The authorization status using the simple aws lambda authorizer payload format
  */
-function getJSONAuthorization(didAuthorize: boolean, userEmail: string) {
-    let output = {
-        "isAuthorized": didAuthorize,
+function getJSONAuthorization(didAuthorize: boolean, userEmail: string): LambdaAuthorization {
+    let output: LambdaAuthorization = {
+        isAuthorized: didAuthorize,
+        context: {
+            userEmail: null
+        }
     };
     if (userEmail !== undefined) {
-        output["context"] =  {
-            "userEmail": userEmail
-        };
+        output.context.userEmail = userEmail
     }
     return output;
 }
+
 
 export default {
     getCookieString,
     getCookieValue,
     decodeUnicode,
     encodeUnicode,
-    getErrorResponseObject,
     hashSalted,
     getRandomString,
     getJSONAuthorization,
