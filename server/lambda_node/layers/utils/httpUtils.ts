@@ -1,6 +1,5 @@
 import crypto = require("crypto");
-import { LambdaAuthorization } from "../model/authorization";
-
+import { LambdaAuthorization } from "../authorization/types";
 
 /**
  * Decodes b64 string to unicode

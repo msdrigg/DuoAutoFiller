@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -sharedDb"
+    command: "-jar DynamoDBLocal.jar -sharedDb --inMemory"
     image: "amazon/dynamodb-local:latest"
     container_name: dynamodb-local
     ports:

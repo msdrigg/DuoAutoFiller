@@ -1,154 +1,89 @@
-import {describe, expect, afterEach, beforeEach, it} from '@jest/globals';
+import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
 import userAccess from "./../layers/db_access/userAccess";
-import AWS = require('aws-sdk');
 import { 
-  GetItemInput,
-  PutItemInput,
-  DeleteItemInput,
-  DocumentClient,
-  Converter,
-} from 'aws-sdk/clients/dynamodb';
-import DynamoDB = require('aws-sdk/clients/dynamodb');
+  DynamoDBClient,
+  DynamoDBClientConfig,
+  AttributeValue,
+} from '@aws-sdk/client-dynamodb';
+import {
+  DeleteCommand,
+  DynamoDBDocumentClient,
+} from '@aws-sdk/lib-dynamodb';
+import {
+  unmarshall
+} from "@aws-sdk/util-dynamodb";
 import { AuthUser } from '../layers/model/users';
 import { ErrorResponse } from '../layers/model/common';
 import { DatabaseUser } from '../layers/db_access/models';
+import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
 
-var fs = require('fs');
-
-AWS.config.update({
+let config: DynamoDBClientConfig = {
     region: "us-east-1",
-    dynamodb: {
-      endpoint: "http://localhost:8000",
+    endpoint: "http://localhost:8000",
+    credentials: {
       accessKeyId: "xxxxxx",
       secretAccessKey: "xxxxxx"
     }
-});
-
-let dynamodb = new AWS.DynamoDB();
-let documentClient = new AWS.DynamoDB.DocumentClient();
-let testDataModel = JSON.parse(fs.readFileSync('./tests/testData/testDatabase.json', 'utf8')).DataModel[0];
-
-async function setupTestDatabase(dataModel: any, dynamodb: DynamoDB) {
-  console.log("Starting to create test db")
-  await createTestDatabase(dataModel, dynamodb);
-  console.log("Done creating test db, adding items")
-  await addTestItems(dataModel, dynamodb);
-  console.log("Done adding items to db")
 }
-async function cleanupTestDatabase(dataModel: any, dynamodb: DynamoDB) {
-  await dynamodb.deleteTable({
-    TableName: dataModel.TableName
-  }).promise().then(result => new Promise(function(result) {
-    console.log("Table deleted")
-  }));
-}
+let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 
-async function addTestItems(dataModel: any, dynamodb: DynamoDB) {
-  for (const item of dataModel.TableData) {
-    await dynamodb.putItem({
-      TableName: dataModel.TableName,
-      Item: item
-    }).promise();
-    console.log("Put item on startup succeeded")
-  }
-}
+let testDataModel = loadTestData('./tests/testData/testDatabase.json');
 
-async function createTestDatabase(dataModel: any, dynamodb: DynamoDB) {
-  let dataModelFormatted = formatKeySchema(dataModel);
-  console.log("Creating test db")
-
-  dataModelFormatted.GlobalSecondaryIndexes = dataModel.GlobalSecondaryIndexes.map(idx => {
-    let newSI = formatKeySchema(idx);
-    newSI.ProvisionedThroughput = {       
-        ReadCapacityUnits: 10, 
-        WriteCapacityUnits: 10
-    };
-    return newSI;
-  });
-  let newAttributes = [];
-  newAttributes.push(dataModel.KeyAttributes.PartitionKey);
-  newAttributes.push(dataModel.KeyAttributes.SortKey);
-  newAttributes.push({
-    "AttributeName": "temporal",
-    "AttributeType": "S"
-  });
-  dataModelFormatted.AttributeDefinitions = newAttributes;
-  delete dataModelFormatted["NonKeyAttributes"];
-  delete dataModelFormatted["DataAccess"];
-  delete dataModelFormatted["TableData"];
-  dataModelFormatted.ProvisionedThroughput = {       
-    ReadCapacityUnits: 10, 
-    WriteCapacityUnits: 10
-  };
-
-  //console.log("About to run db.createTable\n",JSON.stringify(dataModelFormatted, null, 2));
-
-  await dynamodb.createTable(dataModelFormatted).promise()
-  console.log("Created table.")
-  //console.log("Table description JSON:", JSON.stringify(data, null, 2));
-}
-
-function formatKeySchema(dataModel) {
-  let attributes = dataModel.KeyAttributes;
-  if (attributes === undefined) {
-    return dataModel
-  } else {
-    let dataCopy = { ...dataModel};
-    let newAttributes = [
-          {
-            AttributeName: attributes.PartitionKey.AttributeName,
-            KeyType: "HASH"
-          },  //Partition key
-          {
-            AttributeName: attributes.SortKey.AttributeName,
-            KeyType: "RANGE"
-          } // Sort Key
-    ];
-    dataCopy.KeySchema = newAttributes;
-
-    delete dataCopy['KeyAttributes'];
-    return dataCopy;
-  }
-}
-
-beforeEach(() => {
-  return setupTestDatabase(testDataModel, dynamodb);
-})
-
-afterEach(() => {
-  return cleanupTestDatabase(testDataModel, dynamodb);
-})
+beforeAll(() => {
+  return setupTestDatabase(testDataModel, documentClient);
+}, 10000)
+afterAll(() => {
+  console.log("Trying to delete test db")
+  return cleanupTestDatabase(testDataModel, documentClient);
+}, 10000)
 
 describe('createUser', function () {
     it("Creates user successfully",
       async () => {
+        expect.assertions(3);
+
         // Get valid frontendUser
         let frontUser: AuthUser = {
           email: "validEmail@address.com",
           passwordHash: "ase423lk4fdj",
           context: {name: "valid man"},
         };
-        expect(userAccess.createUser(
+        await expect(userAccess.createUser(
           frontUser.email,
           frontUser.passwordHash,
           frontUser.context,
           documentClient
+        )).resolves.toStrictEqual({
+          email: frontUser.email,
+          context: frontUser.context
+        });
+
+        await expect(userAccess.getUser(
+          frontUser.email, documentClient
         )).resolves.toEqual({
           email: frontUser.email,
           context: frontUser.context
         });
 
-        expect(userAccess.getUser(
-          frontUser.email, documentClient
-        )).resolves.toBe({
-          email: frontUser.email,
-          context: frontUser.context
-        });
+        //console.log(JSON.stringify(testDataModel, null, 2));
+        await expect(
+          documentClient.send(
+            new DeleteCommand({
+              TableName: testDataModel.TableName,
+              Key: {
+                PKCombined: frontUser.email,
+                SKCombined: "M#"
+              }
+            })
+          )
+        ).resolves.toBeTruthy();
       }
     );
 
     it("Creates user fails with conflict",
       async () => {
+        expect.assertions(1);
+        
         // Get a frontendUser from the datamodel
         let databaseUser = testDataModel.TableData.filter(it => it.SKCombined.S == "M#")[0];
         let frontUser: AuthUser = {
@@ -160,14 +95,15 @@ describe('createUser', function () {
         }
         let errorResponse: ErrorResponse = {
           message: "User with provided email already exists",
+          reason: expect.any(Object),
           statusCode: 409,
         }
-        expect(userAccess.createUser(
+        await expect(userAccess.createUser(
           frontUser.email,
           frontUser.passwordHash,
           frontUser.context,
           documentClient
-        )).resolves.toEqual(errorResponse);
+        )).resolves.toMatchObject(errorResponse);
       }
     );
 });
@@ -176,11 +112,12 @@ describe('createUser', function () {
 describe('getUser', function () {
   it("Gets user successfully",
     async () => {
+      expect.assertions(1);
+      
       let validUser: DatabaseUser = testDataModel.TableData
-        .map(it => Converter.unmarshall(it))
-        .filter(it => it.SKCombined == "M#")[0] as DatabaseUser;
-      console.log("Getting user: ", JSON.stringify(validUser, null, 2));
-      expect(userAccess.getUser(
+        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
+      await expect(userAccess.getUser(
         validUser.PKCombined, documentClient
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
@@ -191,13 +128,15 @@ describe('getUser', function () {
 
   it("Gets user fails with not found",
     async () => {
+      expect.assertions(1);
       let errorResponse: ErrorResponse = {
         message: "User not found in database",
         statusCode: 404,
       }
-      expect(userAccess.getUser(
+      await expect(userAccess.getUser(
         "INVALDEMAIL@NOTEXISTS.com", documentClient
-      )).resolves.toEqual(errorResponse);
+      )).resolves.toMatchObject(errorResponse);
     }
   );
 });
+

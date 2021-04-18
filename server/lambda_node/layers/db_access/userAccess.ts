@@ -3,7 +3,7 @@ import constants from "../utils/constants";
 import { CoreUser, UserUpdate } from "../model/users";
 import { getCoreUser } from "./mapping";
 import { DatabaseUser } from "./models";
-import { ErrorResponse, ResultOrError } from "../model/common";
+import { AWSError, ErrorResponse, ResultOrError } from "../model/common";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, PutCommandOutput, UpdateCommand, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
 
 /**
@@ -36,8 +36,9 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
             email: databaseUser.PKCombined,
             context: databaseUser.context
         }
-    }, function (err: InternalServerError): ErrorResponse {
-        if (err.code == "ResourceNotFound") {
+    }, function (err: AWSError): ErrorResponse {
+        console.log("Error getting user: ", JSON.stringify(err, null, 2));
+        if (err.name == "ResourceNotFoundException") {
             return {
                 statusCode: 404,
                 reason: err,
@@ -74,7 +75,7 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
             salt: newPasswordSalt
         }
     }
-    console.log("Creating user: ", JSON.stringify(backendUser, null, 2))
+    // console.log("Creating user: ", JSON.stringify(backendUser, null, 2))
 
     let putCommand: PutCommand = new PutCommand({
         TableName: constants.TABLE_NAME,
@@ -85,9 +86,11 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
     let result: ResultOrError<CoreUser> = await dynamo
         .send(putCommand)
         .then(function (_output: PutCommandOutput) {
+            // console.log("User created")
             return getCoreUser(backendUser);
-        }).catch(function (err: AWSError) {
-            if (err.code == 'ConditionalCheckFailedException' ) {
+        }).catch(function (err: any) {
+            // console.log("Error creating user", JSON.stringify(err, null, 2));
+            if (err.name == 'ConditionalCheckFailedException' ) {
                 let response: ErrorResponse = {
                     statusCode: 409,
                     reason: err,
@@ -96,7 +99,7 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
                 return response;
             } else {
                 return {
-                    statusCode: err.statusCode,
+                    statusCode: 500,
                     reason: err,
                     message: "Error adding user to database"
                 };
