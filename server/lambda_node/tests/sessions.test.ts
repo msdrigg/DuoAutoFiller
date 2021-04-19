@@ -1,5 +1,4 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import sessionAccess from "./../layers/db_access/sessionAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -12,11 +11,10 @@ import {
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { AuthUser } from '../layers/model/users';
-import { ErrorResponse } from '../layers/model/common';
 import { DatabaseSession, DatabaseUser } from '../layers/db_access/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
 import { getFrontendSession } from '../layers/db_access/mapping';
+import sessionAccess from './../layers/db_access/sessionAccess';
 
 let config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -115,15 +113,17 @@ describe('getSession', function () {
     }
   );
 
-  it("Get session fails with session not exists",
-    async () => {
-      expect.assertions(1);
-      let validUser: DatabaseUser = testDataModel.TableData
+  it("Get session fails with session not exists", async () => {
+    expect.assertions(1);
+    let validUser: DatabaseUser = testDataModel.TableData
         .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
         .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser
-      await expect(sessionAccess.getSession(
+    
+    
+
+    await expect(sessionAccess.getSession(
         validUser.PKCombined, "asdflkj23", documentClient
-      )).resolves.toBeUndefined();
+    )).resolves.toBeUndefined();
     }
   );
 });

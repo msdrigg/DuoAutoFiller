@@ -1,3 +1,4 @@
+import { KeyContext } from "../model/keys";
 import { PasswordInfo } from "../model/users";
 
 export interface DatabaseRow {
