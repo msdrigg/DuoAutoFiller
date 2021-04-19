@@ -28,7 +28,7 @@ let config: DynamoDBClientConfig = {
     }
 }
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-let testDataModel = loadTestData('./tests/testData/testDatabase.json');
+let testDataModel = loadTestData('./tests/testData/AutoAuthenticateDatabase.json');
 
 beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);

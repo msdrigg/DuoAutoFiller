@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, PutCommand, ScanCommandInput, ScanCommand, PutCommandInput, UpdateCommandInput, UpdateCommand, DeleteCommandInput, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, QueryCommandInput, PutCommandInput, UpdateCommandInput, UpdateCommand, DeleteCommandInput, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ResultOrError } from "../model/common";
 import { getDatabaseKey, getFrontendKey } from "./mapping";
 import { DatabaseKey } from "./models";
@@ -56,20 +56,26 @@ async function getKeysSinceTime(
 ): Promise<ResultOrError<Array<FrontendKey>>> {
     let expressionAttributeValues = {
         ':hkey': userEmail,
+        ":keyFilter": "K#"
     }
+    let filterExpression = 'begins_with (SKCombined, :keyFilter)'
+    let keyConditionExpression = 'PKCombined = :hkey'
     if (cuttoffDate !== undefined) {
-        expressionAttributeValues[':rkey'] = cuttoffDate.toISOString()
+        expressionAttributeValues[':rkey'] = cuttoffDate.getTime();
+        keyConditionExpression = `${keyConditionExpression} and temporal > :rkey`;
     }
-    let dynamoParams: ScanCommandInput = {
+
+    let dynamoParams: QueryCommandInput = {
         TableName: constants.TABLE_NAME,
         IndexName: constants.INDEX_NAME,
         Limit: 1000,
         Select: "ALL_ATTRIBUTES",
-        FilterExpression: 'PKCombined = :hkey and RangeKey > :rkey',
-        ExpressionAttributeValues: expressionAttributeValues
+        FilterExpression: filterExpression,
+        ExpressionAttributeValues: expressionAttributeValues,
+        KeyConditionExpression: keyConditionExpression
     }
     try {
-        let items: Array<DatabaseKey> = (await dynamo.send(new ScanCommand(dynamoParams))).Items as Array<DatabaseKey>;
+        let items: Array<DatabaseKey> = (await dynamo.send(new QueryCommand(dynamoParams))).Items as Array<DatabaseKey>;
         return items.map(element => getFrontendKey(element) as FrontendKey)
     } catch (err) {
         return {

@@ -14,7 +14,6 @@ import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
 import { FrontendKey } from '../layers/model/keys';
-import { ErrorResponse } from '../layers/model/common';
 import { DatabaseKey, DatabaseUser } from '../layers/db_access/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
 import { TABLE_NAME } from '../layers/utils/constants';
@@ -29,7 +28,7 @@ let config: DynamoDBClientConfig = {
     }
 }
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-let testDataModel = loadTestData('./tests/testData/testDatabase.json');
+let testDataModel = loadTestData('./tests/testData/AutoAuthenticateDatabase.json');
 let validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined == "M#")
@@ -119,9 +118,9 @@ describe('getKeysSinceTime', function () {
       expect.assertions(1);
       
       let userWithNoKeys: DatabaseUser = validUsers.find(user => {
-        return validKeys.filter(key => {
+        return validKeys.find(key => {
           return key.PKCombined == user.PKCombined
-        }).length == 0;
+        }) === undefined;
       });
       await expect(keyAccess.getKeysSinceTime(
         userWithNoKeys.PKCombined, undefined, documentClient
@@ -139,7 +138,7 @@ describe('getKeysSinceTime', function () {
       });
       
       await expect(keyAccess.getKeysSinceTime(
-        userWithTwoKeys.PKCombined, new Date(Number.MAX_SAFE_INTEGER), documentClient
+        userWithTwoKeys.PKCombined, new Date(8640000000000000), documentClient
       )).resolves.toStrictEqual([]);
     }
   );

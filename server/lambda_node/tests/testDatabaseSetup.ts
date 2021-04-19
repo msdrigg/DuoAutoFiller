@@ -31,12 +31,10 @@ export function cleanupTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentCl
 
 async function addTestItems(dataModel: any, dynamodb: DynamoDBDocumentClient) {
   for (const item of dataModel.TableData) {
-    let resolvedItem = unmarshall(item);
-    resolvedItem.temporal = Number(resolvedItem.temporal);
     // console.log("Trying to adding item: ", JSON.stringify(resolvedItem, null, 2));
     await dynamodb.send(new PutCommand({
       TableName: dataModel.TableName,
-      Item: resolvedItem
+      Item: unmarshall(item)
     })).catch(err => {
       console.log("Error adding item: ", JSON.stringify(err, null, 2));
     })

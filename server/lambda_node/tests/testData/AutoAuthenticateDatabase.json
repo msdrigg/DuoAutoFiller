@@ -3,7 +3,7 @@
   "ModelMetadata": {
     "Author": "msdrigg",
     "DateCreated": "Mar 10, 2021, 10:35 PM",
-    "DateLastModified": "Apr 15, 2021, 03:47 AM",
+    "DateLastModified": "Apr 19, 2021, 04:52 PM",
     "Description": "Database for auto authenticate ",
     "AWSService": "Amazon DynamoDB",
     "Version": "2.0"
@@ -27,20 +27,20 @@
           "AttributeType": "M"
         },
         {
-          "AttributeName": "temporal",
-          "AttributeType": "S"
-        },
-        {
-          "AttributeName": "useCounter",
-          "AttributeType": "S"
-        },
-        {
           "AttributeName": "passwordInfo",
           "AttributeType": "M"
         },
         {
           "AttributeName": "key",
           "AttributeType": "S"
+        },
+        {
+          "AttributeName": "temporal",
+          "AttributeType": "N"
+        },
+        {
+          "AttributeName": "useCounter",
+          "AttributeType": "N"
         }
       ],
       "GlobalSecondaryIndexes": [
@@ -53,14 +53,11 @@
             },
             "SortKey": {
               "AttributeName": "temporal",
-              "AttributeType": "S"
+              "AttributeType": "N"
             }
           },
           "Projection": {
-            "ProjectionType": "INCLUDE",
-            "NonKeyAttributes": [
-              "context"
-            ]
+            "ProjectionType": "ALL"
           }
         }
       ],
@@ -85,9 +82,6 @@
               }
             }
           },
-          "temporal": {
-            "S": "124412878"
-          },
           "passwordInfo": {
             "M": {
               "storedHash": {
@@ -100,6 +94,9 @@
                 "S": "sha512"
               }
             }
+          },
+          "temporal": {
+            "N": "124412878"
           }
         },
         {
@@ -116,11 +113,11 @@
               }
             }
           },
-          "temporal": {
-            "S": "341234512"
-          },
           "key": {
             "S": "23490fsdf0942398"
+          },
+          "temporal": {
+            "N": "341234512"
           }
         },
         {
@@ -143,14 +140,14 @@
               }
             }
           },
-          "temporal": {
-            "S": "23409842"
-          },
-          "useCounter": {
-            "S": "0"
-          },
           "key": {
             "S": "8dfsaoiu409385sadf"
+          },
+          "temporal": {
+            "N": "23409842"
+          },
+          "useCounter": {
+            "N": "0"
           }
         },
         {
@@ -173,14 +170,14 @@
               }
             }
           },
-          "temporal": {
-            "S": "42345623"
-          },
-          "useCounter": {
-            "S": "3"
-          },
           "key": {
             "S": "asdfku2o34i90d8fsf"
+          },
+          "temporal": {
+            "N": "42345623"
+          },
+          "useCounter": {
+            "N": "3"
           }
         },
         {
@@ -203,14 +200,14 @@
               }
             }
           },
-          "temporal": {
-            "S": "23423455"
-          },
-          "useCounter": {
-            "S": "543"
-          },
           "key": {
             "S": "asdflkjfdaosduf98023"
+          },
+          "temporal": {
+            "N": "23423455"
+          },
+          "useCounter": {
+            "N": "543"
           }
         },
         {
@@ -230,9 +227,6 @@
               }
             }
           },
-          "temporal": {
-            "S": "1239809238"
-          },
           "passwordInfo": {
             "M": {
               "storedHash": {
@@ -245,6 +239,9 @@
                 "S": "sha512"
               }
             }
+          },
+          "temporal": {
+            "N": "1239809238"
           }
         },
         {
@@ -261,11 +258,11 @@
               }
             }
           },
-          "temporal": {
-            "S": "1239809238"
-          },
           "key": {
             "S": "gsdfertwert435345"
+          },
+          "temporal": {
+            "N": "1239809238"
           }
         },
         {
@@ -282,11 +279,11 @@
               }
             }
           },
-          "temporal": {
-            "S": "1239809238"
-          },
           "key": {
             "S": "sdf34r34radf34rf3r"
+          },
+          "temporal": {
+            "N": "1239809238"
           }
         },
         {
@@ -309,14 +306,14 @@
               }
             }
           },
-          "temporal": {
-            "S": "23412345"
-          },
-          "useCounter": {
-            "S": "1"
-          },
           "key": {
             "S": "asdfkj3o4ijalskdfjlka"
+          },
+          "temporal": {
+            "N": "23412345"
+          },
+          "useCounter": {
+            "N": "1"
           }
         },
         {
@@ -339,14 +336,14 @@
               }
             }
           },
-          "temporal": {
-            "S": "324134213"
-          },
-          "useCounter": {
-            "S": "0"
-          },
           "key": {
             "S": "sdfoij34oifjoasjdfaf"
+          },
+          "temporal": {
+            "N": "324134213"
+          },
+          "useCounter": {
+            "N": "0"
           }
         },
         {
@@ -354,13 +351,10 @@
             "S": "emptydude@email.com"
           },
           "SKCombined": {
-            "S": "M#a456asdf56"
+            "S": "M#"
           },
           "context": {
             "M": {}
-          },
-          "temporal": {
-            "S": "124412878"
           },
           "passwordInfo": {
             "M": {
@@ -374,6 +368,9 @@
                 "S": "sha256"
               }
             }
+          },
+          "temporal": {
+            "N": "124412878"
           }
         }
       ],
