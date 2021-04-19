@@ -6,8 +6,10 @@ export type FrontendKey = {
     useCounter: number
 }
 
-export interface KeyContext extends Object {
-    name: string,
-    site: string,
-    creationDate: number
+export type KeyContext = {
+    Name: string,
+    Site: string,
+    CreationDate: number
+} & {
+    [k: string]: any
 }

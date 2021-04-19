@@ -107,9 +107,10 @@ async function getAndIncrement(
             PKCombined: userEmail,
             SKCombined: "K#" + keyId
         },
-        UpdateExpression: "set useCounter = useCounter + :incr",
-        ExpressionAttributeNames: {
-            ':incr': "1"
+        UpdateExpression: "SET useCounter = if_not_exists(useCounter, :zero_counter) + :incr",
+        ExpressionAttributeValues: {
+            ':incr': 1,
+            ':zero_counter': 0
         },
         ReturnValues: "ALL_NEW",
     }
@@ -159,7 +160,6 @@ async function updateKeyContext(
 ): Promise<ResultOrError<FrontendKey>> {
     let updateExpression = "SET";
     let expressionAttributeNames = {
-        "#context": "context",
         "#temporal": "temporal"
     };
     let expressionAttributeValues = {};
@@ -167,6 +167,7 @@ async function updateKeyContext(
     for (const key in updatedContext) {
         updateExpression = `${updateExpression} #context.#${key} = :${key}Value,`;
         expressionAttributeNames[`#${key}`] = key;
+        expressionAttributeNames["#context"] = "context";
         expressionAttributeValues[`:${key}Value`] = updatedContext[key];
     }
 
@@ -185,7 +186,8 @@ async function updateKeyContext(
         ReturnValues: "ALL_NEW",
     })
     try {
-        return (await dynamodb.send(updateCommand)).Attributes as FrontendKey
+        let databaseKey = (await dynamodb.send(updateCommand)).Attributes as DatabaseKey
+        return getFrontendKey(databaseKey);
     } catch (err) {
         return {
             message: "Error updating key from database",

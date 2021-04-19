@@ -4,16 +4,18 @@ import {
   DynamoDBClient,
   DynamoDBClientConfig,
   AttributeValue,
+  TableAlreadyExistsException,
 } from '@aws-sdk/client-dynamodb';
 import {
   DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
+  PutCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { FrontendKey } from '../layers/model/keys';
+import { FrontendKey, KeyContext } from '../layers/model/keys';
 import { DatabaseKey, DatabaseUser } from '../layers/db_access/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
 import { TABLE_NAME } from '../layers/utils/constants';
@@ -45,7 +47,7 @@ afterAll(() => {
 }, 10000)
 
 describe('createKey', function () {
-    it.skip("Creates key successfully",
+    it("Creates key successfully",
       async () => {
         expect.assertions(3);
 
@@ -55,9 +57,9 @@ describe('createKey', function () {
           key: "23948fsdkf",
           id: "203974fjsldf",
           context: {
-              name: "testKey",
-              site: "newste",
-              creationDate: new Date().getTime()
+              Name: "testKey",
+              Site: "newste",
+              CreationDate: new Date().getTime()
            },
           useCounter: 0,
           lastContentUpdate: new Date()
@@ -73,7 +75,9 @@ describe('createKey', function () {
                 PKCombined: userEmail,
                 SKCombined: "K#" + inputKey.id
             }
-        }))).resolves.toStrictEqual(getDatabaseKey(userEmail, inputKey));
+        })).then(it => {
+          return it.Item
+        })).resolves.toStrictEqual(getDatabaseKey(userEmail, inputKey));
 
         // Assert that we can delete the new key
         await expect(
@@ -171,56 +175,141 @@ describe('getKeysSinceTime', function () {
   );
 });
 
-describe.skip('deleteKey', function () {
+describe('deleteKey', function () {
   it("Deletes key successfully",
     async () => {
-      expect.assertions(1);
-      
-      let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      let keyId = "hihi";
-      await expect(keyAccess.deleteKey(
-        validUser.PKCombined, keyId, documentClient
-      )).resolves.toStrictEqual({
-        email: validUser.PKCombined,
-        context: validUser.context
-      });
-    }
-  );
+      expect.assertions(4);
+        // Get valid frontendUser
+        let userEmail = validUsers[0].PKCombined;
+        let databaseKey = getDatabaseKey(
+          userEmail, 
+          {
+            lastContentUpdate: new Date(),
+            useCounter: 0,
+            context: {
+              Name: "testSesh",
+              Site: null,
+              CreationDate: 10039430
+            },
+            key: "hehe3k23k",
+            id: "flk2j32f"
+          }
+        );
+
+        // First of all expect that the put command works
+        await expect(documentClient.send(
+          new PutCommand({
+            TableName: TABLE_NAME,
+            Item: databaseKey
+          })
+        )).resolves.toBeTruthy();
+
+        // Expect key to exist initially
+        await expect(documentClient.send(
+          new GetCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PKCombined: userEmail,
+              SKCombined: databaseKey.SKCombined
+            }
+          })
+        ).then(item => {
+          return item.Item
+        })).not.toBeUndefined();
+
+        // // Expect delete key to resolve
+        await expect(keyAccess.deleteKey(
+          userEmail, databaseKey.SKCombined.slice(2), documentClient)
+        ).resolves.toBeUndefined()
+
+        // Make sure the key does not exist anymore
+        await expect(documentClient.send(
+          new GetCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PKCombined: userEmail,
+              SKCombined: databaseKey.SKCombined
+            }
+          })
+        ).then(it => {
+          return it.Item
+        })).resolves.toBeUndefined();
+      }
+    );
 });
 
-describe.skip('getAndIncrement', function () {
+describe('getAndIncrement', function () {
   it("Gets and increments key counter",
     async () => {
-      expect.assertions(1);
+      expect.assertions(3);
       
-      let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      let keyId = "hi";
+      let incrementedKey = validKeys[0];
+      let newKey = getFrontendKey(incrementedKey);
+      newKey.useCounter = newKey.useCounter + 1;
+      let newDatabaseKey = getDatabaseKey(incrementedKey.PKCombined, newKey)
+
+      // Assert that the increment function returns well
       await expect(keyAccess.getAndIncrement(
-        validUser.PKCombined, keyId, documentClient
-      )).resolves.toStrictEqual({
-        email: validUser.PKCombined,
-        context: validUser.context
-      });
+        incrementedKey.PKCombined, incrementedKey.SKCombined.slice(2), documentClient
+      )).resolves.toStrictEqual(
+        newKey
+      );
+
+      // Assert that the key is really changed in the database
+      await expect(documentClient.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PKCombined: incrementedKey.PKCombined,
+          SKCombined: incrementedKey.SKCombined
+        }
+      })).then(item => {
+        return item.Item;
+      })).resolves.toEqual(newDatabaseKey)
+
+      // Assert that we can put the key back to its original state (dont want tests to change database)
+      await expect(documentClient.send( new PutCommand({
+        TableName: TABLE_NAME,
+        Item: incrementedKey
+      }))).resolves.toBeTruthy();
     }
   );
 })
 
-describe.skip('updateKeyContext', function () {
+describe('updateKeyContext', function () {
   it("Updates key context successfully",
     async () => {
-      expect.assertions(1);
+      expect.assertions(2);
 
-      let validUserEmail = "hi@hi.com";
-      let keyId = "hihi";
-      let newKeyContext = undefined;
+      let validKey: DatabaseKey = validKeys[0];
+      let newKeyContext: KeyContext = {
+        Name: "New name",
+        Content: "new content",
+        CreationDate: 222,
+        Site: null,
+      }
+      let newKey = getFrontendKey(validKey) as any;
+      newKey.lastContentUpdate = expect.any(Date);
+      newKey.context = expect.objectContaining(newKeyContext);
+
       await expect(keyAccess.updateKeyContext(
-        validUserEmail, keyId, newKeyContext, documentClient
-      )).resolves.toStrictEqual({
-      });
+        validKey.PKCombined, validKey.SKCombined.slice(2), newKeyContext, documentClient
+      )).resolves.toEqual(
+        newKey
+      );
+
+      await expect(
+        documentClient.send(new GetCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            SKCombined: validKey.SKCombined,
+            PKCombined: validKey.PKCombined
+          }
+        })).then(result => {
+          return getFrontendKey(result.Item as DatabaseKey)
+        })
+      ).resolves.toEqual(
+        newKey
+      )
     }
   );
 });

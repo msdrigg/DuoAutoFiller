@@ -67,7 +67,7 @@ export function getDatabaseKey(userEmail: string, frontendKey: FrontendKey): Dat
         key: frontendKey.key,
         useCounter: frontendKey.useCounter,
         temporal: frontendKey.lastContentUpdate.getTime(),
-        SKCombined: "S#" + frontendKey.id,
+        SKCombined: "K#" + frontendKey.id,
         PKCombined: userEmail
     }
 }
