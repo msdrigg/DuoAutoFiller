@@ -1,9 +1,9 @@
-import { DynamoDBDocumentClient, PutCommand, ScanCommandInput, ScanCommand, PutCommandInput, UpdateCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommandInput, ScanCommand, PutCommandInput, UpdateCommandInput, UpdateCommand, DeleteCommandInput, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ResultOrError } from "../model/common";
 import { getDatabaseKey, getFrontendKey } from "./mapping";
 import { DatabaseKey } from "./models";
 import constants from "../utils/constants";
-import { FrontendKey } from "../model/keys";
+import { FrontendKey, KeyContext } from "../model/keys";
 
 
 /**
@@ -51,7 +51,7 @@ async function createKey(
  */
 async function getKeysSinceTime(
     userEmail: string,
-    cuttoffDate: Date,
+    cuttoffDate: Date | undefined,
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<Array<FrontendKey>>> {
     let expressionAttributeValues = {
@@ -121,8 +121,78 @@ async function getAndIncrement(
 
 }
 
+async function deleteKey(
+    userEmail: string,
+    keyId: string,
+    dynamodb: DynamoDBDocumentClient
+): Promise<ResultOrError<void>> {
+    let commandInput: DeleteCommandInput = {
+        TableName: constants.TABLE_NAME,
+        Key: {
+            PKCombined: userEmail,
+            SKCombined: "K#" + keyId
+        }
+    }
+    try {
+        await dynamodb.send(new DeleteCommand(commandInput));
+        return undefined;
+    } catch (err) {
+        return {
+            message: "Error deleting key from database",
+            reason: err,
+            statusCode: 500
+        }
+    }
+}
+
+async function updateKeyContext(
+    userEmail: string,
+    keyId: string,
+    updatedContext: KeyContext,
+    dynamodb: DynamoDBDocumentClient
+): Promise<ResultOrError<FrontendKey>> {
+    let updateExpression = "SET";
+    let expressionAttributeNames = {
+        "#context": "context",
+        "#temporal": "temporal"
+    };
+    let expressionAttributeValues = {};
+    
+    for (const key in updatedContext) {
+        updateExpression = `${updateExpression} #context.#${key} = :${key}Value,`;
+        expressionAttributeNames[`#${key}`] = key;
+        expressionAttributeValues[`:${key}Value`] = updatedContext[key];
+    }
+
+    updateExpression = `${updateExpression} #temporal = :temporalValue`
+    expressionAttributeValues[":temporalValue"] = Date.now();
+
+    let updateCommand = new UpdateCommand({
+        TableName: constants.TABLE_NAME,
+        Key: {
+            PKCombined: userEmail,
+            SKCombined: "K#" + keyId
+        },
+        UpdateExpression: updateExpression,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+        ReturnValues: "ALL_NEW",
+    })
+    try {
+        return (await dynamodb.send(updateCommand)).Attributes as FrontendKey
+    } catch (err) {
+        return {
+            message: "Error updating key from database",
+            reason: err,
+            statusCode: 500
+        }
+    }
+}
+
 export default {
     createKey,
     getAndIncrement,
     getKeysSinceTime,
+    deleteKey,
+    updateKeyContext,
 };

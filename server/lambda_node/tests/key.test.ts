@@ -108,15 +108,9 @@ describe('getKeysSinceTime', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
       await expect(keyAccess.getKeysSinceTime(
-        validUser.PKCombined, documentClient
-      )).resolves.toStrictEqual({
-        email: validUser.PKCombined,
-        context: validUser.context
-      });
+        "emptydude@email.com", undefined, documentClient
+      )).resolves.toStrictEqual([]);
     }
   );
 
