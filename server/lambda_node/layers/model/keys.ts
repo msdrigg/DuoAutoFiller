@@ -1,4 +1,4 @@
-type FrontendKey = {
+export type FrontendKey = {
     key: string,
     id: string,
     context: KeyContext,
@@ -6,7 +6,7 @@ type FrontendKey = {
     useCounter: number
 }
 
-interface KeyContext extends Object {
+export interface KeyContext extends Object {
     name: string,
     site: string,
     creationDate: number
