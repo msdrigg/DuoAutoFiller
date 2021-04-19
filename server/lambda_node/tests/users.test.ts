@@ -32,7 +32,6 @@ beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);
 }, 10000)
 afterAll(() => {
-  console.log("Trying to delete test db")
   return cleanupTestDatabase(testDataModel, documentClient);
 }, 10000)
 

@@ -15,10 +15,10 @@ import {
 } from "@aws-sdk/util-dynamodb";
 import { FrontendKey } from '../layers/model/keys';
 import { ErrorResponse } from '../layers/model/common';
-import { DatabaseUser } from '../layers/db_access/models';
+import { DatabaseKey, DatabaseUser } from '../layers/db_access/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
 import { TABLE_NAME } from '../layers/utils/constants';
-import { getDatabaseKey } from '../layers/db_access/mapping';
+import { getDatabaseKey, getFrontendKey } from '../layers/db_access/mapping';
 
 let config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -30,17 +30,23 @@ let config: DynamoDBClientConfig = {
 }
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 let testDataModel = loadTestData('./tests/testData/testDatabase.json');
+let validUsers: Array<DatabaseUser> = testDataModel.TableData
+  .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+  .filter((it: DatabaseUser) => it.SKCombined == "M#")
+let validKeys: Array<DatabaseKey> = testDataModel.TableData
+  .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+  .filter((it: DatabaseUser) => it.SKCombined.startsWith("K#"))
+
 
 beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);
 }, 10000)
 afterAll(() => {
-  console.log("Trying to delete test db")
   return cleanupTestDatabase(testDataModel, documentClient);
 }, 10000)
 
-describe('createUser', function () {
-    it("Creates user successfully",
+describe('createKey', function () {
+    it.skip("Creates key successfully",
       async () => {
         expect.assertions(3);
 
@@ -88,69 +94,95 @@ describe('createUser', function () {
 
 
 describe('getKeysSinceTime', function () {
-  it.skip("Gets all keys successfully for a user who has two keys",
+  it("Gets all keys successfully for a user who has at least two keys",
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      await expect(keyAccess.getKeysSinceTime(
-        validUser.PKCombined, documentClient
-      )).resolves.toStrictEqual({
-        email: validUser.PKCombined,
-        context: validUser.context
+      let userWithTwoKeys: DatabaseUser = validUsers.find(user => {
+        return validKeys.filter(key => {
+          return key.PKCombined == user.PKCombined
+        }).length >= 2;
       });
+      let usersKeys: Array<FrontendKey> = validKeys.filter(key => {
+        return key.PKCombined == userWithTwoKeys.PKCombined
+      }).map(key => {
+        return getFrontendKey(key);
+      });
+      await expect(keyAccess.getKeysSinceTime(
+        userWithTwoKeys.PKCombined, undefined,  documentClient
+      )).resolves.toStrictEqual(usersKeys);
     }
   );
 
-  it.skip("Gets all keys successfully for a user who has no keys",
+  it("Gets all keys successfully for a user who has no keys",
     async () => {
       expect.assertions(1);
       
+      let userWithNoKeys: DatabaseUser = validUsers.find(user => {
+        return validKeys.filter(key => {
+          return key.PKCombined == user.PKCombined
+        }).length == 0;
+      });
       await expect(keyAccess.getKeysSinceTime(
-        "emptydude@email.com", undefined, documentClient
+        userWithNoKeys.PKCombined, undefined, documentClient
       )).resolves.toStrictEqual([]);
     }
   );
 
-  it.skip("Get 0 keys for a user with 2 keys filtered by time",
+  it("Get 0 keys for a user with 2 keys filtered by time",
     async () => {
       expect.assertions(1);
-      let errorResponse: ErrorResponse = {
-        message: "User not found in database",
-        statusCode: 404,
-      }
-      await expect(userAccess.getUser(
-        "INVALDEMAIL@NOTEXISTS.com", documentClient
-      )).resolves.toMatchObject(errorResponse);
+      let userWithTwoKeys: DatabaseUser = validUsers.find(user => {
+        return validKeys.filter(key => {
+          return key.PKCombined == user.PKCombined
+        }).length >= 2;
+      });
+      
+      await expect(keyAccess.getKeysSinceTime(
+        userWithTwoKeys.PKCombined, new Date(Number.MAX_SAFE_INTEGER), documentClient
+      )).resolves.toStrictEqual([]);
     }
   );
 
-  it.skip("Get 1 keys for a user with 2 keys filtered by time",
+  it("Get 1 keys for a user with at least 2 keys filtered by time",
     async () => {
-      expect.assertions(1);
-      let errorResponse: ErrorResponse = {
-        message: "User not found in database",
-        statusCode: 404,
-      }
-      await expect(userAccess.getUser(
-        "INVALDEMAIL@NOTEXISTS.com", documentClient
-      )).resolves.toMatchObject(errorResponse);
+      expect.assertions(2);
+      let userWithTwoOrMoreKeys: DatabaseUser = validUsers.find(user => {
+        return validKeys.filter(key => {
+          return key.PKCombined == user.PKCombined
+        }).length >= 2;
+      });
+      let usersKeys: Array<DatabaseKey> = validKeys.filter(key => {
+        return key.PKCombined == userWithTwoOrMoreKeys.PKCombined
+      });
+      let inBetweenTime = usersKeys.reduce(function (accumulator, currentValue) {
+        return accumulator + currentValue.temporal / 1000
+      }, 0) / usersKeys.length * 1000;
+      let expectedKeys = usersKeys.filter(key => {
+        return key.temporal > inBetweenTime
+      }).map(key => {
+        return getFrontendKey(key)
+      });
+
+      expect(expectedKeys.length).toBeLessThan(usersKeys.length);
+      await expect(keyAccess.getKeysSinceTime(
+        userWithTwoOrMoreKeys.PKCombined, new Date(inBetweenTime), documentClient
+      )).resolves.toStrictEqual(expectedKeys);
     }
   );
 });
 
-describe('deleteKey', function () {
-  it.skip("Deletes key successfully",
+describe.skip('deleteKey', function () {
+  it("Deletes key successfully",
     async () => {
       expect.assertions(1);
       
       let validUser: DatabaseUser = testDataModel.TableData
         .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
         .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      await expect(userAccess.getUser(
-        validUser.PKCombined, documentClient
+      let keyId = "hihi";
+      await expect(keyAccess.deleteKey(
+        validUser.PKCombined, keyId, documentClient
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
         context: validUser.context
@@ -159,16 +191,17 @@ describe('deleteKey', function () {
   );
 });
 
-describe('getAndUpdateKey', function () {
-  it.skip("Gets and updates key successfully",
+describe.skip('getAndIncrement', function () {
+  it("Gets and increments key counter",
     async () => {
       expect.assertions(1);
       
       let validUser: DatabaseUser = testDataModel.TableData
         .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
         .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      await expect(keyAccess.updateKey(
-        validUser.PKCombined, documentClient
+      let keyId = "hi";
+      await expect(keyAccess.getAndIncrement(
+        validUser.PKCombined, keyId, documentClient
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
         context: validUser.context
@@ -177,19 +210,17 @@ describe('getAndUpdateKey', function () {
   );
 })
 
-describe('updateKey', function () {
-  it.skip("Updates key successfully",
+describe.skip('updateKeyContext', function () {
+  it("Updates key context successfully",
     async () => {
       expect.assertions(1);
-      
-      let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser;
-      await expect(keyAccess.updateKey(
-        validUser.PKCombined, documentClient
+
+      let validUserEmail = "hi@hi.com";
+      let keyId = "hihi";
+      let newKeyContext = undefined;
+      await expect(keyAccess.updateKeyContext(
+        validUserEmail, keyId, newKeyContext, documentClient
       )).resolves.toStrictEqual({
-        email: validUser.PKCombined,
-        context: validUser.context
       });
     }
   );

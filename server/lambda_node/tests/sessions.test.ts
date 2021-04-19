@@ -7,14 +7,17 @@ import {
 import {
   DeleteCommand,
   DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
 import { DatabaseSession, DatabaseUser } from '../layers/db_access/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
-import { getFrontendSession } from '../layers/db_access/mapping';
+import { getDatabaseSession, getFrontendSession } from '../layers/db_access/mapping';
 import sessionAccess from './../layers/db_access/sessionAccess';
+import { TABLE_NAME } from '../layers/utils/constants';
 
 let config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -31,7 +34,6 @@ beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);
 }, 10000)
 afterAll(() => {
-  console.log("Trying to delete test db")
   return cleanupTestDatabase(testDataModel, documentClient);
 }, 10000)
 
@@ -119,11 +121,62 @@ describe('getSession', function () {
         .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
         .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser
     
-    
-
     await expect(sessionAccess.getSession(
         validUser.PKCombined, "asdflkj23", documentClient
     )).resolves.toBeUndefined();
     }
   );
 });
+
+
+describe('deleteSession', function () {
+    it("Deletes session successfully", async () => {
+        expect.assertions(4);
+
+        let validSession: DatabaseSession = testDataModel.TableData
+            .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+            .filter((it: { SKCombined: string; }) => it.SKCombined.startsWith("S#"))[0] as DatabaseSession;
+        // Get valid frontendUser
+        let userEmail = validSession.PKCombined;
+        let databaseSession = getDatabaseSession(
+          userEmail, 
+          {
+            expiration: new Date(),
+            context: {
+              name: "testSesh"
+            },
+            key: "hehe3k23k",
+            id: "flk2j32f"
+          }
+        );
+
+        await expect(documentClient.send(
+          new PutCommand({
+            TableName: TABLE_NAME,
+            Item: databaseSession
+          })
+        )).resolves.toBeTruthy();
+
+        await expect(sessionAccess.getSession(
+          userEmail, databaseSession.SKCombined.slice(2), documentClient
+        )).resolves.toMatchObject(getFrontendSession(databaseSession));
+
+        //console.log(JSON.stringify(testDataModel, null, 2));
+
+        await expect(sessionAccess.deleteSession(
+          userEmail, databaseSession.SKCombined.slice(2), documentClient)
+        ).resolves.toBeUndefined()
+
+        await expect(documentClient.send(
+          new GetCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PKCombined: databaseSession.PKCombined,
+              SKCombined: databaseSession.SKCombined
+            }
+          })
+        ).then(it => {it.Item})).resolves.toBeUndefined();
+      }
+    );
+});
+
