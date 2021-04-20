@@ -3,6 +3,7 @@ import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+
 let config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
