@@ -1,9 +1,9 @@
 import * as constants from "../utils/constants";
-import keyAccess from "../db_access/keyAccess";
+import keyAccess from "../repository/keyAccess";
 import { LambdaResponse } from "./types";
 import { AuthorizationContext } from "../authorization/types";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { ResultOrError, ErrorResponse, isError } from "../model/common";
+import { ResultOrError, isError } from "../model/common";
 import { FrontendKey } from "../model/keys";
 
 export async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {

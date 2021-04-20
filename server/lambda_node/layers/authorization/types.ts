@@ -4,5 +4,5 @@ export type LambdaAuthorization = {
 };
 
 export type AuthorizationContext = {
-    userEmail: string | null
+    userEmail?: string
 };

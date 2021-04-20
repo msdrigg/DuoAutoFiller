@@ -1,7 +1,7 @@
 import httpUtils from "../utils/httpUtils";
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import userAccess from "../db_access/userAccess";
+import userAccess from "../repository/userAccess";
 
 let config: DynamoDBClientConfig = {
     region: "us-east-1",

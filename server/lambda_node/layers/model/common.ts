@@ -4,11 +4,17 @@ export type ErrorResponse = {
     reason?: any
 }
 
-export type AWSError = Error & {
-    $fault: any
-    $retryable: any
-    name: string
-    $metadata: Object
+export type ResponsibleError = {
+    name: string,
+    reason: any,
+    message: string,
+    requestId?: string,
+    statusCode: number,
+    isRetryable: boolean,
+    isThrottling: boolean,
+    isServiceError: boolean,
+    isTransientError: boolean,
+    isClockSkewError: boolean
 }
 
 export type ResultOrError<Type> = Type | ErrorResponse

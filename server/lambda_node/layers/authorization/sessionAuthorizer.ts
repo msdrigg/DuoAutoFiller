@@ -1,4 +1,4 @@
-import sessionAccess from "../db_access/sessionAccess";
+import sessionAccess from "../repository/sessionAccess";
 import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";

@@ -2,8 +2,8 @@ import crypto = require('crypto');
 
 import * as constants from "../utils/constants";
 import httpUtils from "../utils/httpUtils";
-import sessionAccess, * as sessions from "../db_access/sessionAccess";
-import userAccess from "../db_access/userAccess";
+import sessionAccess, * as sessions from "../repository/sessionAccess";
+import userAccess from "../repository/userAccess";
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { LambdaResponse } from './types';
 import { isError } from '../model/common';
