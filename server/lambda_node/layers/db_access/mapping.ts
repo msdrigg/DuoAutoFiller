@@ -6,8 +6,8 @@ import { DatabaseKey, DatabaseSession, DatabaseUser } from "./models";
 
 export function getCoreUser(databaseUser: DatabaseUser): CoreUser {
     return {
-        email: databaseUser.PKCombined,
-        context: databaseUser.context
+        Email: databaseUser.PKCombined,
+        Context: databaseUser.Context
     };
 }
 
@@ -15,59 +15,59 @@ export function createDatabaseUser(authUser: AuthUser): DatabaseUser {
     let passwordSalt = httpUtils.getRandomString(64);
     let hashFunction = constants.DEFAULT_HASH_FUNCTION;
     let newPasswordInfo: PasswordInfo = {
-        hashFunction: hashFunction,
-        salt: passwordSalt,
-        storedHash: httpUtils.hashSalted(
-            authUser.passwordHash,
+        HashFunction: hashFunction,
+        Salt: passwordSalt,
+        StoredHash: httpUtils.hashSalted(
+            authUser.PasswordHash,
             passwordSalt,
             hashFunction
         )
     };
     return {
-        PKCombined: authUser.email,
+        PKCombined: authUser.Email,
         SKCombined: "M#",
-        context: authUser.context,
-        temporal: Date.now(),
-        passwordInfo: newPasswordInfo
+        Context: authUser.Context,
+        Temporal: Date.now(),
+        PasswordInfo: newPasswordInfo
     };
 }
 
 export function getFrontendSession(databaseSession: DatabaseSession): FrontendSession {
     return {
-        key: databaseSession.key,
-        id: databaseSession.SKCombined.slice(2),
-        context: databaseSession.context,
-        expiration: new Date(databaseSession.temporal)
+        Key: databaseSession.Key,
+        Id: databaseSession.SKCombined.slice(2),
+        Context: databaseSession.Context,
+        Expiration: new Date(databaseSession.Temporal)
     };
 }
 
 export function getDatabaseSession(userEmail: string, frontendSession: FrontendSession): DatabaseSession {
     return {
-        key: frontendSession.key,
+        Key: frontendSession.Key,
         PKCombined: userEmail,
-        SKCombined: "S#" + frontendSession.id,
-        context: frontendSession.context,
-        temporal: frontendSession.expiration.getTime()
+        SKCombined: "S#" + frontendSession.Id,
+        Context: frontendSession.Context,
+        Temporal: frontendSession.Expiration.getTime()
     };
 }
 
 export function getFrontendKey(databaseKey: DatabaseKey): FrontendKey {
     return {
-        id: databaseKey.SKCombined.slice(2),
-        context: databaseKey.context,
-        useCounter: databaseKey.useCounter,
-        lastContentUpdate: new Date(databaseKey.temporal),
-        key: databaseKey.key
+        Id: databaseKey.SKCombined.slice(2),
+        Context: databaseKey.Context,
+        UseCounter: databaseKey.UseCounter,
+        LastContentUpdate: new Date(databaseKey.Temporal),
+        Key: databaseKey.Key
     }
 }
 
 export function getDatabaseKey(userEmail: string, frontendKey: FrontendKey): DatabaseKey {
     return {
-        context: frontendKey.context, 
-        key: frontendKey.key,
-        useCounter: frontendKey.useCounter,
-        temporal: frontendKey.lastContentUpdate.getTime(),
-        SKCombined: "K#" + frontendKey.id,
+        Context: frontendKey.Context, 
+        Key: frontendKey.Key,
+        UseCounter: frontendKey.UseCounter,
+        Temporal: frontendKey.LastContentUpdate.getTime(),
+        SKCombined: "K#" + frontendKey.Id,
         PKCombined: userEmail
     }
 }

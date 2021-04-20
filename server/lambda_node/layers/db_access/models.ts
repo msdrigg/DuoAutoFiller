@@ -7,22 +7,28 @@ export interface DatabaseRow {
 }
 
 export interface DatabaseUser extends DatabaseRow {
-    passwordInfo: PasswordInfo,
-    context: Object,
-    temporal: number
+    PasswordInfo: PasswordInfo,
+    Context: any,
+    Temporal: number
 }
 
 export interface DatabaseKey extends DatabaseRow {
-    context: KeyContext,
-    key: string,
-    useCounter: number,
-    temporal: number,
+    Context: KeyContext,
+    Key: string,
+    UseCounter: number,
+    Temporal: number,
+}
+
+export interface UserUpdate {
+    Context?: Object,
+    Email?: string,
+    PasswordHash?: string,
 }
 
 export interface DatabaseSession extends DatabaseRow {
-    key: string,
-    context: SessionContext,
-    temporal: number
+    Key: string,
+    Context: SessionContext,
+    Temporal: number
 }
 
 

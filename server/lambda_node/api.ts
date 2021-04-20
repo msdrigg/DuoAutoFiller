@@ -25,10 +25,10 @@ exports.handler = async (event, context) => {
     try {
         switch (pathParts[0]) {
             case 'key':
-                return await keys.handleKeyRequest(remainingPathParts, body, authorizer, dynamo);
+                return await keys.routeRequest(remainingPathParts, body, authorizer, dynamo);
 
             case 'user':
-                return await users.handleUserRequest(remainingPathParts, body, authorizer, dynamo);
+                return await users.routeRequest(remainingPathParts, body, authorizer, dynamo);
 
             default:
                 throw new Error(`Unsupported path "${pathParts[0]}"`);

@@ -14,7 +14,7 @@ import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
 import { DatabaseSession, DatabaseUser } from '../layers/db_access/models';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
+import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './setupTestDatabase';
 import { getDatabaseSession, getFrontendSession } from '../layers/db_access/mapping';
 import sessionAccess from './../layers/db_access/sessionAccess';
 import { TABLE_NAME } from '../layers/utils/constants';
@@ -29,6 +29,12 @@ let config: DynamoDBClientConfig = {
 }
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 let testDataModel = loadTestData('./tests/testData/AutoAuthenticateDatabase.json');
+let validUsers: Array<DatabaseUser> = testDataModel.TableData
+  .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+  .filter((it: DatabaseUser) => it.SKCombined == "M#")
+let validSessions: Array<DatabaseSession> = testDataModel.TableData
+  .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
+  .filter((it: DatabaseSession) => it.SKCombined.startsWith("S#"))
 
 beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);
@@ -41,15 +47,14 @@ describe('createSession', function () {
     it("Creates session successfully", async () => {
         expect.assertions(3);
 
-        let validSession: DatabaseSession = testDataModel.TableData
-            .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-            .filter((it: { SKCombined: string; }) => it.SKCombined.startsWith("S#"))[0] as DatabaseSession;
-        validSession.temporal = Number(validSession.temporal);
+        let validSession: DatabaseSession = validSessions[0];
+
+        validSession.Temporal = validSession.Temporal;
         // Get valid frontendUser
         let userEmail = validSession.PKCombined;
         let id = "asldkfj20394";
         let name = "New_Sesssion_Test";
-        let expiry = new Date(validSession.temporal);
+        let expiry = new Date(validSession.Temporal);
 
         await expect(sessionAccess.createSession(
             userEmail,
@@ -58,19 +63,19 @@ describe('createSession', function () {
             expiry,
             documentClient
         )).resolves.toMatchObject({
-            id: id,
-            context: {name: name},
-            expiration: expiry,
-            key: expect.any(String)
+            Id: id,
+            Context: {Name: name},
+            Expiration: expiry,
+            Key: expect.any(String)
         });
 
         await expect(sessionAccess.getSession(
           userEmail, id, documentClient
         )).resolves.toMatchObject({
-            id: id,
-            context: {name: name},
-            expiration: expiry,
-            key: expect.any(String)
+            Id: id,
+            Context: {Name: name},
+            Expiration: expiry,
+            Key: expect.any(String)
         });
 
         //console.log(JSON.stringify(testDataModel, null, 2));
@@ -94,10 +99,9 @@ describe('getSession', function () {
   it("Gets session successfully", async () => {
     expect.assertions(1);
     
-    let validSession: DatabaseSession = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined.startsWith("S#"))[0] as DatabaseSession;
-    validSession.temporal = Number(validSession.temporal);
+    let validSession: DatabaseSession = validSessions[0];
+
+    validSession.Temporal = Number(validSession.Temporal);
     let frontendSession = getFrontendSession(validSession);
     await expect(sessionAccess.getSession(
     validSession.PKCombined, validSession.SKCombined.slice(2), documentClient
@@ -117,9 +121,7 @@ describe('getSession', function () {
 
   it("Get session fails with session not exists", async () => {
     expect.assertions(1);
-    let validUser: DatabaseUser = testDataModel.TableData
-        .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-        .filter((it: { SKCombined: string; }) => it.SKCombined == "M#")[0] as DatabaseUser
+    let validUser: DatabaseUser = validUsers[0];
     
     await expect(sessionAccess.getSession(
         validUser.PKCombined, "asdflkj23", documentClient
@@ -133,20 +135,19 @@ describe('deleteSession', function () {
     it("Deletes session successfully", async () => {
         expect.assertions(4);
 
-        let validSession: DatabaseSession = testDataModel.TableData
-            .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-            .filter((it: { SKCombined: string; }) => it.SKCombined.startsWith("S#"))[0] as DatabaseSession;
+        let validSession: DatabaseSession = validSessions[0];
+
         // Get valid frontendUser
         let userEmail = validSession.PKCombined;
         let databaseSession = getDatabaseSession(
           userEmail, 
           {
-            expiration: new Date(),
-            context: {
-              name: "testSesh"
+            Expiration: new Date(),
+            Context: {
+              Name: "testSesh"
             },
-            key: "hehe3k23k",
-            id: "flk2j32f"
+            Key: "hehe3k23k",
+            Id: "flk2j32f"
           }
         );
 
@@ -161,11 +162,9 @@ describe('deleteSession', function () {
           userEmail, databaseSession.SKCombined.slice(2), documentClient
         )).resolves.toMatchObject(getFrontendSession(databaseSession));
 
-        //console.log(JSON.stringify(testDataModel, null, 2));
-
         await expect(sessionAccess.deleteSession(
           userEmail, databaseSession.SKCombined.slice(2), documentClient)
-        ).resolves.toBeUndefined()
+        ).resolves.toBeUndefined();
 
         await expect(documentClient.send(
           new GetCommand({
@@ -179,4 +178,3 @@ describe('deleteSession', function () {
       }
     );
 });
-

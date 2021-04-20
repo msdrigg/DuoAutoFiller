@@ -1,9 +1,9 @@
 export type FrontendKey = {
-    key: string,
-    id: string,
-    context: KeyContext,
-    lastContentUpdate: Date,
-    useCounter: number
+    Key: string,
+    Id: string,
+    Context: KeyContext,
+    LastContentUpdate: Date,
+    UseCounter: number
 }
 
 export type KeyContext = {

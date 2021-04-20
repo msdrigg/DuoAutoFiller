@@ -74,11 +74,11 @@ async function createSession(
     let sessionObject: DatabaseSession = {
         PKCombined: userEmail,
         SKCombined: "S#" + sessionId,
-        key: sessionKey,
-        context: {
-            name: sessionName
+        Key: sessionKey,
+        Context: {
+            Name: sessionName
         },
-        temporal: expirationDate.getTime()
+        Temporal: expirationDate.getTime()
     };
     let comandInput: PutCommandInput = {
         TableName: constants.TABLE_NAME,

@@ -1,14 +1,10 @@
 type FrontendSession = {
-    id: string,
-    key: string,
-    context: SessionContext,
-    expiration: Date,
+    Id: string,
+    Key: string,
+    Context: SessionContext,
+    Expiration: Date,
 }
 
 interface SessionContext {
-    name: string
-}
-
-interface SessionContext {
-    name: string
+    Name: string
 }

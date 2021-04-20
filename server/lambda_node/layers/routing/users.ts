@@ -1,12 +1,16 @@
-const crypto = require('crypto');
+import crypto = require('crypto');
 
 import * as constants from "../utils/constants";
-import * as httpUtils from "../utils/httpUtils";
-import * as sessions from "../db_access/sessionAccess";
+import httpUtils from "../utils/httpUtils";
+import sessionAccess, * as sessions from "../db_access/sessionAccess";
 import userAccess from "../db_access/userAccess";
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { LambdaResponse } from './types';
+import { isError } from '../model/common';
 
-async function routeRequest(routes, body, authorizer, dynamo) {
-    let userEmailAuthorized;
+export async function routeRequest(routes: Array<string>, body: string, authorizer: { userEmail: string; sessionId: string; }, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
+    let userEmailAuthorized: string;
+
     if (routes[0] == "signin") {
         userEmailAuthorized = undefined;
     } else {
@@ -19,27 +23,31 @@ async function routeRequest(routes, body, authorizer, dynamo) {
         case 'signup':
             // Creating a user
             let userSubmission = JSON.parse(body);
-            let createdUser = userAccess.createUser(
-                userSubmission.email,
-                userSubmission.passwordHash,
-                userSubmission.context,
+            let result = userAccess.createUser(
+                userSubmission.Email,
+                userSubmission.PasswordHash,
+                userSubmission.Context,
                 dynamo
             );
             
-            if (createdUser !== undefined) {
-                return constants.OK_MODEL
+            if (isError(result)) {
+                return result;
+            } else if (result === undefined) {
+                return constants.OK_MODEL;
             } else {
-                return httpUtils.getErrorResponseObject(err.message, 409);
+                return {
+                    message: "Error adding user to database with conflict",
+                    statusCode: 409
+                };
             }
         
         case 'update':
-            let request = JSON.parse(body);
-            return userAccess.updateUser(routes[1], userEmailAuthorized, request);
+            let input = JSON.parse(body);
+            return userAccess.updateUser(userEmailAuthorized, input, dynamo);
         
         case 'refreshSession':
             // Download the session key
-            let sessionId = authorizer.sessionId;
-            return sessions.getSession(userEmail, sessionId, dynamo);
+            return sessionAccess.getSession(userEmailAuthorized, authorizer.sessionId, dynamo);
 
         case 'login':
             // Create a session
@@ -50,10 +58,10 @@ async function routeRequest(routes, body, authorizer, dynamo) {
             //     do a session cookie but still validate it for 30 days
             let request = JSON.parse(body);
 
-            let sessionCookies;
-            let sessionName;
-            let sessionId = getRandomString(32);
-            let expirationDate;
+            let sessionCookies: Array<string>;
+            let sessionName: string;
+            let sessionId = httpUtils.getRandomString(32);
+            let expirationDate: Date;
 
             if (request.sessionLength == 0) {
                 // Use browser session. Validate for 30 days
@@ -64,18 +72,18 @@ async function routeRequest(routes, body, authorizer, dynamo) {
                 expirationDate = new Date(expirationSeconds);
 
                 sessionCookies = [
-                    httpUtils.getCookieString(constants.SESSION_COOKIE_NAME, sessionId),
-                    httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, userEmailAuthorized)
+                    httpUtils.getCookieString(constants.SESSION_COOKIE_NAME, sessionId, expirationDate),
+                    httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, userEmailAuthorized, expirationDate)
                 ];
                 sessionName = "TEMPORARY";
 
             } else {
-                let expirationSeconds = Math.min(
+                let expirationTimeoutSeconds = Math.min(
                     constants.MAX_SESSION_LENGTH_SECONDS, 
                     request.sessionLength
                 );
                 let expirationSeconds = Math.floor(
-                    (new Date()).getTime() / 1000 + expirationSeconds
+                    (new Date()).getTime() / 1000 + expirationTimeoutSeconds
                 );
                 expirationDate = new Date(expirationSeconds);
 
@@ -94,7 +102,7 @@ async function routeRequest(routes, body, authorizer, dynamo) {
                 sessionName = request.sessionName;
             }
 
-            await sessions.createSession(
+            await sessionAccess.createSession(
                 userEmailAuthorized,
                 sessionId,
                 sessionName,
@@ -112,7 +120,3 @@ async function routeRequest(routes, body, authorizer, dynamo) {
             throw new Error(`Unsupported path /user/"${routes.join("/")}"`);
     }
 }
-
-export default { 
-    handleUserRequest
-};

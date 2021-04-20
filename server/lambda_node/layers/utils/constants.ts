@@ -11,13 +11,13 @@ export const OK_MODEL = {
 };
 export const OK_RESPONSE: LambdaResponse = OK_MODEL;
 export const UPDATEABLE_USER_METADATA = [
-    'phone',
-    'emailBackup'
+    'Phone',
+    'EmailBackup'
 ];
 export const TRACKED_USER_METADATA = [
-    "phone",
-    "emailBackup", 
-    "dateJoined"
+    "Phone",
+    "EmailBackup", 
+    "DateJoined"
 ];
 
 export default {

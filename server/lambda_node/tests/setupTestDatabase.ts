@@ -65,7 +65,7 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClie
   attributes.push(dataModel.KeyAttributes.PartitionKey);
   attributes.push(dataModel.KeyAttributes.SortKey);
   attributes.push({
-    "AttributeName": "temporal",
+    "AttributeName": "Temporal",
     "AttributeType": "N"
   });
 
@@ -109,3 +109,5 @@ function formatKeySchema(dataModel: any): clientDynamodb.KeySchemaElement[] {
     return keySchemae;
   }
 }
+
+

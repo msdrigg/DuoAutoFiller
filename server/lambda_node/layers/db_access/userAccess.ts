@@ -1,10 +1,10 @@
 import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
-import { CoreUser, UserUpdate } from "../model/users";
+import { CoreUser } from "../model/users";
 import { getCoreUser } from "./mapping";
-import { DatabaseUser } from "./models";
+import { DatabaseUser, UserUpdate } from "./models";
 import { AWSError, ErrorResponse, ResultOrError } from "../model/common";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, PutCommandOutput, UpdateCommand, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, PutCommandOutput, UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
 
 /**
  * Gets the user metadata cooresponding to this userEmail and sessionId.
@@ -33,8 +33,8 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
         }
         let databaseUser = response.Item as unknown as DatabaseUser;
         return {
-            email: databaseUser.PKCombined,
-            context: databaseUser.context
+            Email: databaseUser.PKCombined,
+            Context: databaseUser.Context
         }
     }, function (err: AWSError): ErrorResponse {
         console.log("Error getting user: ", JSON.stringify(err, null, 2));
@@ -56,23 +56,23 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
  * 
  * @param {string} [userEmail] The email for the user
  * @param {string} [passwordHash] The hashed password from the user
- * @param {typedefs.UserContext} [context] Context for the user
+ * @param {typedefs.UserContext} [Context] Context for the user
  * @param {AWS DynamoDB.DocumentClient} [dynamo] Client for accessing dynamodb
  * 
  * @throws {typedefs.DynamoError} Any dynamodb error creating the user
  * @returns {typedefs.FrontendUser|undefined} The user created, undefined if the user fails to be created
  */
-async function createUser(userEmail: string, passwordHash: string, context: Object, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
+async function createUser(userEmail: string, passwordHash: string, Context: Object, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
     let newPasswordSalt = httpUtils.getRandomString(40);
     let backendUser: DatabaseUser = {
         PKCombined: userEmail,
         SKCombined: "M#",
-        context: context,
-        temporal: Date.now(),
-        passwordInfo: {
-            storedHash: httpUtils.hashSalted(passwordHash, newPasswordSalt, constants.DEFAULT_HASH_FUNCTION),
-            hashFunction: constants.DEFAULT_HASH_FUNCTION,
-            salt: newPasswordSalt
+        Context: Context,
+        Temporal: Date.now(),
+        PasswordInfo: {
+            StoredHash: httpUtils.hashSalted(passwordHash, newPasswordSalt, constants.DEFAULT_HASH_FUNCTION),
+            HashFunction: constants.DEFAULT_HASH_FUNCTION,
+            Salt: newPasswordSalt
         }
     }
     // console.log("Creating user: ", JSON.stringify(backendUser, null, 2))
@@ -121,9 +121,7 @@ async function createUser(userEmail: string, passwordHash: string, context: Obje
 async function updateUser(userEmail: string, changes: UserUpdate, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>>{
     // For updates to email or psw, we need to re-encrypt all encryptedData,
     // invalidate all sessions, and change user password hash and email
-
-
-    if (!changes.context && !changes.email && !changes.passwordHash) {
+    if (!changes.Context && !changes.Email && !changes.PasswordHash) {
         return {
             statusCode: 400,
             message: "No user updates given in request",
@@ -132,19 +130,14 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
     }
 
     let user: CoreUser;
-    if (changes.context) {
-        // Update user context
-        // Request: {$context variables to update}
-        let updatedContext = Object.keys(changes.context)
-            .filter(key => constants.UPDATEABLE_USER_METADATA.includes(key))
-            .reduce((obj, key) => {
-                obj[key] = changes[key];
-                return obj;
-            }, {});
+    if (changes.Context) {
+        // Update user Context
+        // Request: {$Context variables to update}
         
+        let updatedContext = changes.Context;
         if (!Object.keys(updatedContext).length) {
             let response: ErrorResponse = {
-                message: "No items to update in context",
+                message: "No items to update in Context",
                 statusCode: 400,
             };
             return response;
@@ -152,18 +145,18 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
         
         let updateExpression = "SET";
         let expressionAttributeNames = {
-            "#context": "context"
+            "#Context": "Context"
         };
         let expressionAttributeValues = {};
         
         for (const key in updatedContext) {
-            updateExpression = `${updateExpression} #context.#${key} = :${key}Value,`;
+            updateExpression = `${updateExpression} #Context.#${key} = :${key}Value,`;
             expressionAttributeNames[`#${key}`] = key;
             expressionAttributeValues[`:${key}Value`] = updatedContext[key];
         }
-        updateExpression = updateExpression.slice(1);
+        updateExpression = updateExpression.slice(0, -1);
 
-        let updateCommand = new UpdateCommand({
+        let updateCommandInput: UpdateCommandInput = {
             TableName: constants.TABLE_NAME,
             Key: {
                 PKCombined: userEmail,
@@ -173,7 +166,8 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
             ExpressionAttributeNames: expressionAttributeNames,
             ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW",
-        })
+        }
+        let updateCommand = new UpdateCommand(updateCommandInput)
         let dynamoResult: UpdateCommandOutput = await dynamo.send(updateCommand);
 
         user = getCoreUser(dynamoResult.Attributes as unknown as DatabaseUser);
@@ -181,7 +175,7 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
 
 
 
-    if (changes.email && changes.email != userEmail) {
+    if (changes.Email && changes.Email != userEmail) {
         // Update user email
         // Delete session
         // Create new user, freeze old user, copy vault over to new user
@@ -190,16 +184,16 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
         // Most of the steps are the same, so we don't repeat most steps twice
         throw new Error("Changing email or password is not yet implemented");
 
-    } else if (changes.passwordHash) {
+    } else if (changes.PasswordHash) {
         // NOTE: If we change the email, we automatically change the password hash,
         // so don't do this step if email has already changed
 
         // 1. Update user metadata
         // a. Lock user
         // b. Delete sessions
-        // 3. Go through each key and move current encrypted data to context field, add new encrypted data field in its place
-        // 4. Update user's passwordInfo file
-        // 5. Go through each key and delete old encrypted data from context field
+        // 3. Go through each key and move current encrypted data to Context field, add new encrypted data field in its place
+        // 4. Update user's PasswordInfo file
+        // 5. Go through each key and delete old encrypted data from Context field
 
         throw new Error("Changing email or password is not yet implemented");
     }

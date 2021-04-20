@@ -62,7 +62,7 @@ async function getKeysSinceTime(
     let keyConditionExpression = 'PKCombined = :hkey'
     if (cuttoffDate !== undefined) {
         expressionAttributeValues[':rkey'] = cuttoffDate.getTime();
-        keyConditionExpression = `${keyConditionExpression} and temporal > :rkey`;
+        keyConditionExpression = `${keyConditionExpression} and Temporal > :rkey`;
     }
 
     let dynamoParams: QueryCommandInput = {
@@ -107,7 +107,7 @@ async function getAndIncrement(
             PKCombined: userEmail,
             SKCombined: "K#" + keyId
         },
-        UpdateExpression: "SET useCounter = if_not_exists(useCounter, :zero_counter) + :incr",
+        UpdateExpression: "SET UseCounter = if_not_exists(UseCounter, :zero_counter) + :incr",
         ExpressionAttributeValues: {
             ':incr': 1,
             ':zero_counter': 0
@@ -160,19 +160,19 @@ async function updateKeyContext(
 ): Promise<ResultOrError<FrontendKey>> {
     let updateExpression = "SET";
     let expressionAttributeNames = {
-        "#temporal": "temporal"
+        "#Temporal": "Temporal"
     };
     let expressionAttributeValues = {};
     
     for (const key in updatedContext) {
-        updateExpression = `${updateExpression} #context.#${key} = :${key}Value,`;
+        updateExpression = `${updateExpression} #Context.#${key} = :${key}Value,`;
         expressionAttributeNames[`#${key}`] = key;
-        expressionAttributeNames["#context"] = "context";
+        expressionAttributeNames["#Context"] = "Context";
         expressionAttributeValues[`:${key}Value`] = updatedContext[key];
     }
 
-    updateExpression = `${updateExpression} #temporal = :temporalValue`
-    expressionAttributeValues[":temporalValue"] = Date.now();
+    updateExpression = `${updateExpression} #Temporal = :TemporalValue`
+    expressionAttributeValues[":TemporalValue"] = Date.now();
 
     let updateCommand = new UpdateCommand({
         TableName: constants.TABLE_NAME,
@@ -186,6 +186,7 @@ async function updateKeyContext(
         ReturnValues: "ALL_NEW",
     })
     try {
+        // console.log("Updating key Context with reason: ", JSON.stringify(updateCommand.input, null, 2));
         let databaseKey = (await dynamodb.send(updateCommand)).Attributes as DatabaseKey
         return getFrontendKey(databaseKey);
     } catch (err) {

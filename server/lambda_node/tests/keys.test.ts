@@ -1,5 +1,5 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import keyAccess from "./../layers/db_access/keyAccess";
+import keyAccess from "../layers/db_access/keyAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -17,7 +17,7 @@ import {
 } from "@aws-sdk/util-dynamodb";
 import { FrontendKey, KeyContext } from '../layers/model/keys';
 import { DatabaseKey, DatabaseUser } from '../layers/db_access/models';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './testDatabaseSetup';
+import { cleanupTestDatabase, loadTestData, setupTestDatabase } from './setupTestDatabase';
 import { TABLE_NAME } from '../layers/utils/constants';
 import { getDatabaseKey, getFrontendKey } from '../layers/db_access/mapping';
 
@@ -28,7 +28,8 @@ let config: DynamoDBClientConfig = {
       accessKeyId: "xxxxxx",
       secretAccessKey: "xxxxxx"
     }
-}
+} 
+
 let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 let testDataModel = loadTestData('./tests/testData/AutoAuthenticateDatabase.json');
 let validUsers: Array<DatabaseUser> = testDataModel.TableData
@@ -37,7 +38,6 @@ let validUsers: Array<DatabaseUser> = testDataModel.TableData
 let validKeys: Array<DatabaseKey> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined.startsWith("K#"))
-
 
 beforeAll(() => {
   return setupTestDatabase(testDataModel, documentClient);
@@ -54,15 +54,15 @@ describe('createKey', function () {
         // Get valid inputKey
         let userEmail = "msd@gemail.com"
         let inputKey: FrontendKey = {
-          key: "23948fsdkf",
-          id: "203974fjsldf",
-          context: {
+          Key: "23948fsdkf",
+          Id: "203974fjsldf",
+          Context: {
               Name: "testKey",
               Site: "newste",
               CreationDate: new Date().getTime()
            },
-          useCounter: 0,
-          lastContentUpdate: new Date()
+          UseCounter: 0,
+          LastContentUpdate: new Date()
         };
         // Assert that they key creation functino returns input key
         await expect(keyAccess.createKey(userEmail, inputKey, documentClient))
@@ -73,7 +73,7 @@ describe('createKey', function () {
             TableName: TABLE_NAME,
             Key: {
                 PKCombined: userEmail,
-                SKCombined: "K#" + inputKey.id
+                SKCombined: "K#" + inputKey.Id
             }
         })).then(it => {
           return it.Item
@@ -86,7 +86,7 @@ describe('createKey', function () {
               TableName: testDataModel.TableName,
               Key: {
                 PKCombined: userEmail,
-                SKCombined: "K#" + inputKey.id
+                SKCombined: "K#" + inputKey.Id
               }
             })
           )
@@ -159,10 +159,10 @@ describe('getKeysSinceTime', function () {
         return key.PKCombined == userWithTwoOrMoreKeys.PKCombined
       });
       let inBetweenTime = usersKeys.reduce(function (accumulator, currentValue) {
-        return accumulator + currentValue.temporal / 1000
+        return accumulator + currentValue.Temporal / 1000
       }, 0) / usersKeys.length * 1000;
       let expectedKeys = usersKeys.filter(key => {
-        return key.temporal > inBetweenTime
+        return key.Temporal > inBetweenTime
       }).map(key => {
         return getFrontendKey(key)
       });
@@ -184,15 +184,15 @@ describe('deleteKey', function () {
         let databaseKey = getDatabaseKey(
           userEmail, 
           {
-            lastContentUpdate: new Date(),
-            useCounter: 0,
-            context: {
+            LastContentUpdate: new Date(),
+            UseCounter: 0,
+            Context: {
               Name: "testSesh",
               Site: null,
               CreationDate: 10039430
             },
-            key: "hehe3k23k",
-            id: "flk2j32f"
+            Key: "hehe3k23k",
+            Id: "flk2j32f"
           }
         );
 
@@ -245,7 +245,7 @@ describe('getAndIncrement', function () {
       
       let incrementedKey = validKeys[0];
       let newKey = getFrontendKey(incrementedKey);
-      newKey.useCounter = newKey.useCounter + 1;
+      newKey.UseCounter = newKey.UseCounter + 1;
       let newDatabaseKey = getDatabaseKey(incrementedKey.PKCombined, newKey)
 
       // Assert that the increment function returns well
@@ -276,7 +276,7 @@ describe('getAndIncrement', function () {
 })
 
 describe('updateKeyContext', function () {
-  it("Updates key context successfully",
+  it("Updates key Context successfully",
     async () => {
       expect.assertions(2);
 
@@ -288,8 +288,8 @@ describe('updateKeyContext', function () {
         Site: null,
       }
       let newKey = getFrontendKey(validKey) as any;
-      newKey.lastContentUpdate = expect.any(Date);
-      newKey.context = expect.objectContaining(newKeyContext);
+      newKey.LastContentUpdate = expect.any(Date);
+      newKey.Context = expect.objectContaining(newKeyContext);
 
       await expect(keyAccess.updateKeyContext(
         validKey.PKCombined, validKey.SKCombined.slice(2), newKeyContext, documentClient

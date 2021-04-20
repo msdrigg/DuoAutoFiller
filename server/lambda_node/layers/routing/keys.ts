@@ -1,11 +1,12 @@
 import * as constants from "../utils/constants";
-import * as httpUtils from "../utils/httpUtils";
-import * as keyAccess from "../db_access/keyAccess";
+import keyAccess from "../db_access/keyAccess";
 import { LambdaResponse } from "./types";
 import { AuthorizationContext } from "../authorization/types";
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { ResultOrError, ErrorResponse, isError } from "../model/common";
+import { FrontendKey } from "../model/keys";
 
-async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DocumentClient): Promise<LambdaResponse> {
+export async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
     // Route users requests 
     let route: string = "";
     if (routes.length > 0) {
@@ -19,18 +20,18 @@ async function routeRequest(routes: Array<string>, body: string, authorizer: Aut
             case '':
                 // Posting (updating or adding a key
                 let frontendKey = JSON.parse(body);
-                let createdKey = await keyAccess.createKey(frontendKey, userEmailAuthorized);
 
+                let response: ResultOrError<FrontendKey> = await keyAccess.createKey(userEmailAuthorized, frontendKey,  dynamo);
+                if (isError(response)) {
+                    return response
+                }
                 return constants.OK_MODEL
             
             case 'findSinceTimestamp':
                 // Find all keys (batch) since a timestamp. If not provided, find all
                 let timestamp = JSON.parse(body).timestamp;
 
-                let dateTime = undefined;
-                if (timestamp) {
-                    dateTime = Date.parse(timestamp);
-                } 
+                let dateTime = timestamp && Date.parse(timestamp) || timestamp
                 
                 return keyAccess.getKeysSinceTime(userEmailAuthorized, dateTime, dynamo);
             
@@ -45,11 +46,10 @@ async function routeRequest(routes: Array<string>, body: string, authorizer: Aut
                 throw new Error(`Unsupported path /key/"${route}"`);
         }
     } catch (err) {
-        return httpUtils.getErrorResponseObject(err.message, 400);
+        return {
+            message: err.message,
+            reason: err,
+            statusCode: 400
+        }
     } 
 }
-
-
-export default {
-    handleKeyRequest
-};

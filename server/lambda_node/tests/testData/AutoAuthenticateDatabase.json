@@ -3,7 +3,7 @@
   "ModelMetadata": {
     "Author": "msdrigg",
     "DateCreated": "Mar 10, 2021, 10:35 PM",
-    "DateLastModified": "Apr 19, 2021, 04:52 PM",
+    "DateLastModified": "Apr 20, 2021, 12:49 AM",
     "Description": "Database for auto authenticate ",
     "AWSService": "Amazon DynamoDB",
     "Version": "2.0"
@@ -23,23 +23,23 @@
       },
       "NonKeyAttributes": [
         {
-          "AttributeName": "context",
+          "AttributeName": "Context",
           "AttributeType": "M"
         },
         {
-          "AttributeName": "passwordInfo",
+          "AttributeName": "PasswordInfo",
           "AttributeType": "M"
         },
         {
-          "AttributeName": "key",
+          "AttributeName": "Key",
           "AttributeType": "S"
         },
         {
-          "AttributeName": "temporal",
+          "AttributeName": "Temporal",
           "AttributeType": "N"
         },
         {
-          "AttributeName": "useCounter",
+          "AttributeName": "UseCounter",
           "AttributeType": "N"
         }
       ],
@@ -52,7 +52,7 @@
               "AttributeType": "S"
             },
             "SortKey": {
-              "AttributeName": "temporal",
+              "AttributeName": "Temporal",
               "AttributeType": "N"
             }
           },
@@ -69,7 +69,7 @@
           "SKCombined": {
             "S": "M#"
           },
-          "context": {
+          "Context": {
             "M": {
               "Phone": {
                 "N": "342349084"
@@ -82,20 +82,20 @@
               }
             }
           },
-          "passwordInfo": {
+          "PasswordInfo": {
             "M": {
-              "storedHash": {
+              "StoredHash": {
                 "S": "ash3ck3mdak3ja0932fa"
               },
-              "salt": {
+              "Salt": {
                 "S": "abd5c45a5d4e5f"
               },
-              "hashFunction": {
+              "HashFunction": {
                 "S": "sha512"
               }
             }
           },
-          "temporal": {
+          "Temporal": {
             "N": "124412878"
           }
         },
@@ -106,17 +106,17 @@
           "SKCombined": {
             "S": "S#24908fsdfj209"
           },
-          "context": {
+          "Context": {
             "M": {
               "Name": {
                 "S": "Chrome2"
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "23490fsdf0942398"
           },
-          "temporal": {
+          "Temporal": {
             "N": "341234512"
           }
         },
@@ -127,7 +127,7 @@
           "SKCombined": {
             "S": "K#234c7sdj234"
           },
-          "context": {
+          "Context": {
             "M": {
               "Protocol": {
                 "S": "TOTP"
@@ -140,13 +140,13 @@
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "8dfsaoiu409385sadf"
           },
-          "temporal": {
+          "Temporal": {
             "N": "23409842"
           },
-          "useCounter": {
+          "UseCounter": {
             "N": "0"
           }
         },
@@ -157,7 +157,7 @@
           "SKCombined": {
             "S": "K#234c723409"
           },
-          "context": {
+          "Context": {
             "M": {
               "Protocol": {
                 "S": "YUBIKEY"
@@ -170,13 +170,13 @@
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "asdfku2o34i90d8fsf"
           },
-          "temporal": {
+          "Temporal": {
             "N": "42345623"
           },
-          "useCounter": {
+          "UseCounter": {
             "N": "3"
           }
         },
@@ -187,7 +187,7 @@
           "SKCombined": {
             "S": "K#2384ufd823"
           },
-          "context": {
+          "Context": {
             "M": {
               "Protocol": {
                 "S": "TOTP"
@@ -200,13 +200,13 @@
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "asdflkjfdaosduf98023"
           },
-          "temporal": {
+          "Temporal": {
             "N": "23423455"
           },
-          "useCounter": {
+          "UseCounter": {
             "N": "543"
           }
         },
@@ -217,7 +217,7 @@
           "SKCombined": {
             "S": "M#"
           },
-          "context": {
+          "Context": {
             "M": {
               "Phone": {
                 "N": "2342343"
@@ -227,20 +227,20 @@
               }
             }
           },
-          "passwordInfo": {
+          "PasswordInfo": {
             "M": {
-              "storedHash": {
+              "StoredHash": {
                 "S": "42341asdfafsd"
               },
-              "salt": {
+              "Salt": {
                 "S": "asdf2er3rf"
               },
-              "hashFunction": {
+              "HashFunction": {
                 "S": "sha512"
               }
             }
           },
-          "temporal": {
+          "Temporal": {
             "N": "1239809238"
           }
         },
@@ -251,17 +251,17 @@
           "SKCombined": {
             "S": "S#asdf234fsdfftrt4"
           },
-          "context": {
+          "Context": {
             "M": {
               "Name": {
                 "S": "Chrome3"
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "gsdfertwert435345"
           },
-          "temporal": {
+          "Temporal": {
             "N": "1239809238"
           }
         },
@@ -272,17 +272,17 @@
           "SKCombined": {
             "S": "S#asdfwqer34f34r"
           },
-          "context": {
+          "Context": {
             "M": {
               "Name": {
                 "S": "Laptop"
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "sdf34r34radf34rf3r"
           },
-          "temporal": {
+          "Temporal": {
             "N": "1239809238"
           }
         },
@@ -293,7 +293,7 @@
           "SKCombined": {
             "S": "K#asdflkj34rjaslkdf"
           },
-          "context": {
+          "Context": {
             "M": {
               "Protocol": {
                 "S": "RSA"
@@ -306,13 +306,13 @@
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "asdfkj3o4ijalskdfjlka"
           },
-          "temporal": {
+          "Temporal": {
             "N": "23412345"
           },
-          "useCounter": {
+          "UseCounter": {
             "N": "1"
           }
         },
@@ -323,7 +323,7 @@
           "SKCombined": {
             "S": "K#asdfklijf4oijaosidf"
           },
-          "context": {
+          "Context": {
             "M": {
               "Protocol": {
                 "S": "TOTP"
@@ -336,13 +336,13 @@
               }
             }
           },
-          "key": {
+          "Key": {
             "S": "sdfoij34oifjoasjdfaf"
           },
-          "temporal": {
+          "Temporal": {
             "N": "324134213"
           },
-          "useCounter": {
+          "UseCounter": {
             "N": "0"
           }
         },
@@ -353,23 +353,27 @@
           "SKCombined": {
             "S": "M#"
           },
-          "context": {
-            "M": {}
-          },
-          "passwordInfo": {
+          "Context": {
             "M": {
-              "storedHash": {
+              "Name": {
+                "S": "Scottie"
+              }
+            }
+          },
+          "PasswordInfo": {
+            "M": {
+              "StoredHash": {
                 "S": "asdf2r2345fqdf"
               },
-              "salt": {
+              "Salt": {
                 "S": "abd5c45a5d4e5f"
               },
-              "hashFunction": {
+              "HashFunction": {
                 "S": "sha256"
               }
             }
           },
-          "temporal": {
+          "Temporal": {
             "N": "124412878"
           }
         }
