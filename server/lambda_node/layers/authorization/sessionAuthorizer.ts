@@ -4,7 +4,7 @@ import constants from "../utils/constants";
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
-let config: DynamoDBClientConfig = {
+const config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
     credentials: {
@@ -12,19 +12,19 @@ let config: DynamoDBClientConfig = {
       secretAccessKey: "xxxxxx"
     }
 }
-let dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 
 exports.handler = async (event, _context) => {
     // Authorize session based off session existing, and session cookie header
 
-    let emailEncoded = httpUtils.getCookieValue(event.cookies, constants.EMAIL_COOKIE_NAME);
-    let sessionId = httpUtils.getCookieValue(event.cookies, constants.SESSION_COOKIE_NAME);
+    const emailEncoded = httpUtils.getCookieValue(event.cookies, constants.EMAIL_COOKIE_NAME);
+    const sessionId = httpUtils.getCookieValue(event.cookies, constants.SESSION_COOKIE_NAME);
 
     if (emailEncoded === undefined || sessionId === undefined) {
         return httpUtils.getJSONAuthorization(false, undefined);
     }
 
-    let email = httpUtils.decodeUnicode(emailEncoded);
+    const email = httpUtils.decodeUnicode(emailEncoded);
 
     let session;
     try {
@@ -38,7 +38,7 @@ exports.handler = async (event, _context) => {
     }
 
     if (session !== undefined) {
-        let expiration = Date.parse(session.temporal);
+        const expiration = Date.parse(session.temporal);
         if (expiration < Date.now()) {
             try {
                 await sessionAccess.deleteSession(email, sessionId, dynamo);

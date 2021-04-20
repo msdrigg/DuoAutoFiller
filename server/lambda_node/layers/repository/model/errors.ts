@@ -17,7 +17,7 @@ export type AWSErrorMetadata = {
     httpStatusCode?: number
 }
 
-export function isAWSError(item: any): item is AWSError {
-    let errorMaybe = item as AWSError;
-    return errorMaybe.name !== undefined && errorMaybe.$metadata !== undefined && (errorMaybe.$fault == "client" || errorMaybe.$fault == "server")
+export function isAWSError(item?: unknown): item is AWSError {
+    const errorMaybe = item as AWSError;
+    return errorMaybe !== undefined && errorMaybe.name !== undefined && errorMaybe.$metadata !== undefined && (errorMaybe.$fault == "client" || errorMaybe.$fault == "server")
 }

@@ -1,9 +1,19 @@
-import * as httpUtils from "./layers/utils/httpUtils";
 import * as users from "./layers/routing/users";
 import * as keys from "./layers/routing/keys";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
+import { AuthorizationContext } from "./layers/authorization/types";
+import { APIGatewayRequestEvent, LambdaContext, LambdaResponse } from "./layers/utils/AWSTypes";
 
-const AWS = require('aws-sdk');
-const dynamo = new AWS.DynamoDB.DocumentClient();
+const config: DynamoDBClientConfig = {
+    region: "us-east-1",
+    endpoint: "http://localhost:8000",
+    credentials: {
+      accessKeyId: "xxxxxx",
+      secretAccessKey: "xxxxxx"
+    }
+}
+const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 
 /**
  * Demonstrates a simple HTTP endpoint using API Gateway. You have full
@@ -15,12 +25,12 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
  * PUT, or DELETE request respectively, passing in the payload to the
  * DynamoDB API as a JSON body.
  */
-exports.handler = async (event, context) => {
-    let pathParts = event.rawPath.split('/').slice(1);
-    let remainingPathParts = pathParts.slice(1);
+exports.handler = async (event: APIGatewayRequestEvent, context: LambdaContext): Promise<LambdaResponse> => {
+    const pathParts = event.rawPath.split('/').slice(1);
+    const remainingPathParts = pathParts.slice(1);
 
-    let body = event.body;
-    let authorizer = context.authorizer;
+    const body = event.body;
+    const authorizer: AuthorizationContext = context.authorizer;
 
     try {
         switch (pathParts[0]) {
@@ -34,7 +44,7 @@ exports.handler = async (event, context) => {
                 throw new Error(`Unsupported path "${pathParts[0]}"`);
         }
     } catch (err) {
-        let errorResponse = err;
+        const errorResponse = err;
         errorResponse.alternateStatusCode = err.statusCode;
         errorResponse.statusCode = 400;
         return errorResponse;

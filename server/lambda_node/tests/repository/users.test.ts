@@ -13,12 +13,12 @@ import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
 import { AuthUser, CoreUser, UserUpdate } from '../../layers/model/users';
-import { ErrorResponse } from '../../layers/model/common';
+import { ErrorType, ResponsibleError } from '../../layers/model/common';
 import { DatabaseUser } from '../../layers/repository/model/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { getCoreUser } from '../../layers/repository/model/mapping';
+import { createResponsibleError, getCoreUser } from '../../layers/repository/model/mapping';
 
-let config: DynamoDBClientConfig = {
+const config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
     credentials: {
@@ -26,9 +26,9 @@ let config: DynamoDBClientConfig = {
       secretAccessKey: "xxxxxx"
     }
 }
-let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-let testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
-let validUsers: Array<DatabaseUser> = testDataModel.TableData
+const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
+const validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined.startsWith("M#"))
 
@@ -46,7 +46,7 @@ describe('createUser', function () {
         expect.assertions(3);
 
         // Get valid frontendUser
-        let frontUser: AuthUser = {
+        const frontUser: AuthUser = {
           Email: "validEmail@address.com",
           PasswordHash: "ase423lk4fdj",
           Context: {name: "valid man"},
@@ -88,19 +88,19 @@ describe('createUser', function () {
         expect.assertions(1);
         
         // Get a frontendUser from the datamodel
-        let databaseUser = validUsers[0];
-        let frontUser: AuthUser = {
+        const databaseUser = validUsers[0];
+        const frontUser: AuthUser = {
           Email: databaseUser.PKCombined,
           PasswordHash: "ase423lk4fdj",
           Context: {
             Name: "valid man"
           },
         }
-        let errorResponse: ErrorResponse = {
-          message: "User with provided email already exists",
-          reason: expect.any(Object),
-          statusCode: 409,
-        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errorResponse = createResponsibleError(ErrorType.DatabaseError, "User with provided email already exists", 409) as any;
+        errorResponse.reason = expect.any(Error);
+        
         await expect(userAccess.createUser(
           frontUser.Email,
           frontUser.PasswordHash,
@@ -117,7 +117,7 @@ describe('getUser', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: CoreUser = getCoreUser(validUsers[0]);
+      const validUser: CoreUser = getCoreUser(validUsers[0]);
 
       await expect(userAccess.getUser(
         validUser.Email, documentClient
@@ -128,10 +128,8 @@ describe('getUser', function () {
   it("Gets user fails with not found",
     async () => {
       expect.assertions(1);
-      let errorResponse: ErrorResponse = {
-        message: "User not found in database",
-        statusCode: 404,
-      }
+      const errorResponse: ResponsibleError = createResponsibleError(ErrorType.DatabaseError, "User not found in database", 404);
+
       await expect(userAccess.getUser(
         "INVALDEMAIL@NOTEXISTS.com", documentClient
       )).resolves.toMatchObject(errorResponse);
@@ -144,7 +142,7 @@ describe('deleteUser', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = validUsers[0];
+      const validUser: DatabaseUser = validUsers[0];
 
       await expect(userAccess.getUser(
         validUser.PKCombined, documentClient
@@ -161,19 +159,19 @@ describe('updateUser', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = validUsers.find(
+      const validUser: DatabaseUser = validUsers.find(
         (user: DatabaseUser) => {
-          return user.Context.hasOwnProperty("Name")
+          return user.Context.Name !== undefined
         });
       
-      let update: UserUpdate = {
+      const update: UserUpdate = {
         Context: {
           Name: "New name",
           Phone: "new Phone",
           Butthole: "got one"
         }
       }
-      let returnedUser = getCoreUser(validUser);
+      const returnedUser = getCoreUser(validUser);
       returnedUser.Context = update.Context;
 
       await expect(userAccess.updateUser(
@@ -186,7 +184,7 @@ describe('updateUser', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = validUsers[0];
+      const validUser: DatabaseUser = validUsers[0];
       
       await expect(userAccess.getUser(
         validUser.PKCombined, documentClient
@@ -201,7 +199,7 @@ describe('updateUser', function () {
     async () => {
       expect.assertions(1);
       
-      let validUser: DatabaseUser = validUsers[0];
+      const validUser: DatabaseUser = validUsers[0];
 
       await expect(userAccess.getUser(
         validUser.PKCombined, documentClient

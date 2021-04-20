@@ -1,3 +1,5 @@
+import { BaseContext } from "./common"
+
 export type FrontendKey = {
     Key: string,
     Id: string,
@@ -10,6 +12,4 @@ export type KeyContext = {
     Name: string,
     Site: string,
     CreationDate: number
-} & {
-    [k: string]: any
-}
+} & BaseContext

@@ -4,7 +4,6 @@ import {
   DynamoDBClient,
   DynamoDBClientConfig,
   AttributeValue,
-  TableAlreadyExistsException,
 } from '@aws-sdk/client-dynamodb';
 import {
   DeleteCommand,
@@ -21,7 +20,7 @@ import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/s
 import { TABLE_NAME } from '../../layers/utils/constants';
 import { getDatabaseKey, getFrontendKey } from '../../layers/repository/model/mapping';
 
-let config: DynamoDBClientConfig = {
+const config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
     credentials: {
@@ -30,12 +29,12 @@ let config: DynamoDBClientConfig = {
     }
 } 
 
-let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-let testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
-let validUsers: Array<DatabaseUser> = testDataModel.TableData
+const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
+const validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined == "M#")
-let validKeys: Array<DatabaseKey> = testDataModel.TableData
+const validKeys: Array<DatabaseKey> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined.startsWith("K#"))
 
@@ -52,8 +51,8 @@ describe('createKey', function () {
         expect.assertions(3);
 
         // Get valid inputKey
-        let userEmail = "msd@gemail.com"
-        let inputKey: FrontendKey = {
+        const userEmail = "msd@gemail.com"
+        const inputKey: FrontendKey = {
           Key: "23948fsdkf",
           Id: "203974fjsldf",
           Context: {
@@ -96,7 +95,7 @@ describe('createKey', function () {
 
     it.skip("Create key fails with dynamo error", 
       async () => {
-
+        return 0
       }
     );
 });
@@ -107,12 +106,12 @@ describe('getKeysSinceTime', function () {
     async () => {
       expect.assertions(1);
       
-      let userWithTwoKeys: DatabaseUser = validUsers.find(user => {
+      const userWithTwoKeys: DatabaseUser = validUsers.find(user => {
         return validKeys.filter(key => {
           return key.PKCombined == user.PKCombined
         }).length >= 2;
       });
-      let usersKeys: Array<FrontendKey> = validKeys.filter(key => {
+      const usersKeys: Array<FrontendKey> = validKeys.filter(key => {
         return key.PKCombined == userWithTwoKeys.PKCombined
       }).map(key => {
         return getFrontendKey(key);
@@ -127,7 +126,7 @@ describe('getKeysSinceTime', function () {
     async () => {
       expect.assertions(1);
       
-      let userWithNoKeys: DatabaseUser = validUsers.find(user => {
+      const userWithNoKeys: DatabaseUser = validUsers.find(user => {
         return validKeys.find(key => {
           return key.PKCombined == user.PKCombined
         }) === undefined;
@@ -141,7 +140,7 @@ describe('getKeysSinceTime', function () {
   it("Get 0 keys for a user with 2 keys filtered by time",
     async () => {
       expect.assertions(1);
-      let userWithTwoKeys: DatabaseUser = validUsers.find(user => {
+      const userWithTwoKeys: DatabaseUser = validUsers.find(user => {
         return validKeys.filter(key => {
           return key.PKCombined == user.PKCombined
         }).length >= 2;
@@ -156,18 +155,18 @@ describe('getKeysSinceTime', function () {
   it("Get 1 keys for a user with at least 2 keys filtered by time",
     async () => {
       expect.assertions(2);
-      let userWithTwoOrMoreKeys: DatabaseUser = validUsers.find(user => {
+      const userWithTwoOrMoreKeys: DatabaseUser = validUsers.find(user => {
         return validKeys.filter(key => {
           return key.PKCombined == user.PKCombined
         }).length >= 2;
       });
-      let usersKeys: Array<DatabaseKey> = validKeys.filter(key => {
+      const usersKeys: Array<DatabaseKey> = validKeys.filter(key => {
         return key.PKCombined == userWithTwoOrMoreKeys.PKCombined
       });
-      let inBetweenTime = usersKeys.reduce(function (accumulator, currentValue) {
+      const inBetweenTime = usersKeys.reduce(function (accumulator, currentValue) {
         return accumulator + currentValue.Temporal / 1000
       }, 0) / usersKeys.length * 1000;
-      let expectedKeys = usersKeys.filter(key => {
+      const expectedKeys = usersKeys.filter(key => {
         return key.Temporal > inBetweenTime
       }).map(key => {
         return getFrontendKey(key)
@@ -182,7 +181,7 @@ describe('getKeysSinceTime', function () {
   
   it.skip("Get key fails with dynamo error", 
     async () => {
-
+      return 0
     }
   );
 });
@@ -192,8 +191,8 @@ describe('deleteKey', function () {
     async () => {
       expect.assertions(4);
         // Get valid frontendUser
-        let userEmail = validUsers[0].PKCombined;
-        let databaseKey = getDatabaseKey(
+        const userEmail = validUsers[0].PKCombined;
+        const databaseKey = getDatabaseKey(
           userEmail, 
           {
             LastContentUpdate: new Date(),
@@ -250,7 +249,7 @@ describe('deleteKey', function () {
     );
   it.skip("Delete key fails with dynamo error", 
     async () => {
-
+      return 0
     }
   );
 });
@@ -260,10 +259,10 @@ describe('getAndIncrement', function () {
     async () => {
       expect.assertions(3);
       
-      let incrementedKey = validKeys[0];
-      let newKey = getFrontendKey(incrementedKey);
+      const incrementedKey = validKeys[0];
+      const newKey = getFrontendKey(incrementedKey);
       newKey.UseCounter = newKey.UseCounter + 1;
-      let newDatabaseKey = getDatabaseKey(incrementedKey.PKCombined, newKey)
+      const newDatabaseKey = getDatabaseKey(incrementedKey.PKCombined, newKey)
 
       // Assert that the increment function returns well
       await expect(keyAccess.getAndIncrement(
@@ -293,7 +292,7 @@ describe('getAndIncrement', function () {
 
   it.skip("Get and increment fails with dynamo error", 
     async () => {
-
+      return 0;
     }
   );
 })
@@ -303,14 +302,15 @@ describe('updateKeyContext', function () {
     async () => {
       expect.assertions(2);
 
-      let validKey: DatabaseKey = validKeys[0];
-      let newKeyContext: KeyContext = {
+      const validKey: DatabaseKey = validKeys[0];
+      const newKeyContext: KeyContext = {
         Name: "New name",
         Content: "new content",
         CreationDate: 222,
         Site: null,
       }
-      let newKey = getFrontendKey(validKey) as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newKey = getFrontendKey(validKey) as any;
       newKey.LastContentUpdate = expect.any(Date);
       newKey.Context = expect.objectContaining(newKeyContext);
 
@@ -338,7 +338,7 @@ describe('updateKeyContext', function () {
 
   it.skip("Update key context fails with dynamo error", 
     async () => {
-
+      return 0;
     }
   );
 });

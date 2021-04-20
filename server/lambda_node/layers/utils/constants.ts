@@ -1,5 +1,5 @@
-import { LambdaResponse } from "../routing/types";
 import { HashFunction } from "./../model/users"
+import { LambdaResponse } from "./AWSTypes";
 export const TABLE_NAME = "AutoAuthenticateUnified";
 export const INDEX_NAME = "GSITemporal";
 export const DEFAULT_HASH_FUNCTION: string = HashFunction.SHA512;

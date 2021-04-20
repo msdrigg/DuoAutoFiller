@@ -3,7 +3,7 @@ import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import userAccess from "../repository/userAccess";
 
-let config: DynamoDBClientConfig = {
+const config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
     credentials: {
@@ -11,11 +11,11 @@ let config: DynamoDBClientConfig = {
       secretAccessKey: "xxxxxx"
     }
 }
-let dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 
-exports.handler = async (event, context) => {
+exports.handler = async (event, _context) => {
     // Authorize user based off Authorization cookie with email (b64) and password
-    let authorization = event.headers.Authorization;
+    const authorization = event.headers.Authorization;
     let authString;
     if (authorization !== undefined) {
         authString = httpUtils.decodeUnicode(authorization.split(" ")[1]);
@@ -23,14 +23,14 @@ exports.handler = async (event, context) => {
         return httpUtils.getJSONAuthorization(false, undefined);
     }
 
-    let authParts = authString.split(":");
+    const authParts = authString.split(":");
 
     if (authParts.length != 2) {
         return httpUtils.getJSONAuthorization(false, undefined);
     }
 
-    let userEmail = authParts[0];
-    let userPasswordPreHashed = authParts[1];
+    const userEmail = authParts[0];
+    const userPasswordPreHashed = authParts[1];
 
     let user;
     try {
@@ -46,11 +46,11 @@ exports.handler = async (event, context) => {
     if (user === undefined) {
         return httpUtils.getJSONAuthorization(false, undefined);
     }
-    let passwordSalt = user.passwordInfo.salt;
-    let hashFunction = user.passwordInfo.hashFunction;
+    const passwordSalt = user.passwordInfo.salt;
+    const hashFunction = user.passwordInfo.hashFunction;
 
-    let userPasswordHashed = httpUtils.hashSalted(userPasswordPreHashed, passwordSalt, hashFunction);
-    let isAuthenticated = userPasswordHashed == user.passwordInfo.storedHash;
+    const userPasswordHashed = httpUtils.hashSalted(userPasswordPreHashed, passwordSalt, hashFunction);
+    const isAuthenticated = userPasswordHashed == user.passwordInfo.storedHash;
 
     return httpUtils.getJSONAuthorization(isAuthenticated, userEmail);
 }

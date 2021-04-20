@@ -1,55 +1,68 @@
-import * as constants from "../utils/constants";
 import keyAccess from "../repository/keyAccess";
-import { LambdaResponse } from "./types";
+import { getErrorLambdaResponse, LambdaResponse } from "../utils/AWSTypes";
 import { AuthorizationContext } from "../authorization/types";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { ResultOrError, isError } from "../model/common";
+import { ErrorType, isError, ResponsibleError, ResultOrError } from "../model/common";
 import { FrontendKey } from "../model/keys";
+import { createResponsibleError } from "../repository/model/mapping";
 
 export async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
     // Route users requests 
-    let route: string = "";
+    let route = "";
     if (routes.length > 0) {
         route = routes[0];
     }
 
     try {
-        let userEmailAuthorized = authorizer.userEmail;
+        const userEmailAuthorized = authorizer.userEmail;
 
         switch (route) {
-            case '':
+            case '': {
                 // Posting (updating or adding a key
-                let frontendKey = JSON.parse(body);
-
-                let response: ResultOrError<FrontendKey> = await keyAccess.createKey(userEmailAuthorized, frontendKey,  dynamo);
+                const frontendKey = JSON.parse(body);
+                const response: ResultOrError<FrontendKey> = await keyAccess.createKey(userEmailAuthorized, frontendKey,  dynamo);
                 if (isError(response)) {
-                    return response
+                    return getErrorLambdaResponse(response);
+                } else {
+                    return response;
                 }
-                return constants.OK_MODEL
-            
-            case 'findSinceTimestamp':
+            }
+            case 'findSinceTimestamp': {
                 // Find all keys (batch) since a timestamp. If not provided, find all
-                let timestamp = JSON.parse(body).timestamp;
+                const timestamp = JSON.parse(body).timestamp;
 
-                let dateTime = timestamp && Date.parse(timestamp) || timestamp
+                const dateTime = timestamp && Date.parse(timestamp) || timestamp
                 
-                return keyAccess.getKeysSinceTime(userEmailAuthorized, dateTime, dynamo);
-            
-            case 'downloadAndUse':
+                const response = await keyAccess.getKeysSinceTime(userEmailAuthorized, dateTime, dynamo);
+                if (isError(response)) {
+                    return getErrorLambdaResponse(response);
+                } else {
+                    return response as FrontendKey[];
+                }
+            }
+            case 'downloadAndUse': {
                 // Increment usageCounter and return the key atomically
-                let requestBody = JSON.parse(body);
-                let keyId = requestBody.id;
+                const requestBody = JSON.parse(body);
+                const keyId = requestBody.id;
                 
-                return keyAccess.getAndIncrement(userEmailAuthorized, keyId, dynamo);
-
-            default:
+                const result = await keyAccess.getAndIncrement(userEmailAuthorized, keyId, dynamo);
+                if (isError(result)) {
+                    return getErrorLambdaResponse(result);
+                } else {
+                    return result;
+                }
+            }
+            default: {
                 throw new Error(`Unsupported path /key/"${route}"`);
+            }
         }
     } catch (err) {
-        return {
-            message: err.message,
-            reason: err,
-            statusCode: 400
+        let responsibleError: ResponsibleError;
+        if (err !== undefined) {
+            responsibleError = createResponsibleError(ErrorType.ServerError, err?.message || "Unknown error", 400, err);
+        } else {
+            responsibleError = createResponsibleError(ErrorType.UnknownError, "Unknown error routing request", 500)
         }
+        return getErrorLambdaResponse(responsibleError);
     } 
 }

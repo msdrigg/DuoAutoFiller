@@ -10,7 +10,7 @@ import { LambdaAuthorization } from "../authorization/types";
  */
 function decodeUnicode(encoded: string): string {
     // Going backwards: from bytestream, to percent-encoding, to original string.
-    let binary = atob(encoded)
+    const binary = atob(encoded)
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < bytes.length; i++) {
     bytes[i] = binary.charCodeAt(i);
@@ -53,11 +53,11 @@ function getRandomString(length: number): string{
  * @returns {string} The value cooresponding to the cookie name given, undefined if not found
  */
 function getCookieValue(cookies: Array<string>, cookieName: string): string {
-    let emailCookie = cookies.find(cookie => cookie.startsWith(cookieName));
+    const emailCookie = cookies.find(cookie => cookie.startsWith(cookieName));
     if (emailCookie === undefined) {
         return undefined;
     } else {
-        let cookieSplit = emailCookie.split(";")[0].split("=");
+        const cookieSplit = emailCookie.split(";")[0].split("=");
 
         if (cookieSplit.length > 1 && cookieSplit[1]) {
             return cookieSplit[1];
@@ -78,7 +78,7 @@ function getCookieValue(cookies: Array<string>, cookieName: string): string {
  * @returns {string} The cookie string header value
  */
 function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date): string {
-    let baseCookieString = `${cookieName}=${cookieValue};`;
+    const baseCookieString = `${cookieName}=${cookieValue};`;
     if (expirationDate === undefined) {
         return baseCookieString;
     } else {
@@ -96,7 +96,7 @@ function getCookieString(cookieName: string, cookieValue: string, expirationDate
  * @returns {string} The hex encoding of the resulting hash
  */
 function hashSalted(password: string, salt: string, hashFunction: string): string {
-    var hash = crypto.createHmac(hashFunction, salt); /** Hashing algorithm sha512 */
+    const hash = crypto.createHmac(hashFunction, salt); /** Hashing algorithm sha512 */
     hash.update(password);
     return hash.digest('hex');
 }
@@ -110,7 +110,7 @@ function hashSalted(password: string, salt: string, hashFunction: string): strin
  * @returns {typedefs.LambdaAuthorization} The authorization status using the simple aws lambda authorizer payload format
  */
 function getJSONAuthorization(didAuthorize: boolean, userEmail: string): LambdaAuthorization {
-    let output: LambdaAuthorization = {
+    const output: LambdaAuthorization = {
         isAuthorized: didAuthorize,
         context: {
             userEmail: null

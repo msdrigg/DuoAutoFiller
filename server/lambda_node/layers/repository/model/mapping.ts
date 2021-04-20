@@ -1,4 +1,4 @@
-import { ResponsibleError } from "../../model/common";
+import { ErrorType, ResponsibleError } from "../../model/common";
 import { FrontendKey } from "../../model/keys";
 import { AuthUser, CoreUser, PasswordInfo } from "../../model/users";
 import constants from "../../utils/constants";
@@ -6,6 +6,7 @@ import httpUtils from "../../utils/httpUtils";
 import { isAWSError } from "./errors";
 import { DatabaseKey, DatabaseSession, DatabaseUser } from "./models";
 import { isRetryableByTrait, isThrottlingError, isTransientError, isClockSkewError } from "@aws-sdk/service-error-classification";
+import { FrontendSession } from "../../model/sessions";
 
 export function getCoreUser(databaseUser: DatabaseUser): CoreUser {
     return {
@@ -15,9 +16,9 @@ export function getCoreUser(databaseUser: DatabaseUser): CoreUser {
 }
 
 export function createDatabaseUser(authUser: AuthUser): DatabaseUser {
-    let passwordSalt = httpUtils.getRandomString(64);
-    let hashFunction = constants.DEFAULT_HASH_FUNCTION;
-    let newPasswordInfo: PasswordInfo = {
+    const passwordSalt = httpUtils.getRandomString(64);
+    const hashFunction = constants.DEFAULT_HASH_FUNCTION;
+    const newPasswordInfo: PasswordInfo = {
         HashFunction: hashFunction,
         Salt: passwordSalt,
         StoredHash: httpUtils.hashSalted(
@@ -75,11 +76,17 @@ export function getDatabaseKey(userEmail: string, frontendKey: FrontendKey): Dat
     }
 }
 
-export function getResponsibleError(error: any): ResponsibleError {
+export function getResponsibleError(error: unknown): ResponsibleError {
     if (isAWSError(error)) {
         // Handle AWS Error
+        let name: ErrorType;
+        if (error.$fault == "server") {
+            name = ErrorType.DynamoDBError
+        } else {
+            name = ErrorType.ServerError
+        }
         return {
-            name: error.name,
+            name: name,
             message: error.message,
             reason: error,
             statusCode: error.$metadata?.httpStatusCode || 500,
@@ -91,10 +98,16 @@ export function getResponsibleError(error: any): ResponsibleError {
         }
     } else {
         // Handle some other unknown error
+        let usableError: Error;
+        if (error !== undefined && (error as Error).name !== undefined) {
+            usableError == error as Error;
+        } else {
+            usableError = new Error("Unknown error cause");
+        }
         return {
-            name: "UnknownError",
+            name: ErrorType.UnknownError,
             message: "Unknown Error",
-            reason: error,
+            reason: usableError,
             statusCode: 500,
             isRetryable: false,
             isServiceError: false,
@@ -102,5 +115,20 @@ export function getResponsibleError(error: any): ResponsibleError {
             isTransientError: false,
             isClockSkewError: false
         }
+    }
+}
+
+
+export function createResponsibleError(name: ErrorType, message: string, statusCode?: number, reason?: Error): ResponsibleError {
+    return {
+        name: name,
+        message: message,
+        reason: reason,
+        statusCode: statusCode,
+        isRetryable: false,
+        isThrottling: false,
+        isTransientError: false,
+        isClockSkewError: false,
+        isServiceError: false
     }
 }

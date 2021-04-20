@@ -1,13 +1,15 @@
-export interface CoreUser {
+import { BaseContext } from "./common"
+
+export type CoreUser = {
     Email: string,
-    Context: Object
+    Context: BaseContext
 }
 
-export interface AuthUser extends CoreUser {
+export type AuthUser = CoreUser & {
     PasswordHash: string,
 }
 
-export interface PasswordInfo {
+export type PasswordInfo = {
     StoredHash: string,
     HashFunction: string,
     Salt: string
@@ -17,8 +19,8 @@ export enum HashFunction {
     SHA512 = "SHA512",
 }
 
-export interface UserUpdate {
-    Context?: Object,
+export type UserUpdate = {
+    Context?: { [k: string]: string | number | null }
     Email?: string,
     PasswordHash?: string,
 }

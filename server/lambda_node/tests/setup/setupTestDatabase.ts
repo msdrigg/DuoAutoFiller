@@ -2,13 +2,13 @@ import fs = require('fs');
 import * as clientDynamodb from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb";
 import {unmarshall} from "@aws-sdk/util-dynamodb";
-import { DeleteTableCommandInput } from '@aws-sdk/client-dynamodb';
+import { DeleteTableCommandInput, DeleteTableCommandOutput } from '@aws-sdk/client-dynamodb';
 
-export function loadTestData(filepath: string) {
+export function loadTestData(filepath: string): unknown {
     return JSON.parse(fs.readFileSync(filepath, 'utf8')).DataModel[0];
 }
 
-export async function setupTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClient) {
+export async function setupTestDatabase(dataModel: unknown, dynamodb: DynamoDBDocumentClient): Promise<void> {
   // console.log("Starting to create test db")
   try {
     await createTestDatabase(dataModel, dynamodb);
@@ -19,8 +19,8 @@ export async function setupTestDatabase(dataModel: any, dynamodb: DynamoDBDocume
   await addTestItems(dataModel, dynamodb);
   // console.log("Done adding items to db")
 }
-export function cleanupTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClient) {
-    let deleteTableInput: DeleteTableCommandInput = {
+export function cleanupTestDatabase(dataModel: {TableName: string}, dynamodb: DynamoDBDocumentClient): Promise<DeleteTableCommandOutput> {
+    const deleteTableInput: DeleteTableCommandInput = {
         TableName: dataModel.TableName
     }
     return dynamodb.send(new clientDynamodb.DeleteTableCommand(deleteTableInput))
@@ -29,6 +29,7 @@ export function cleanupTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentCl
 //   }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function addTestItems(dataModel: any, dynamodb: DynamoDBDocumentClient) {
   for (const item of dataModel.TableData) {
     // console.log("Trying to adding item: ", JSON.stringify(resolvedItem, null, 2));
@@ -44,12 +45,13 @@ async function addTestItems(dataModel: any, dynamodb: DynamoDBDocumentClient) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClient) {
-  let keySchema: clientDynamodb.KeySchemaElement[] = formatKeySchema(dataModel);
+  const keySchema: clientDynamodb.KeySchemaElement[] = formatKeySchema(dataModel);
   // console.log("Creating test db")
-  let indexes: clientDynamodb.GlobalSecondaryIndex[] = [];
+  const indexes: clientDynamodb.GlobalSecondaryIndex[] = [];
   for (const idx of dataModel.GlobalSecondaryIndexes) {
-    let newIndex: clientDynamodb.GlobalSecondaryIndex = {
+    const newIndex: clientDynamodb.GlobalSecondaryIndex = {
       KeySchema: formatKeySchema(idx),
       IndexName: idx.IndexName,
       Projection: idx.Projection,
@@ -61,7 +63,7 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClie
     indexes.push(newIndex);
   }
 
-  let attributes: clientDynamodb.AttributeDefinition[] = [];
+  const attributes: clientDynamodb.AttributeDefinition[] = [];
   attributes.push(dataModel.KeyAttributes.PartitionKey);
   attributes.push(dataModel.KeyAttributes.SortKey);
   attributes.push({
@@ -69,7 +71,7 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClie
     "AttributeType": "N"
   });
 
-  let tableParams: clientDynamodb.CreateTableInput = {
+  const tableParams: clientDynamodb.CreateTableInput = {
     TableName: dataModel.TableName,
     AttributeDefinitions: attributes,
     GlobalSecondaryIndexes: indexes,
@@ -81,22 +83,18 @@ async function createTestDatabase(dataModel: any, dynamodb: DynamoDBDocumentClie
   }
 
   try {
-    await dynamodb.send(new clientDynamodb.CreateTableCommand(tableParams)).then(
-      result => {
-        // console.log("Created table with result: ", JSON.stringify(result, null, 2));
-      }
-    )
+    await dynamodb.send(new clientDynamodb.CreateTableCommand(tableParams))
   } catch(err) {
     console.log("Created table with error: ", JSON.stringify(err, null, 2));
   }
 }
 
-function formatKeySchema(dataModel: any): clientDynamodb.KeySchemaElement[] {
-  let attributes = dataModel.KeyAttributes;
+function formatKeySchema(dataModel: { KeyAttributes: {[k: string]: {AttributeName: string}}}): clientDynamodb.KeySchemaElement[] {
+  const attributes = dataModel.KeyAttributes;
   if (attributes === undefined) {
     return undefined;
   } else {
-    let keySchemae: clientDynamodb.KeySchemaElement[] = [
+    const keySchemae: clientDynamodb.KeySchemaElement[] = [
           {
             AttributeName: attributes.PartitionKey.AttributeName,
             KeyType: "HASH"

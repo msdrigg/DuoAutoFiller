@@ -1,10 +1,9 @@
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, QueryCommandInput, PutCommandInput, UpdateCommandInput, UpdateCommand, DeleteCommandInput, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { ResultOrError } from "../model/common";
-import { getDatabaseKey, getFrontendKey } from "./model/mapping";
+import { getDatabaseKey, getFrontendKey, getResponsibleError } from "./model/mapping";
 import { DatabaseKey } from "./model/models";
 import constants from "../utils/constants";
 import { FrontendKey, KeyContext } from "../model/keys";
-import { isAWSError } from "./model/errors";
 
 
 /**
@@ -22,21 +21,14 @@ async function createKey(
     frontendKey: FrontendKey,
     dynamodb: DynamoDBDocumentClient
 ): Promise<ResultOrError<FrontendKey>> {
-    let databaseKey: DatabaseKey = getDatabaseKey(userEmail, frontendKey);
-    let commandInput: PutCommandInput = {
+    const databaseKey: DatabaseKey = getDatabaseKey(userEmail, frontendKey);
+    const commandInput: PutCommandInput = {
         TableName: constants.TABLE_NAME,
         Item: databaseKey
     }
-    try {
-        await dynamodb.send(new PutCommand(commandInput));
-        return frontendKey;
-    } catch (err) {
-        return {
-            message: "Error adding key to database",
-            reason: err,
-            statusCode: 500
-        }
-    }
+    return await dynamodb.send(new PutCommand(commandInput))
+        .then(_result => frontendKey)
+        .catch(err => getResponsibleError(err));
 }
 
 
@@ -47,7 +39,6 @@ async function createKey(
  * @param {Date=} [cuttoffDate] Only return keys that have content updates after this date
  * @param {AWS.DynamoDB.DocumentClient} [dynamo] client for accessing dynamodb 
  * 
- * @throws {typedefs.DynamoError} any dynamodb error creating the user
  * @returns {List<typedefs.FrontendKey>} The keys matching the criterion
  */
 async function getKeysSinceTime(
@@ -55,18 +46,18 @@ async function getKeysSinceTime(
     cuttoffDate: Date | undefined,
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<Array<FrontendKey>>> {
-    let expressionAttributeValues = {
+    const expressionAttributeValues = {
         ':hkey': userEmail,
         ":keyFilter": "K#"
     }
-    let filterExpression = 'begins_with (SKCombined, :keyFilter)'
+    const filterExpression = 'begins_with (SKCombined, :keyFilter)'
     let keyConditionExpression = 'PKCombined = :hkey'
     if (cuttoffDate !== undefined) {
         expressionAttributeValues[':rkey'] = cuttoffDate.getTime();
         keyConditionExpression = `${keyConditionExpression} and Temporal > :rkey`;
     }
 
-    let dynamoParams: QueryCommandInput = {
+    const dynamoParams: QueryCommandInput = {
         TableName: constants.TABLE_NAME,
         IndexName: constants.INDEX_NAME,
         Limit: 1000,
@@ -75,16 +66,10 @@ async function getKeysSinceTime(
         ExpressionAttributeValues: expressionAttributeValues,
         KeyConditionExpression: keyConditionExpression
     }
-    try {
-        let items: Array<DatabaseKey> = (await dynamo.send(new QueryCommand(dynamoParams))).Items as Array<DatabaseKey>;
-        return items.map(element => getFrontendKey(element) as FrontendKey)
-    } catch (err) {
-        return {
-            message: "Error getting keys from the database",
-            statusCode: 500,
-            reason: err
-        }
-    }
+
+    return await dynamo.send(new QueryCommand(dynamoParams))
+        .then(output =>  output.Items.map(item => getFrontendKey(item as DatabaseKey)))
+        .catch(err => getResponsibleError(err));
 }
 
 /**
@@ -92,17 +77,17 @@ async function getKeysSinceTime(
  * 
  * @param {string} [userEmail] Authorized users email
  * @param {string} [keyId] The key to access
- * @param {AWS.DynamoDB.DocumentClient} [dynamo] client for accessing dynamodb 
+ * @param {DynamoDBDocumentClient} [dynamo] client for accessing dynamodb 
  * 
- * @throws {typedefs.DynamoError} any dynamodb error creating the user
- * @returns {typedefs.FrontendKey} The keys matching the criterion
+ * @throws {DynamoError} any dynamodb error creating the user
+ * @returns {FrontendKey} The keys matching the criterion
  */
 async function getAndIncrement(
     userEmail: string,
     keyId: string,
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<FrontendKey>> {
-    let updateCommandInput: UpdateCommandInput = {
+    const updateCommandInput: UpdateCommandInput = {
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
@@ -116,17 +101,9 @@ async function getAndIncrement(
         ReturnValues: "ALL_NEW",
     }
 
-    try {
-        let body = await dynamo.send(new UpdateCommand(updateCommandInput));
-        return getFrontendKey(body.Attributes as DatabaseKey);
-    } catch (err) {
-        return {
-            message: "Error updating key",
-            reason: err,
-            statusCode: 500
-        };
-    }
-
+    return await dynamo.send(new UpdateCommand(updateCommandInput))
+        .then(result => getFrontendKey(result.Attributes as DatabaseKey))
+        .catch(err => getResponsibleError(err));
 }
 
 async function deleteKey(
@@ -134,23 +111,17 @@ async function deleteKey(
     keyId: string,
     dynamodb: DynamoDBDocumentClient
 ): Promise<ResultOrError<void>> {
-    let commandInput: DeleteCommandInput = {
+    const commandInput: DeleteCommandInput = {
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
             SKCombined: "K#" + keyId
         }
     }
-    try {
-        await dynamodb.send(new DeleteCommand(commandInput));
-        return undefined;
-    } catch (err) {
-        return {
-            message: "Error deleting key from database",
-            reason: err,
-            statusCode: 500
-        }
-    }
+
+    return await dynamodb.send(new DeleteCommand(commandInput))
+        .then(_result => undefined)
+        .catch(err => getResponsibleError(err));
 }
 
 async function updateKeyContext(
@@ -160,10 +131,10 @@ async function updateKeyContext(
     dynamodb: DynamoDBDocumentClient
 ): Promise<ResultOrError<FrontendKey>> {
     let updateExpression = "SET";
-    let expressionAttributeNames = {
+    const expressionAttributeNames = {
         "#Temporal": "Temporal"
     };
-    let expressionAttributeValues = {};
+    const expressionAttributeValues = {};
     
     for (const key in updatedContext) {
         updateExpression = `${updateExpression} #Context.#${key} = :${key}Value,`;
@@ -175,7 +146,7 @@ async function updateKeyContext(
     updateExpression = `${updateExpression} #Temporal = :TemporalValue`
     expressionAttributeValues[":TemporalValue"] = Date.now();
 
-    let updateCommand = new UpdateCommand({
+    const updateCommand = new UpdateCommand({
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
@@ -186,24 +157,10 @@ async function updateKeyContext(
         ExpressionAttributeValues: expressionAttributeValues,
         ReturnValues: "ALL_NEW",
     })
-    try {
-        // console.log("Updating key Context with reason: ", JSON.stringify(updateCommand.input, null, 2));
-        let databaseKey = (await dynamodb.send(updateCommand)).Attributes as DatabaseKey
-        return getFrontendKey(databaseKey);
-    } catch (err) {
-        if (isAWSError(err)) {
-            return {
-                message: err.message,
-                reason: err,
-                statusCode: err.$metadata?.httpStatusCode || 500
-            }
-        }
-        return {
-            message: "Unknown error",
-            reason: err,
-            statusCode: 500
-        }
-    }
+
+    return await dynamodb.send(updateCommand)
+        .then(result => getFrontendKey(result.Attributes as DatabaseKey))
+        .catch(err => getResponsibleError(err))
 }
 
 export default {

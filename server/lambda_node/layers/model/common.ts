@@ -1,13 +1,7 @@
-export type ErrorResponse = {
-    message: string,
-    statusCode: number,
-    reason?: any
-}
-
 export type ResponsibleError = {
-    name: string,
-    reason: any,
+    name: ErrorType,
     message: string,
+    reason?: Error,
     requestId?: string,
     statusCode: number,
     isRetryable: boolean,
@@ -17,9 +11,26 @@ export type ResponsibleError = {
     isClockSkewError: boolean
 }
 
-export type ResultOrError<Type> = Type | ErrorResponse
+export type BaseContext = {
+    [k: string]: string | number | null
+}
 
-export function isError<Type>(item: ResultOrError<Type>): item is ErrorResponse {
-    let errorMaybe = item as ErrorResponse;
-    return errorMaybe.message !== undefined && errorMaybe.statusCode !== undefined;
+export type ResultOrError<Type> = Type | ResponsibleError
+
+export function isError<Type>(item: ResultOrError<Type>): item is ResponsibleError {
+    const errorMaybe = item as ResponsibleError;
+
+    return errorMaybe.message !== undefined && errorMaybe.statusCode !== undefined && errorMaybe.name !== undefined &&
+        errorMaybe.isRetryable !== undefined && errorMaybe.isClockSkewError !== undefined && errorMaybe.isServiceError !== undefined &&
+        errorMaybe.isThrottling !== undefined;
+}
+
+export enum ErrorType {
+    DynamoDBError = "DynamoDBError",
+    RoutingError = "RoutingError",
+    UnknownError = "UnknownError",
+    ClientRequestError = "ClientRequestError",
+    ConnectionError = "ConnectionError",
+    ServerError = "ServerError",
+    DatabaseError = "DatabaseError"
 }

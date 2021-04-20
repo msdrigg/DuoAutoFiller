@@ -2,8 +2,10 @@ import { DeleteCommand, DeleteCommandInput, DynamoDBDocumentClient, GetCommand, 
 import * as constants from "../utils/constants";
 import httpUtils from "../utils/httpUtils";
 import { DatabaseSession } from "./model/models";
-import { getFrontendSession } from "./model/mapping";
+import { getFrontendSession, getResponsibleError } from "./model/mapping";
 import { ResultOrError } from "../model/common";
+import { FrontendSession } from "../model/sessions"
+import { isAWSError } from "./model/errors";
 
 /**
  * Gets a session cooresponding to this userEmail and sessionId. Dynamo is the constructor injected dynamoDB Client
@@ -20,31 +22,28 @@ async function getSession(
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<FrontendSession | undefined>> {
     //! Returns undefined if session is not found in database, returns the session otherwise
-    let session: DatabaseSession;
-    try {
-        let commandInput: GetCommandInput = {
-            TableName: constants.TABLE_NAME,
-            Key: {
-                PKCombined: userEmail,
-                SKCombined: "S#" + sessionId
-            }
-        }
-        session = (await dynamo.send(new GetCommand(commandInput))).Item as DatabaseSession;
-    } catch(err) {
-        if (err.code == "ResourceNotFound") {
-            session = undefined;
-        } else {
-            return {
-                statusCode: 500,
-                reason: err,
-                message: "Error deleting session"
-            }
+    const commandInput: GetCommandInput = {
+        TableName: constants.TABLE_NAME,
+        Key: {
+            PKCombined: userEmail,
+            SKCombined: "S#" + sessionId
         }
     }
-
-    if (session === undefined) return undefined;
-
-    return getFrontendSession(session);
+    return await dynamo.send(new GetCommand(commandInput))
+        .then(result => {
+            if (result.Item === undefined) {
+                return undefined;
+            } else {
+                return getFrontendSession(result.Item as DatabaseSession)
+            }
+        })
+        .catch(err => {
+            if (isAWSError(err) && err.name == "ResourceNotFound") {
+                return undefined;
+            } else {
+                return getResponsibleError(err);
+            }
+        })
 }
 
 /**
@@ -69,8 +68,8 @@ async function createSession(
     expirationDate: Date,
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<FrontendSession>> {
-    let sessionKey = httpUtils.getRandomString(64);
-    let sessionObject: DatabaseSession = {
+    const sessionKey = httpUtils.getRandomString(64);
+    const sessionObject: DatabaseSession = {
         PKCombined: userEmail,
         SKCombined: "S#" + sessionId,
         Key: sessionKey,
@@ -79,23 +78,13 @@ async function createSession(
         },
         Temporal: expirationDate.getTime()
     };
-    let comandInput: PutCommandInput = {
+    const comandInput: PutCommandInput = {
         TableName: constants.TABLE_NAME,
         Item: sessionObject
     }
-    try {
-        await dynamo.send(
-            new PutCommand(comandInput)
-        );
-    } catch (err) {
-        return {
-            message: "Error creating session",
-            reason: err,
-            statusCode: 500
-        }
-    }
-    
-    return getFrontendSession(sessionObject);
+    return dynamo.send( new PutCommand(comandInput))
+        .then(_result => getFrontendSession(sessionObject))
+        .catch(err => getResponsibleError(err));
 }
 
 /**
@@ -115,22 +104,16 @@ async function deleteSession(
     sessionId: string,
     dynamo: DynamoDBDocumentClient
 ): Promise<ResultOrError<void>> {
-    let commandInput: DeleteCommandInput = {
+    const commandInput: DeleteCommandInput = {
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
             SKCombined: "S#" + sessionId,
         }
     };
-    try {
-        await dynamo.send(new DeleteCommand(commandInput));
-    } catch (err) {
-        return {
-            reason: err,
-            message: "Error deleting session",
-            statusCode: 500
-        }
-    }
+    return dynamo.send(new DeleteCommand(commandInput))
+        .then(_result => undefined)
+        .catch(err => getResponsibleError(err));
 }
 
 export default {

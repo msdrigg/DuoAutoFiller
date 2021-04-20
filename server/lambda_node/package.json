@@ -5,7 +5,8 @@
   "main": "api.js",
   "scripts": {
     "test": "jest -i",
-    "coverage": "jest --coverage"
+    "coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "typescript": "^4.2.4"
   },
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.13.0",
     "@aws-sdk/types": "^3.12.0",
     "@aws-sdk/util-dynamodb": "^3.13.0",
     "@babel/core": "^7.13.15",
@@ -39,6 +41,9 @@
     "@babel/preset-env": "^7.13.15",
     "@types/aws-sdk": "^2.7.0",
     "@types/babel__core": "^7.1.14",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "eslint": "^7.24.0",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1"

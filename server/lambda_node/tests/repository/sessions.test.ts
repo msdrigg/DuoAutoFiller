@@ -19,7 +19,7 @@ import { getDatabaseSession, getFrontendSession } from '../../layers/repository/
 import sessionAccess from '../../layers/repository/sessionAccess';
 import { TABLE_NAME } from '../../layers/utils/constants';
 
-let config: DynamoDBClientConfig = {
+const config: DynamoDBClientConfig = {
     region: "us-east-1",
     endpoint: "http://localhost:8000",
     credentials: {
@@ -27,12 +27,13 @@ let config: DynamoDBClientConfig = {
       secretAccessKey: "xxxxxx"
     }
 }
-let documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-let testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
-let validUsers: Array<DatabaseUser> = testDataModel.TableData
+const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json') as {TableName: string, TableData: any}
+const validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseUser) => it.SKCombined == "M#")
-let validSessions: Array<DatabaseSession> = testDataModel.TableData
+const validSessions: Array<DatabaseSession> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
   .filter((it: DatabaseSession) => it.SKCombined.startsWith("S#"))
 
@@ -47,14 +48,13 @@ describe('createSession', function () {
     it("Creates session successfully", async () => {
         expect.assertions(3);
 
-        let validSession: DatabaseSession = validSessions[0];
+        const validSession: DatabaseSession = validSessions[0];
 
-        validSession.Temporal = validSession.Temporal;
         // Get valid frontendUser
-        let userEmail = validSession.PKCombined;
-        let id = "asldkfj20394";
-        let name = "New_Sesssion_Test";
-        let expiry = new Date(validSession.Temporal);
+        const userEmail = validSession.PKCombined;
+        const id = "asldkfj20394";
+        const name = "New_Sesssion_Test";
+        const expiry = new Date(validSession.Temporal);
 
         await expect(sessionAccess.createSession(
             userEmail,
@@ -99,10 +99,10 @@ describe('getSession', function () {
   it("Gets session successfully", async () => {
     expect.assertions(1);
     
-    let validSession: DatabaseSession = validSessions[0];
+    const validSession: DatabaseSession = validSessions[0];
 
     validSession.Temporal = Number(validSession.Temporal);
-    let frontendSession = getFrontendSession(validSession);
+    const frontendSession = getFrontendSession(validSession);
     await expect(sessionAccess.getSession(
     validSession.PKCombined, validSession.SKCombined.slice(2), documentClient
     )).resolves.toStrictEqual(frontendSession);
@@ -121,7 +121,7 @@ describe('getSession', function () {
 
   it("Get session fails with session not exists", async () => {
     expect.assertions(1);
-    let validUser: DatabaseUser = validUsers[0];
+    const validUser: DatabaseUser = validUsers[0];
     
     await expect(sessionAccess.getSession(
         validUser.PKCombined, "asdflkj23", documentClient
@@ -135,11 +135,11 @@ describe('deleteSession', function () {
     it("Deletes session successfully", async () => {
         expect.assertions(4);
 
-        let validSession: DatabaseSession = validSessions[0];
+        const validSession: DatabaseSession = validSessions[0];
 
         // Get valid frontendUser
-        let userEmail = validSession.PKCombined;
-        let databaseSession = getDatabaseSession(
+        const userEmail = validSession.PKCombined;
+        const databaseSession = getDatabaseSession(
           userEmail, 
           {
             Expiration: new Date(),

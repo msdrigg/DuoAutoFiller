@@ -1,10 +1,12 @@
-type FrontendSession = {
+import { BaseContext } from "./common"
+
+export type FrontendSession = {
     Id: string,
     Key: string,
     Context: SessionContext,
     Expiration: Date,
 }
 
-interface SessionContext {
+export type SessionContext  = {
     Name: string
-}
+} & BaseContext

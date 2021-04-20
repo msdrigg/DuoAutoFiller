@@ -1,11 +1,11 @@
 import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
 import { CoreUser, UserUpdate } from "../model/users";
-import { getCoreUser } from "./model/mapping";
+import { createResponsibleError, getCoreUser, getResponsibleError } from "./model/mapping";
 import { DatabaseUser } from "./model/models";
-import { ErrorResponse, ResultOrError } from "../model/common";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, PutCommandOutput, UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
-import { AWSError } from "./model/errors";
+import { BaseContext, ErrorType, ResultOrError } from "../model/common";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { isAWSError } from "./model/errors";
 
 /**
  * Gets the user metadata cooresponding to this userEmail and sessionId.
@@ -18,38 +18,31 @@ import { AWSError } from "./model/errors";
  */
 async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
     // Function to get user given the email, and return the user (undefined if no user exists)
-    let params: GetCommand = new GetCommand( {
+    const params: GetCommand = new GetCommand( {
         TableName: constants.TABLE_NAME,
         Key: {
             PKCombined: userEmail,
             SKCombined: "M#"
         }
     });
-    let result = await dynamo.send(params).then(function(response): ResultOrError<CoreUser> {
-        if (response.Item === undefined) {
-            return {
-                statusCode: 404,
-                message: "User not found in database"
-            };
+    return await dynamo.send(params).then( result => {
+        if (result.Item === undefined) {
+            return createResponsibleError(ErrorType.DatabaseError, "User not found in database", 404)
         }
-        let databaseUser = response.Item as unknown as DatabaseUser;
+        const databaseUser = result.Item as unknown as DatabaseUser;
         return {
             Email: databaseUser.PKCombined,
             Context: databaseUser.Context
-        }
-    }, function (err: AWSError): ErrorResponse {
+        };
+    }).catch( (err: unknown) => {
         console.log("Error getting user: ", JSON.stringify(err, null, 2));
-        if (err.name == "ResourceNotFoundException") {
-            return {
-                statusCode: 404,
-                reason: err,
-                message: "User not found in database"
-            };
+        if (isAWSError(err) && err.name == "ResourceNotFoundException") {
+            return createResponsibleError(
+                ErrorType.DatabaseError, "User not found in database", 404, err
+            );
         }
-        return err as unknown as ErrorResponse;
+        return getResponsibleError(err);
     });
-
-    return result;
 }
 
 /**
@@ -63,9 +56,9 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
  * @throws {typedefs.DynamoError} Any dynamodb error creating the user
  * @returns {typedefs.FrontendUser|undefined} The user created, undefined if the user fails to be created
  */
-async function createUser(userEmail: string, passwordHash: string, Context: Object, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
-    let newPasswordSalt = httpUtils.getRandomString(40);
-    let backendUser: DatabaseUser = {
+async function createUser(userEmail: string, passwordHash: string, Context: BaseContext, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
+    const newPasswordSalt = httpUtils.getRandomString(40);
+    const backendUser: DatabaseUser = {
         PKCombined: userEmail,
         SKCombined: "M#",
         Context: Context,
@@ -78,35 +71,21 @@ async function createUser(userEmail: string, passwordHash: string, Context: Obje
     }
     // console.log("Creating user: ", JSON.stringify(backendUser, null, 2))
 
-    let putCommand: PutCommand = new PutCommand({
+    const putCommand: PutCommand = new PutCommand({
         TableName: constants.TABLE_NAME,
         Item: backendUser,
         ConditionExpression: 'attribute_not_exists(PKCombined) OR attribute_not_exists(SKCombined)',
     })
 
-    let result: ResultOrError<CoreUser> = await dynamo
-        .send(putCommand)
-        .then(function (_output: PutCommandOutput) {
-            // console.log("User created")
-            return getCoreUser(backendUser);
-        }).catch(function (err: any) {
-            // console.log("Error creating user", JSON.stringify(err, null, 2));
-            if (err.name == 'ConditionalCheckFailedException' ) {
-                let response: ErrorResponse = {
-                    statusCode: 409,
-                    reason: err,
-                    message: "User with provided email already exists"
-                }
-                return response;
+     return await dynamo.send(putCommand)
+        .then( _output => getCoreUser(backendUser))
+        .catch((err: unknown) => {
+            if (isAWSError(err) && err.name == 'ConditionalCheckFailedException' ) {
+                return createResponsibleError(ErrorType.DatabaseError, "User with provided email already exists", 409, err)
             } else {
-                return {
-                    statusCode: 500,
-                    reason: err,
-                    message: "Error adding user to database"
-                };
+                return getResponsibleError(err);
             }
         });
-    return result;
 }
 
 /**
@@ -123,11 +102,7 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
     // For updates to email or psw, we need to re-encrypt all encryptedData,
     // invalidate all sessions, and change user password hash and email
     if (!changes.Context && !changes.Email && !changes.PasswordHash) {
-        return {
-            statusCode: 400,
-            message: "No user updates given in request",
-            reason: null
-        };
+        return createResponsibleError(ErrorType.ClientRequestError, "No user updates given in request", 400)
     }
 
     let user: CoreUser;
@@ -135,20 +110,16 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
         // Update user Context
         // Request: {$Context variables to update}
         
-        let updatedContext = changes.Context;
+        const updatedContext = changes.Context;
         if (!Object.keys(updatedContext).length) {
-            let response: ErrorResponse = {
-                message: "No items to update in Context",
-                statusCode: 400,
-            };
-            return response;
+            return createResponsibleError(ErrorType.ClientRequestError, "No items to update in Context", 400)
         } 
         
         let updateExpression = "SET";
-        let expressionAttributeNames = {
+        const expressionAttributeNames = {
             "#Context": "Context"
         };
-        let expressionAttributeValues = {};
+        const expressionAttributeValues = {};
         
         for (const key in updatedContext) {
             updateExpression = `${updateExpression} #Context.#${key} = :${key}Value,`;
@@ -157,7 +128,7 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
         }
         updateExpression = updateExpression.slice(0, -1);
 
-        let updateCommandInput: UpdateCommandInput = {
+        const updateCommandInput: UpdateCommandInput = {
             TableName: constants.TABLE_NAME,
             Key: {
                 PKCombined: userEmail,
@@ -168,8 +139,8 @@ async function updateUser(userEmail: string, changes: UserUpdate, dynamo: Dynamo
             ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW",
         }
-        let updateCommand = new UpdateCommand(updateCommandInput)
-        let dynamoResult: UpdateCommandOutput = await dynamo.send(updateCommand);
+        const updateCommand = new UpdateCommand(updateCommandInput)
+        const dynamoResult: UpdateCommandOutput = await dynamo.send(updateCommand);
 
         user = getCoreUser(dynamoResult.Attributes as unknown as DatabaseUser);
     }
