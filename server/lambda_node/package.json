@@ -5,7 +5,7 @@
   "main": "api.js",
   "scripts": {
     "test": "jest -i",
-    "coverage": "jest --coverage",
+    "coverage": "jest --coverage --coverageReporters=\"json-summary\"",
     "lint": "eslint . --ext .ts"
   },
   "repository": {
