@@ -1,6 +1,6 @@
-import { BaseContext } from "./common"
+import { BaseContext } from "../common"
 
-export type FrontendSession = {
+export type CoreSession = {
     Id: string,
     Key: string,
     Context: SessionContext,

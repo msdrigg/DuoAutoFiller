@@ -1,5 +1,4 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import keyAccess from "../../layers/repository/keyAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -14,11 +13,12 @@ import {
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { FrontendKey, KeyContext } from '../../layers/model/keys';
-import { DatabaseKey, DatabaseUser } from '../../layers/repository/model/models';
+import { DatabaseUser } from '../../layers/users/repository';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { TABLE_NAME } from '../../layers/utils/constants';
-import { getDatabaseKey, getFrontendKey } from '../../layers/repository/model/mapping';
+import { TABLE_NAME } from '../../layers/common/utils/constants';
+import { CoreKey, KeyContext } from '../../layers/keys';
+import { getDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
+import { DatabaseKey, KeyRepository } from '../../layers/keys/repository';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -30,6 +30,7 @@ const config: DynamoDBClientConfig = {
 } 
 
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const keyRepository = new KeyRepository(documentClient);
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 const validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
@@ -52,7 +53,7 @@ describe('createKey', function () {
 
         // Get valid inputKey
         const userEmail = "msd@gemail.com"
-        const inputKey: FrontendKey = {
+        const inputKey: CoreKey = {
           Key: "23948fsdkf",
           Id: "203974fjsldf",
           Context: {
@@ -64,7 +65,7 @@ describe('createKey', function () {
           LastContentUpdate: new Date()
         };
         // Assert that they key creation functino returns input key
-        await expect(keyAccess.createKey(userEmail, inputKey, documentClient))
+        await expect(keyRepository.createKey(userEmail, inputKey))
             .resolves.toStrictEqual(inputKey);
 
         // Assert that the key can be found in the database
@@ -111,13 +112,13 @@ describe('getKeysSinceTime', function () {
           return key.PKCombined == user.PKCombined
         }).length >= 2;
       });
-      const usersKeys: Array<FrontendKey> = validKeys.filter(key => {
+      const usersKeys: Array<CoreKey> = validKeys.filter(key => {
         return key.PKCombined == userWithTwoKeys.PKCombined
       }).map(key => {
         return getFrontendKey(key);
       });
-      await expect(keyAccess.getKeysSinceTime(
-        userWithTwoKeys.PKCombined, undefined,  documentClient
+      await expect(keyRepository.getKeysSinceTime(
+        userWithTwoKeys.PKCombined, undefined
       )).resolves.toStrictEqual(usersKeys);
     }
   );
@@ -131,8 +132,8 @@ describe('getKeysSinceTime', function () {
           return key.PKCombined == user.PKCombined
         }) === undefined;
       });
-      await expect(keyAccess.getKeysSinceTime(
-        userWithNoKeys.PKCombined, undefined, documentClient
+      await expect(keyRepository.getKeysSinceTime(
+        userWithNoKeys.PKCombined, undefined
       )).resolves.toStrictEqual([]);
     }
   );
@@ -146,8 +147,8 @@ describe('getKeysSinceTime', function () {
         }).length >= 2;
       });
       
-      await expect(keyAccess.getKeysSinceTime(
-        userWithTwoKeys.PKCombined, new Date(8640000000000000), documentClient
+      await expect(keyRepository.getKeysSinceTime(
+        userWithTwoKeys.PKCombined, new Date(8640000000000000)
       )).resolves.toStrictEqual([]);
     }
   );
@@ -173,8 +174,8 @@ describe('getKeysSinceTime', function () {
       });
 
       expect(expectedKeys.length).toBeLessThan(usersKeys.length);
-      await expect(keyAccess.getKeysSinceTime(
-        userWithTwoOrMoreKeys.PKCombined, new Date(inBetweenTime), documentClient
+      await expect(keyRepository.getKeysSinceTime(
+        userWithTwoOrMoreKeys.PKCombined, new Date(inBetweenTime)
       )).resolves.toStrictEqual(expectedKeys);
     }
   );
@@ -229,8 +230,8 @@ describe('deleteKey', function () {
         })).not.toBeUndefined();
 
         // // Expect delete key to resolve
-        await expect(keyAccess.deleteKey(
-          userEmail, databaseKey.SKCombined.slice(2), documentClient)
+        await expect(keyRepository.deleteKey(
+          userEmail, databaseKey.SKCombined.slice(2))
         ).resolves.toBeUndefined()
 
         // Make sure the key does not exist anymore
@@ -265,8 +266,8 @@ describe('getAndIncrement', function () {
       const newDatabaseKey = getDatabaseKey(incrementedKey.PKCombined, newKey)
 
       // Assert that the increment function returns well
-      await expect(keyAccess.getAndIncrement(
-        incrementedKey.PKCombined, incrementedKey.SKCombined.slice(2), documentClient
+      await expect(keyRepository.getAndIncrement(
+        incrementedKey.PKCombined, incrementedKey.SKCombined.slice(2)
       )).resolves.toStrictEqual(
         newKey
       );
@@ -314,8 +315,8 @@ describe('updateKeyContext', function () {
       newKey.LastContentUpdate = expect.any(Date);
       newKey.Context = expect.objectContaining(newKeyContext);
 
-      await expect(keyAccess.updateKeyContext(
-        validKey.PKCombined, validKey.SKCombined.slice(2), newKeyContext, documentClient
+      await expect(keyRepository.updateKeyContext(
+        validKey.PKCombined, validKey.SKCombined.slice(2), newKeyContext
       )).resolves.toEqual(
         newKey
       );

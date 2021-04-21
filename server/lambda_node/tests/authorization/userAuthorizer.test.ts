@@ -1,5 +1,4 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import userAccess from "../../layers/repository/userAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -8,10 +7,10 @@ import {
   DeleteCommand,
   DynamoDBDocumentClient,
 } from '@aws-sdk/lib-dynamodb';
-import { UserAuthChallenge } from '../../layers/model/users';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { authorizeUser } from '../../layers/authorization/userAuthorizer';
-import { LambdaAuthorization } from '../../layers/authorization/types';
+import { authorizeUser } from '../../layers/authorization';
+import { LambdaAuthorization } from '../../layers/authorization/model';
+import { UserAuthChallenge, UserRepository } from '../../layers/users';
+import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -22,6 +21,7 @@ const config: DynamoDBClientConfig = {
     }
 }
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const userRepository = new UserRepository(documentClient);
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 
 
@@ -40,11 +40,10 @@ describe('authorizeUser', function () {
     };
 
     beforeAll(() => {
-      return userAccess.createUser(
+      return userRepository.createUser(
         challenge.Email,
         challenge.PasswordInput,
-        challenge.Context,
-        documentClient
+        challenge.Context
       )
     })
 
@@ -70,7 +69,7 @@ describe('authorizeUser', function () {
             userEmail: challenge.Email
           }
         };
-        await expect(authorizeUser(challenge, documentClient))
+        await expect(authorizeUser(challenge, userRepository))
           .resolves.toEqual(authorized);
       }
     );
@@ -86,7 +85,7 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeUser(fakeTrial, documentClient))
+        await expect(authorizeUser(fakeTrial, userRepository))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -102,7 +101,7 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeUser(fakeTrial, documentClient))
+        await expect(authorizeUser(fakeTrial, userRepository))
           .resolves.toEqual(unAuthorized);
       }
     );

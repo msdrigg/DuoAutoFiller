@@ -13,11 +13,11 @@ import {
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { DatabaseSession, DatabaseUser } from '../../layers/repository/model/models';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { getDatabaseSession, getFrontendSession } from '../../layers/repository/model/mapping';
-import sessionAccess from '../../layers/repository/sessionAccess';
-import { TABLE_NAME } from '../../layers/utils/constants';
+import { TABLE_NAME } from '../../layers/common/utils/constants';
+import { getFrontendSession, getDatabaseSession } from '../../layers/sessions/mapping';
+import { DatabaseSession, SessionRepository } from '../../layers/sessions/repository';
+import { DatabaseUser } from '../../layers/users/repository';
+import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -28,6 +28,7 @@ const config: DynamoDBClientConfig = {
     }
 }
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const sessionRepository = new SessionRepository(documentClient);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json') as {TableName: string, TableData: any}
 const validUsers: Array<DatabaseUser> = testDataModel.TableData
@@ -56,12 +57,11 @@ describe('createSession', function () {
         const name = "New_Sesssion_Test";
         const expiry = new Date(Date.now() + 1000 * 50);
 
-        await expect(sessionAccess.createSession(
+        await expect(sessionRepository.createSession(
             userEmail,
             id,
             name,
-            expiry,
-            documentClient
+            expiry
         )).resolves.toMatchObject({
             Id: id,
             Context: {Name: name},
@@ -69,8 +69,8 @@ describe('createSession', function () {
             Key: expect.any(String)
         });
 
-        await expect(sessionAccess.getSession(
-          userEmail, id, documentClient
+        await expect(sessionRepository.getSession(
+          userEmail, id
         )).resolves.toMatchObject({
             Id: id,
             Context: {Name: name},
@@ -103,8 +103,8 @@ describe('getSession', function () {
 
     validSession.Temporal = Number(validSession.Temporal);
     const frontendSession = getFrontendSession(validSession);
-    await expect(sessionAccess.getSession(
-    validSession.PKCombined, validSession.SKCombined.slice(2), documentClient
+    await expect(sessionRepository.getSession(
+    validSession.PKCombined, validSession.SKCombined.slice(2)
     )).resolves.toStrictEqual(frontendSession);
 }
   );
@@ -113,8 +113,8 @@ describe('getSession', function () {
     async () => {
       expect.assertions(1);
 
-      await expect(sessionAccess.getSession(
-        "INVALDEMAIL@NOTEXISTS.com", "asdflkj23", documentClient
+      await expect(sessionRepository.getSession(
+        "INVALDEMAIL@NOTEXISTS.com", "asdflkj23"
       )).resolves.toBeUndefined();
     }
   );
@@ -123,8 +123,8 @@ describe('getSession', function () {
     expect.assertions(1);
     const validUser: DatabaseUser = validUsers[0];
     
-    await expect(sessionAccess.getSession(
-        validUser.PKCombined, "asdflkj23", documentClient
+    await expect(sessionRepository.getSession(
+        validUser.PKCombined, "asdflkj23"
     )).resolves.toBeUndefined();
     }
   );
@@ -158,12 +158,12 @@ describe('deleteSession', function () {
           })
         )).resolves.toBeTruthy();
 
-        await expect(sessionAccess.getSession(
-          userEmail, databaseSession.SKCombined.slice(2), documentClient
+        await expect(sessionRepository.getSession(
+          userEmail, databaseSession.SKCombined.slice(2)
         )).resolves.toMatchObject(getFrontendSession(databaseSession));
 
-        await expect(sessionAccess.deleteSession(
-          userEmail, databaseSession.SKCombined.slice(2), documentClient)
+        await expect(sessionRepository.deleteSession(
+          userEmail, databaseSession.SKCombined.slice(2))
         ).resolves.toBeUndefined();
 
         await expect(documentClient.send(

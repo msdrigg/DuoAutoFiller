@@ -1,6 +1,6 @@
-import { BaseContext } from "./common"
+import { BaseContext } from "../common"
 
-export type FrontendKey = {
+export type CoreKey = {
     Key: string,
     Id: string,
     Context: KeyContext,

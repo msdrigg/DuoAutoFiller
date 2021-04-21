@@ -8,12 +8,13 @@ import {
     DeleteCommand,
   DynamoDBDocumentClient, GetCommand, GetCommandOutput, PutCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { LambdaAuthorization, SessionAuthorizationContext } from '../../layers/authorization/types';
-import { authorizeSession } from '../../layers/authorization/sessionAuthorizer';
-import { DatabaseSession } from '../../layers/repository/model/models';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { TABLE_NAME } from '../../layers/utils/constants';
+import { authorizeSession } from '../../layers/authorization';
+import { LambdaAuthorization } from '../../layers/authorization/model';
+import { SessionAuthorizationContext } from '../../layers/common';
+import { TABLE_NAME } from '../../layers/common/utils/constants';
+import { DatabaseSession, SessionRepository } from '../../layers/sessions/repository';
+import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -24,6 +25,7 @@ const config: DynamoDBClientConfig = {
     }
 }
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const sessionRepository = new SessionRepository(documentClient);
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 const validSessions: Array<DatabaseSession> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
@@ -62,7 +64,7 @@ describe('authorizeUser', function () {
             Item: validSession
         }))).resolves.toBeTruthy()
 
-        await expect(authorizeSession(validSession.PKCombined, validSession.SKCombined.slice(2), documentClient))
+        await expect(authorizeSession(validSession.PKCombined, validSession.SKCombined.slice(2), sessionRepository))
           .resolves.toEqual(authorized);
 
         await expect(documentClient.send(new DeleteCommand({
@@ -84,7 +86,7 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), documentClient))
+        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -98,7 +100,7 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), documentClient))
+        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -113,7 +115,7 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), documentClient))
+        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
           .resolves.toEqual(unAuthorized);
 
         // Make sure the session has been deleted

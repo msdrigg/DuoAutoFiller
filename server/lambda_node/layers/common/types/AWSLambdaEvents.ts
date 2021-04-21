@@ -1,5 +1,5 @@
-import { UserAuthorizationContext } from "../authorization/types";
-import { ResponsibleError } from "../model/common";
+import { UserAuthorizationContext } from "./AuthorizationContext";
+import { ResponsibleError } from "./ResponsibleError";
 
 export type LambdaContext = {
     authorizer: UserAuthorizationContext

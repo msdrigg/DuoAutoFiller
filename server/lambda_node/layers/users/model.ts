@@ -1,4 +1,4 @@
-import { BaseContext } from "./common"
+import { BaseContext } from "../common"
 
 export type CoreUser = {
     Email: string,
@@ -22,6 +22,7 @@ export type PasswordInfo = {
 
 export enum HashFunction {
     SHA512 = "SHA512",
+    DEFAULT = SHA512,
 }
 
 export type UserUpdate = {

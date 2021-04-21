@@ -1,9 +1,51 @@
-import * as users from "./layers/routing/users";
-import * as keys from "./layers/routing/keys";
+import { DynamoDBClientConfig, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
-import { UserAuthorizationContext } from "./layers/authorization/types";
-import { APIGatewayRequestEvent, LambdaContext, LambdaResponse } from "./layers/utils/AWSTypes";
+import { APIGatewayRequestEvent, createResponsibleError, ErrorType, GenericRouter, getErrorLambdaResponse, LambdaContext, LambdaResponse, UserAuthorizationContext } from "./layers/common";
+import { KeyRepository, KeyRouter } from "./layers/keys";
+import { SessionRepository, SessionRouter } from "./layers/sessions";
+import { UserRepository, UserRouter } from "./layers/users";
+
+
+export class PrimaryRouter implements GenericRouter {
+    userRouter: UserRouter;
+    keyRouter: KeyRouter;
+    sessionRouter: SessionRouter;
+
+    constructor(userRouter: UserRouter, keyRouter: KeyRouter, sessionRouter: SessionRouter) {
+        this.userRouter = userRouter;
+        this.keyRouter = keyRouter;
+        this.sessionRouter = sessionRouter;
+    }
+
+    async routeRequest(
+        pathParts: Array<string>,
+        body: string,
+        authorizer: UserAuthorizationContext,
+    ): Promise<LambdaResponse> {
+        const primaryRoute = pathParts[0];
+        const remainingPathParts = pathParts.slice(1);
+
+        switch (primaryRoute) {
+            case 'key':
+                return await this.keyRouter.routeRequest(remainingPathParts, body, authorizer);
+
+            case 'user':
+                return await this.userRouter.routeRequest(remainingPathParts, body, authorizer);
+
+            case 'session':
+                return await this.sessionRouter.routeRequest(remainingPathParts, body, authorizer);
+
+            default:
+                return getErrorLambdaResponse(
+                    createResponsibleError(
+                        ErrorType.ClientRouteError,
+                        `Route not found for path ${pathParts.join('\\')}`,
+                        404
+                    )
+                )
+        }
+    }
+}
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -14,6 +56,11 @@ const config: DynamoDBClientConfig = {
     }
 }
 const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const primaryRouter = new PrimaryRouter(
+    new UserRouter(new UserRepository(dynamo)),
+    new KeyRouter(new KeyRepository(dynamo)),
+    new SessionRouter(new SessionRepository(dynamo))
+)
 
 /**
  * Demonstrates a simple HTTP endpoint using API Gateway. You have full
@@ -27,26 +74,10 @@ const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(config));
  */
 exports.handler = async (event: APIGatewayRequestEvent, context: LambdaContext): Promise<LambdaResponse> => {
     const pathParts = event.rawPath.split('/').slice(1);
-    const remainingPathParts = pathParts.slice(1);
 
-    const body = event.body;
-    const authorizer: UserAuthorizationContext = context.authorizer;
-
-    try {
-        switch (pathParts[0]) {
-            case 'key':
-                return await keys.routeRequest(remainingPathParts, body, authorizer, dynamo);
-
-            case 'user':
-                return await users.routeRequest(remainingPathParts, body, authorizer, dynamo);
-
-            default:
-                throw new Error(`Unsupported path "${pathParts[0]}"`);
-        }
-    } catch (err) {
-        const errorResponse = err;
-        errorResponse.alternateStatusCode = err.statusCode;
-        errorResponse.statusCode = 400;
-        return errorResponse;
-    }
+    return await primaryRouter.routeRequest(
+        pathParts,
+        event.body,
+        context.authorizer,
+    )
 };

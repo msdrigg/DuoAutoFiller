@@ -1,8 +1,3 @@
-export type LambdaAuthorization = {
-    isAuthorized: boolean,
-    context?: UserAuthorizationContext | SessionAuthorizationContext
-};
-
 export type UserAuthorizationContext = {
     userEmail: string
 }

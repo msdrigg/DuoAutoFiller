@@ -1,5 +1,4 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import userAccess, { getAuthUser } from "../../layers/repository/userAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -12,12 +11,12 @@ import {
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { CoreUser, UserUpdate, UserAuthVerifier } from '../../layers/model/users';
-import { ErrorType, isError, ResponsibleError } from '../../layers/model/common';
-import { DatabaseUser } from '../../layers/repository/model/models';
-import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { createResponsibleError, getCoreUser } from '../../layers/repository/model/mapping';
 import { createHmac } from "crypto";
+import { isError, createResponsibleError, ErrorType, ResponsibleError } from '../../layers/common';
+import { CoreUser, UserAuthVerifier, UserUpdate } from '../../layers/users';
+import { getCoreUser } from '../../layers/users/mapping';
+import { DatabaseUser, UserRepository } from '../../layers/users/repository';
+import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -28,6 +27,7 @@ const config: DynamoDBClientConfig = {
     }
 }
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
+const userRepository = new UserRepository(documentClient)
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 const validUsers: Array<DatabaseUser> = testDataModel.TableData
   .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
@@ -52,18 +52,17 @@ describe('createUser', function () {
           PasswordHash: "ase423lk4fdj",
           Context: {name: "valid man"},
         };
-        await expect(userAccess.createUser(
+        await expect(userRepository.createUser(
           frontUser.Email,
           frontUser.PasswordHash,
-          frontUser.Context,
-          documentClient
+          frontUser.Context
         )).resolves.toStrictEqual({
           Email: frontUser.Email,
           Context: frontUser.Context
         });
 
-        await expect(userAccess.getUser(
-          frontUser.Email, documentClient
+        await expect(userRepository.getUser(
+          frontUser.Email
         )).resolves.toEqual({
           Email: frontUser.Email,
           Context: frontUser.Context
@@ -93,18 +92,17 @@ describe('createUser', function () {
           PasswordHash: "ase423lk4fdj",
           Context: {name: "valid man"},
         };
-        await expect(userAccess.createUser(
+        await expect(userRepository.createUser(
           frontUser.Email,
           frontUser.PasswordHash,
-          frontUser.Context,
-          documentClient
+          frontUser.Context
         )).resolves.toStrictEqual({
           Email: frontUser.Email,
           Context: frontUser.Context
         });
 
-        await expect(getAuthUser(
-          frontUser.Email, documentClient
+        await expect(userRepository.getAuthUser(
+          frontUser.Email
         ).then(result => {
           if (!isError(result)) {
             const hash = createHmac(result.PasswordInfo.HashFunction, result.PasswordInfo.Salt);
@@ -148,11 +146,10 @@ describe('createUser', function () {
         const errorResponse = createResponsibleError(ErrorType.DatabaseError, "User with provided email already exists", 409) as any;
         errorResponse.reason = expect.any(Error);
         
-        await expect(userAccess.createUser(
+        await expect(userRepository.createUser(
           frontUser.Email,
           frontUser.PasswordHash,
-          frontUser.Context,
-          documentClient
+          frontUser.Context
         )).resolves.toMatchObject(errorResponse);
       }
     );
@@ -166,8 +163,8 @@ describe('getUser', function () {
       
       const validUser: CoreUser = getCoreUser(validUsers[0]);
 
-      await expect(userAccess.getUser(
-        validUser.Email, documentClient
+      await expect(userRepository.getUser(
+        validUser.Email
       )).resolves.toStrictEqual(validUser);
     }
   );
@@ -177,8 +174,8 @@ describe('getUser', function () {
       expect.assertions(1);
       const errorResponse: ResponsibleError = createResponsibleError(ErrorType.DatabaseError, "User not found in database", 404);
 
-      await expect(userAccess.getUser(
-        "INVALDEMAIL@NOTEXISTS.com", documentClient
+      await expect(userRepository.getUser(
+        "INVALDEMAIL@NOTEXISTS.com"
       )).resolves.toMatchObject(errorResponse);
     }
   );
@@ -197,8 +194,8 @@ describe('getAuthUserVerifier', function () {
         Context: databaseUser.Context
       }
 
-      await expect(getAuthUser(
-        validUser.Email, documentClient
+      await expect(userRepository.getAuthUser(
+        validUser.Email
       )).resolves.toStrictEqual(validUser);
     }
   );
@@ -208,8 +205,8 @@ describe('getAuthUserVerifier', function () {
       expect.assertions(1);
       const errorResponse: ResponsibleError = createResponsibleError(ErrorType.DatabaseError, "User not found in database", 404);
 
-      await expect(userAccess.getUser(
-        "INVALDEMAIL@NOTEXISTS.com", documentClient
+      await expect(userRepository.getUser(
+        "INVALDEMAIL@NOTEXISTS.com"
       )).resolves.toMatchObject(errorResponse);
     }
   );
@@ -221,8 +218,8 @@ describe('deleteUser', function () {
       
       const validUser: DatabaseUser = validUsers[0];
 
-      await expect(userAccess.getUser(
-        validUser.PKCombined, documentClient
+      await expect(userRepository.getUser(
+        validUser.PKCombined
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
         Context: validUser.Context
@@ -251,8 +248,8 @@ describe('updateUser', function () {
       const returnedUser = getCoreUser(validUser);
       returnedUser.Context = update.Context;
 
-      await expect(userAccess.updateUser(
-        validUser.PKCombined, update, documentClient
+      await expect(userRepository.updateUser(
+        validUser.PKCombined, update
       )).resolves.toStrictEqual(returnedUser);
     }
   );
@@ -263,8 +260,8 @@ describe('updateUser', function () {
       
       const validUser: DatabaseUser = validUsers[0];
       
-      await expect(userAccess.getUser(
-        validUser.PKCombined, documentClient
+      await expect(userRepository.getUser(
+        validUser.PKCombined
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
         Context: validUser.Context
@@ -278,8 +275,8 @@ describe('updateUser', function () {
       
       const validUser: DatabaseUser = validUsers[0];
 
-      await expect(userAccess.getUser(
-        validUser.PKCombined, documentClient
+      await expect(userRepository.getUser(
+        validUser.PKCombined
       )).resolves.toStrictEqual({
         email: validUser.PKCombined,
         Context: validUser.Context

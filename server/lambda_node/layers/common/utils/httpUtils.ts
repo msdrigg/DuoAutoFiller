@@ -1,5 +1,4 @@
 import * as crypto from "crypto";
-import { LambdaAuthorization } from "../authorization/types";
 
 /**
  * Decodes b64 string to unicode
@@ -8,7 +7,7 @@ import { LambdaAuthorization } from "../authorization/types";
  * 
  * @returns {string} The unicode string cooresponding to the input
  */
-function decodeUnicode(encoded: string): string {
+export function decodeUnicode(encoded: string): string {
     // Going backwards: from bytestream, to percent-encoding, to original string.
     const binary = atob(encoded)
     const bytes = new Uint8Array(binary.length);
@@ -25,7 +24,7 @@ function decodeUnicode(encoded: string): string {
  * 
  * @returns {string} The b64 string cooresponding to the unicode input
  */
-function encodeUnicode(unicodeString: string): string {
+export function encodeUnicode(unicodeString: string): string {
   const codeUnits = new Uint16Array(unicodeString.length);
   for (let i = 0; i < codeUnits.length; i++) {
     codeUnits[i] = unicodeString.charCodeAt(i);
@@ -40,7 +39,7 @@ function encodeUnicode(unicodeString: string): string {
  * 
  * @returns {string} The random string value of provided length (in hex)
  */
-function getRandomString(length: number): string{
+export function getRandomString(length: number): string{
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
 
@@ -52,7 +51,7 @@ function getRandomString(length: number): string{
  * 
  * @returns {string} The value cooresponding to the cookie name given, undefined if not found
  */
-function getCookieValue(cookies: Array<string>, cookieName: string): string {
+export function getCookieValue(cookies: Array<string>, cookieName: string): string {
     const emailCookie = cookies.find(cookie => cookie.startsWith(cookieName));
     if (emailCookie === undefined) {
         return undefined;
@@ -77,7 +76,7 @@ function getCookieValue(cookies: Array<string>, cookieName: string): string {
  * 
  * @returns {string} The cookie string header value
  */
-function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date): string {
+export function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date): string {
     const baseCookieString = `${cookieName}=${cookieValue};`;
     if (expirationDate === undefined) {
         return baseCookieString;
@@ -95,41 +94,8 @@ function getCookieString(cookieName: string, cookieValue: string, expirationDate
  * 
  * @returns {string} The hex encoding of the resulting hash
  */
-function hashSalted(password: string, salt: string, hashFunction: string): string {
+export function hashSalted(password: string, salt: string, hashFunction: string): string {
     const hash = crypto.createHmac(hashFunction, salt); /** Hashing algorithm sha512 */
     hash.update(password);
     return hash.digest('hex');
 }
-
-/**
- * Creates the object that contains the authorization status for an authorizer
- * 
- * @param {Boolean} didAuthorize
- * @param {string} [userEmail] Not needed if didAuthorize is false
- * 
- * @returns {typedefs.LambdaAuthorization} The authorization status using the simple aws lambda authorizer payload format
- */
-function getJSONAuthorization(didAuthorize: boolean, userEmail: string): LambdaAuthorization {
-    const output: LambdaAuthorization = {
-        isAuthorized: didAuthorize,
-        context: {
-            userEmail: null
-        }
-    };
-    if (userEmail !== undefined) {
-        output.context.userEmail = userEmail
-    }
-    return output;
-}
-
-
-export default {
-    getCookieString,
-    getCookieValue,
-    decodeUnicode,
-    encodeUnicode,
-    hashSalted,
-    getRandomString,
-    getJSONAuthorization,
-};
-
