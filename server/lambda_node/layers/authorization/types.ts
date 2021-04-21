@@ -1,16 +1,16 @@
 export type LambdaAuthorization = {
     isAuthorized: boolean,
-    context?: AuthorizationContext
+    context?: UserAuthorizationContext | SessionAuthorizationContext
 };
 
-export type AuthorizationContext = {
+export type UserAuthorizationContext = {
     userEmail: string
 }
 
-export type SessionAuthorizationContext = AuthorizationContext & {
+export type SessionAuthorizationContext = UserAuthorizationContext & {
     sessionId: string
 }
 
-export function isSessionAuthorizationContext(item: AuthorizationContext): item is SessionAuthorizationContext {
+export function isSessionAuthorizationContext(item: UserAuthorizationContext): item is SessionAuthorizationContext {
     return (item as SessionAuthorizationContext).sessionId !== undefined
 }

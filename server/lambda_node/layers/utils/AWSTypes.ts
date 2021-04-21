@@ -1,8 +1,8 @@
-import { AuthorizationContext } from "../authorization/types";
+import { UserAuthorizationContext } from "../authorization/types";
 import { ResponsibleError } from "../model/common";
 
 export type LambdaContext = {
-    authorizer: AuthorizationContext
+    authorizer: UserAuthorizationContext
 }
 
 export type APIGatewayRequestEvent = {

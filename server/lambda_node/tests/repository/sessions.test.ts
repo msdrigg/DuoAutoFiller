@@ -54,7 +54,7 @@ describe('createSession', function () {
         const userEmail = validSession.PKCombined;
         const id = "asldkfj20394";
         const name = "New_Sesssion_Test";
-        const expiry = new Date(validSession.Temporal);
+        const expiry = new Date(Date.now() + 1000 * 50);
 
         await expect(sessionAccess.createSession(
             userEmail,

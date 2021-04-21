@@ -66,11 +66,15 @@ export async function authorizeUser(userInput: UserAuthChallenge, dynamo: Dynamo
             const userPasswordHashed: string = httpUtils.hashSalted(userInput.PasswordInput, passwordSalt, hashFunction);
             const isAuthenticated: boolean = userPasswordHashed == result.PasswordInfo.StoredHash;
 
-            return {
-                isAuthorized: isAuthenticated,
-                context: {
-                    userEmail: userInput.Email
+            if (isAuthenticated) {
+                return {
+                    isAuthorized: true,
+                    context: {
+                        userEmail: userInput.Email
+                    }
                 }
+            } else {
+                return {isAuthorized: false}
             }
         }
     })

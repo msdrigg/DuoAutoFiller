@@ -1,12 +1,12 @@
 import keyAccess from "../repository/keyAccess";
 import { getErrorLambdaResponse, LambdaResponse } from "../utils/AWSTypes";
-import { AuthorizationContext } from "../authorization/types";
+import { UserAuthorizationContext } from "../authorization/types";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { ErrorType, isError, ResponsibleError, ResultOrError } from "../model/common";
 import { FrontendKey } from "../model/keys";
 import { createResponsibleError } from "../repository/model/mapping";
 
-export async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
+export async function routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
     // Route users requests 
     let route = "";
     if (routes.length > 0) {

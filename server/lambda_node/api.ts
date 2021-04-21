@@ -2,7 +2,7 @@ import * as users from "./layers/routing/users";
 import * as keys from "./layers/routing/keys";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
-import { AuthorizationContext } from "./layers/authorization/types";
+import { UserAuthorizationContext } from "./layers/authorization/types";
 import { APIGatewayRequestEvent, LambdaContext, LambdaResponse } from "./layers/utils/AWSTypes";
 
 const config: DynamoDBClientConfig = {
@@ -30,7 +30,7 @@ exports.handler = async (event: APIGatewayRequestEvent, context: LambdaContext):
     const remainingPathParts = pathParts.slice(1);
 
     const body = event.body;
-    const authorizer: AuthorizationContext = context.authorizer;
+    const authorizer: UserAuthorizationContext = context.authorizer;
 
     try {
         switch (pathParts[0]) {

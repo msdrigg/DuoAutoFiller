@@ -3,20 +3,15 @@ import userAccess from "../../layers/repository/userAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
-  AttributeValue,
 } from '@aws-sdk/client-dynamodb';
 import {
   DeleteCommand,
   DynamoDBDocumentClient,
 } from '@aws-sdk/lib-dynamodb';
-import {
-  unmarshall
-} from "@aws-sdk/util-dynamodb";
-import { UserAuthVerifier, CoreUser } from '../../layers/model/users';
-import { ErrorType } from '../../layers/model/common';
-import { DatabaseUser } from '../../layers/repository/model/models';
+import { UserAuthChallenge } from '../../layers/model/users';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
-import { createResponsibleError, getCoreUser } from '../../layers/repository/model/mapping';
+import { authorizeUser } from '../../layers/authorization/userAuthorizer';
+import { LambdaAuthorization } from '../../layers/authorization/types';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -28,9 +23,6 @@ const config: DynamoDBClientConfig = {
 }
 const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
-const validUsers: Array<DatabaseUser> = testDataModel.TableData
-  .map((it: { [key: string]: AttributeValue; }) => unmarshall(it))
-  .filter((it: DatabaseUser) => it.SKCombined.startsWith("M#"))
 
 
 beforeAll(() => {
@@ -41,84 +33,77 @@ afterAll(() => {
 }, 10000)
 
 describe('authorizeUser', function () {
-    it.skip("Authorize user successfully",
-      async () => {
-        expect.assertions(3);
+    const challenge: UserAuthChallenge = {
+      Email: "validEmail@address.com",
+      PasswordInput: "ase423lk4fdj",
+      Context: {name: "valid man"},
+    };
 
-        // Get valid frontendUser
-        const challenge: UserAuthChallenge = {
-          Email: "validEmail@address.com",
-          PasswordHash: "ase423lk4fdj",
-          Context: {name: "valid man"},
-        };
-        await expect(userAccess.createUser(
-          challenge.Email,
-          challenge.PasswordHash,
-          challenge.Context,
-          documentClient
-        )).resolves.toStrictEqual({
-          Email: frontUser.Email,
-          Context: frontUser.Context
-        });
+    beforeAll(() => {
+      return userAccess.createUser(
+        challenge.Email,
+        challenge.PasswordInput,
+        challenge.Context,
+        documentClient
+      )
+    })
 
-        await expect(userAccess.getUser(
-          frontUser.Email, documentClient
-        )).resolves.toEqual({
-          Email: frontUser.Email,
-          Context: frontUser.Context
-        });
+    afterAll(() => {
+      return documentClient.send(
+        new DeleteCommand({
+          TableName: testDataModel.TableName,
+          Key: {
+            PKCombined: challenge.Email,
+            SKCombined: "M#"
+          }
+        })
+      )
+    })
 
-        //console.log(JSON.stringify(testDataModel, null, 2));
-        await expect(
-          documentClient.send(
-            new DeleteCommand({
-              TableName: testDataModel.TableName,
-              Key: {
-                PKCombined: frontUser.Email,
-                SKCombined: "M#"
-              }
-            })
-          )
-        ).resolves.toBeTruthy();
-      }
-    );
-
-    it.skip("Authorize user fails with user not exists",
+    it("Authorize user successfully",
       async () => {
         expect.assertions(1);
-        
-        // Get a frontendUser from the datamodel
-        const databaseUser = validUsers[0];
-        const frontUser: UserAuthVerifier = {
-          Email: databaseUser.PKCombined,
-          PasswordHash: "ase423lk4fdj",
-          Context: {
-            Name: "valid man"
-          },
-        }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorResponse = createResponsibleError(ErrorType.DatabaseError, "User with provided email already exists", 409) as any;
-        errorResponse.reason = expect.any(Error);
-        
-        await expect(userAccess.createUser(
-          frontUser.Email,
-          frontUser.PasswordHash,
-          frontUser.Context,
-          documentClient
-        )).resolves.toMatchObject(errorResponse);
+        const authorized: LambdaAuthorization = {
+          isAuthorized: true,
+          context: {
+            userEmail: challenge.Email
+          }
+        };
+        await expect(authorizeUser(challenge, documentClient))
+          .resolves.toEqual(authorized);
       }
     );
 
-    it.skip("Authorize user fails with password hash not matches",
+    it("Authorize user fails with user not exists",
+      async () => {
+        expect.assertions(1);
+
+        const fakeTrial = {
+          ...challenge
+        };
+        fakeTrial.Email = "blahbalhsd@ggg.comk"
+        const unAuthorized: LambdaAuthorization = {
+          isAuthorized: false,
+        };
+        await expect(authorizeUser(fakeTrial, documentClient))
+          .resolves.toEqual(unAuthorized);
+      }
+    );
+
+    it("Authorize user fails with password hash not matches",
         async () => {
         expect.assertions(1);
-        
-        const validUser: CoreUser = getCoreUser(validUsers[0]);
 
-        await expect(userAccess.getUser(
-            validUser.Email, documentClient
-        )).resolves.toStrictEqual(validUser);
-        }
+        const fakeTrial = {
+          ...challenge
+        };
+        fakeTrial.PasswordInput = "23flk23flkj23f";
+        const unAuthorized: LambdaAuthorization = {
+          isAuthorized: false,
+        };
+        await expect(authorizeUser(fakeTrial, documentClient))
+          .resolves.toEqual(unAuthorized);
+      }
     );
 });

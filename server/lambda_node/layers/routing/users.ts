@@ -5,11 +5,11 @@ import userAccess from "../repository/userAccess";
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { getErrorLambdaResponse, LambdaResponse } from '../utils/AWSTypes';
 import { ErrorType, isError, ResultOrError } from '../model/common';
-import { AuthorizationContext, isSessionAuthorizationContext } from "../authorization/types";
+import { UserAuthorizationContext, isSessionAuthorizationContext } from "../authorization/types";
 import { createResponsibleError } from "../repository/model/mapping";
 import { FrontendSession } from "../model/sessions";
 
-export async function routeRequest(routes: Array<string>, body: string, authorizer: AuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
+export async function routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext, dynamo: DynamoDBDocumentClient): Promise<LambdaResponse> {
     let userEmailAuthorized: string;
 
     if (routes[0] == "signin") {
