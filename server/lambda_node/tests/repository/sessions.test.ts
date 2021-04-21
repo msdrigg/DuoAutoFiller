@@ -18,6 +18,7 @@ import { getFrontendSession, getDatabaseSession } from '../../layers/sessions/ma
 import { DatabaseSession, SessionRepository } from '../../layers/sessions/repository';
 import { DatabaseUser } from '../../layers/users/repository';
 import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
+import { createResponsibleError, ErrorType } from '../../layers/common';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -113,9 +114,10 @@ describe('getSession', function () {
     async () => {
       expect.assertions(1);
 
+      const error = createResponsibleError(ErrorType.DatabaseError, "Session not found matching email and id", 404);
       await expect(sessionRepository.getSession(
         "INVALDEMAIL@NOTEXISTS.com", "asdflkj23"
-      )).resolves.toBeUndefined();
+      )).resolves.toEqual(error);
     }
   );
 
@@ -123,9 +125,10 @@ describe('getSession', function () {
     expect.assertions(1);
     const validUser: DatabaseUser = validUsers[0];
     
+    const error = createResponsibleError(ErrorType.DatabaseError, "Session not found matching email and id", 404);
     await expect(sessionRepository.getSession(
         validUser.PKCombined, "asdflkj23"
-    )).resolves.toBeUndefined();
+    )).resolves.toEqual(error);
     }
   );
 });

@@ -36,14 +36,15 @@ describe('routeRequest with unknown route', function () {
       async () => {
         expect.assertions(1);
         
+        const pathFail = ["poop"]
         const expectedError = {
             statusCode: 404,
-            body: expect.stringMatching("^.*\\\"message\\\":\\\"Path not found\\\".*$"),
+            body: expect.stringMatching("^.*\\\"message\\\":\\\"Path not found: key/poop\\\".*$"),
             headers: {
                 "content-type": "application/json"
             }
         }
-        expect(requestRouter.routeRequest(["poop"], "hi", {
+        expect(requestRouter.routeRequest(pathFail, "hi", {
             userEmail: "HI"
         })).resolves.toEqual(expectedError)
     });
