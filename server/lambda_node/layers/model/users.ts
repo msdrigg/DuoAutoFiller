@@ -5,8 +5,13 @@ export type CoreUser = {
     Context: BaseContext
 }
 
-export type AuthUser = CoreUser & {
-    PasswordHash: string,
+export type UserAuthVerifier = CoreUser & {
+    PasswordInfo: PasswordInfo,
+}
+
+export type UserAuthChallenge = Omit<CoreUser, "Context"> & {
+    PasswordInput: string,
+    Context?: BaseContext
 }
 
 export type PasswordInfo = {

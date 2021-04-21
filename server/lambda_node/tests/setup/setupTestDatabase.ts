@@ -4,7 +4,8 @@ import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb";
 import {unmarshall} from "@aws-sdk/util-dynamodb";
 import { DeleteTableCommandInput, DeleteTableCommandOutput } from '@aws-sdk/client-dynamodb';
 
-export function loadTestData(filepath: string): unknown {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function loadTestData(filepath: string): any {
     return JSON.parse(fs.readFileSync(filepath, 'utf8')).DataModel[0];
 }
 

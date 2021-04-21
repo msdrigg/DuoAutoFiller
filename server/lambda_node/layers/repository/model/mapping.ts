@@ -1,6 +1,6 @@
 import { ErrorType, ResponsibleError } from "../../model/common";
 import { FrontendKey } from "../../model/keys";
-import { AuthUser, CoreUser, PasswordInfo } from "../../model/users";
+import { CoreUser, PasswordInfo, UserAuthChallenge } from "../../model/users";
 import constants from "../../utils/constants";
 import httpUtils from "../../utils/httpUtils";
 import { isAWSError } from "./errors";
@@ -15,14 +15,14 @@ export function getCoreUser(databaseUser: DatabaseUser): CoreUser {
     };
 }
 
-export function createDatabaseUser(authUser: AuthUser): DatabaseUser {
+export function createDatabaseUser(authUser: UserAuthChallenge): DatabaseUser {
     const passwordSalt = httpUtils.getRandomString(64);
     const hashFunction = constants.DEFAULT_HASH_FUNCTION;
     const newPasswordInfo: PasswordInfo = {
         HashFunction: hashFunction,
         Salt: passwordSalt,
         StoredHash: httpUtils.hashSalted(
-            authUser.PasswordHash,
+            authUser.PasswordInput,
             passwordSalt,
             hashFunction
         )

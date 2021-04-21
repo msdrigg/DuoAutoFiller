@@ -1,9 +1,9 @@
 import httpUtils from "../utils/httpUtils";
 import constants from "../utils/constants";
-import { CoreUser, UserUpdate } from "../model/users";
+import { UserAuthVerifier, CoreUser, UserUpdate } from "../model/users";
 import { createResponsibleError, getCoreUser, getResponsibleError } from "./model/mapping";
 import { DatabaseUser } from "./model/models";
-import { BaseContext, ErrorType, ResultOrError } from "../model/common";
+import { BaseContext, ErrorType, isError, ResultOrError } from "../model/common";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from "@aws-sdk/lib-dynamodb";
 import { isAWSError } from "./model/errors";
 
@@ -17,6 +17,19 @@ import { isAWSError } from "./model/errors";
  * @returns {CoreUser|undefined} The user 
  */
 async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<CoreUser>> {
+    return getAuthUser(userEmail, dynamo).then(result => {
+        if (isError(result)) {
+            return result;
+        } else {
+            return {
+                Email: result.Email,
+                Context: result.Context
+            }
+        }
+    })
+}
+
+export async function getAuthUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promise<ResultOrError<UserAuthVerifier>> {
     // Function to get user given the email, and return the user (undefined if no user exists)
     const params: GetCommand = new GetCommand( {
         TableName: constants.TABLE_NAME,
@@ -32,10 +45,11 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
         const databaseUser = result.Item as unknown as DatabaseUser;
         return {
             Email: databaseUser.PKCombined,
-            Context: databaseUser.Context
+            Context: databaseUser.Context,
+            PasswordInfo: databaseUser.PasswordInfo,
+
         };
     }).catch( (err: unknown) => {
-        console.log("Error getting user: ", JSON.stringify(err, null, 2));
         if (isAWSError(err) && err.name == "ResourceNotFoundException") {
             return createResponsibleError(
                 ErrorType.DatabaseError, "User not found in database", 404, err
@@ -44,6 +58,7 @@ async function getUser(userEmail: string, dynamo: DynamoDBDocumentClient): Promi
         return getResponsibleError(err);
     });
 }
+
 
 /**
  * Creates a user and returns the created user

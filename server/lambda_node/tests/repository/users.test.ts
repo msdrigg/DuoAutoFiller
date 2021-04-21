@@ -1,5 +1,5 @@
 import {describe, expect, beforeAll, afterAll, it} from '@jest/globals';
-import userAccess from "../../layers/repository/userAccess";
+import userAccess, { getAuthUser } from "../../layers/repository/userAccess";
 import { 
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -12,11 +12,12 @@ import {
 import {
   unmarshall
 } from "@aws-sdk/util-dynamodb";
-import { AuthUser, CoreUser, UserUpdate } from '../../layers/model/users';
-import { ErrorType, ResponsibleError } from '../../layers/model/common';
+import { CoreUser, UserUpdate, UserAuthVerifier } from '../../layers/model/users';
+import { ErrorType, isError, ResponsibleError } from '../../layers/model/common';
 import { DatabaseUser } from '../../layers/repository/model/models';
 import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
 import { createResponsibleError, getCoreUser } from '../../layers/repository/model/mapping';
+import { createHmac } from "crypto";
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -46,7 +47,7 @@ describe('createUser', function () {
         expect.assertions(3);
 
         // Get valid frontendUser
-        const frontUser: AuthUser = {
+        const frontUser = {
           Email: "validEmail@address.com",
           PasswordHash: "ase423lk4fdj",
           Context: {name: "valid man"},
@@ -83,13 +84,59 @@ describe('createUser', function () {
       }
     );
 
+    it("Creates user successfully with verified user hash",
+      async () => {
+        expect.assertions(3);
+        // Get valid frontendUser
+        const frontUser = {
+          Email: "validEmail@address.com",
+          PasswordHash: "ase423lk4fdj",
+          Context: {name: "valid man"},
+        };
+        await expect(userAccess.createUser(
+          frontUser.Email,
+          frontUser.PasswordHash,
+          frontUser.Context,
+          documentClient
+        )).resolves.toStrictEqual({
+          Email: frontUser.Email,
+          Context: frontUser.Context
+        });
+
+        await expect(getAuthUser(
+          frontUser.Email, documentClient
+        ).then(result => {
+          if (!isError(result)) {
+            const hash = createHmac(result.PasswordInfo.HashFunction, result.PasswordInfo.Salt);
+            hash.update(frontUser.PasswordHash);
+            const expectedHash = hash.digest('hex');
+            return expectedHash == result.PasswordInfo.StoredHash;
+          } else {
+            return false
+          }
+        })).resolves.toBeTruthy();
+
+        await expect(
+          documentClient.send(
+            new DeleteCommand({
+              TableName: testDataModel.TableName,
+              Key: {
+                PKCombined: frontUser.Email,
+                SKCombined: "M#"
+              }
+            })
+          )
+        ).resolves.toBeTruthy();
+      }
+    );
+
     it("Creates user fails with conflict",
       async () => {
         expect.assertions(1);
         
         // Get a frontendUser from the datamodel
         const databaseUser = validUsers[0];
-        const frontUser: AuthUser = {
+        const frontUser = {
           Email: databaseUser.PKCombined,
           PasswordHash: "ase423lk4fdj",
           Context: {
@@ -137,6 +184,36 @@ describe('getUser', function () {
   );
 });
 
+
+describe('getAuthUserVerifier', function () {
+  it("Gets user successfully",
+    async () => {
+      expect.assertions(1);
+      
+      const databaseUser = validUsers[0];
+      const validUser: UserAuthVerifier = {
+        Email: databaseUser.PKCombined,
+        PasswordInfo: databaseUser.PasswordInfo,
+        Context: databaseUser.Context
+      }
+
+      await expect(getAuthUser(
+        validUser.Email, documentClient
+      )).resolves.toStrictEqual(validUser);
+    }
+  );
+
+  it("Gets user fails with not found",
+    async () => {
+      expect.assertions(1);
+      const errorResponse: ResponsibleError = createResponsibleError(ErrorType.DatabaseError, "User not found in database", 404);
+
+      await expect(userAccess.getUser(
+        "INVALDEMAIL@NOTEXISTS.com", documentClient
+      )).resolves.toMatchObject(errorResponse);
+    }
+  );
+});
 describe('deleteUser', function () {
   it.skip("Deletes user successfully",
     async () => {
