@@ -1,29 +1,9 @@
-import {describe, expect, beforeAll, afterAll, it, jest } from '@jest/globals';
-import { 
-  DynamoDBClient,
-  DynamoDBClientConfig,
-} from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-} from '@aws-sdk/lib-dynamodb';
+import {describe, expect, it, jest } from '@jest/globals';
 import { KeyRouter, CoreKey, IKeyRepository, KeyContext } from '../../layers/keys';
-import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 import { ResultOrError } from '../../layers/common';
 import { CreationKey } from '../../layers/keys/model';
 import { createDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
 
-
-const config: DynamoDBClientConfig = {
-    region: "us-east-1",
-    endpoint: "http://localhost:8000",
-    credentials: {
-      accessKeyId: "xxxxxx",
-      secretAccessKey: "xxxxxx"
-    }
-} 
-
-const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
-const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 
 const inputEmail = "fakeEmail1124309@fake.com";
 const inputKey: CreationKey = {
@@ -62,12 +42,6 @@ class MockKeyRepository implements IKeyRepository {
         return this.mockFunction(userEmail, keyId, updatedContext) as Promise<ResultOrError<CoreKey>>;
     }
 }
-beforeAll(() => {
-  return setupTestDatabase(testDataModel, documentClient);
-}, 10000)
-afterAll(() => {
-  return cleanupTestDatabase(testDataModel, documentClient);
-}, 10000)
 
 
 describe('routeRequest with unknown route', function () {
@@ -126,15 +100,170 @@ describe('routeRequest to blank path', function () {
             inputEmail, inputKey
         )
     }
-);
+  );
 
-  it("handle malformed body", 
+  it.skip("handle malformed body", 
     async () => {
         return 0
     }
   );
 
-  it("handle dynamo error",
+  it.skip("handle dynamo single error",
+    async () => {
+        return 0
+    }
+  );
+
+  it.skip("handle dynamo persistant error",
+    async () => {
+        return 0
+    }
+  );
+});
+
+
+describe('routeRequest to "findSinceTimestamp', function () {
+    it.skip("successfully download all keys",
+        async () => {
+        expect.assertions(5);
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mockCreationFunction = jest.fn(async (..._args: any[]) => {
+            return getFrontendKey(createDatabaseKey(inputEmail, inputKey))
+        })
+        const mockRepository = new MockKeyRepository(mockCreationFunction);
+        const router = new KeyRouter(mockRepository);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+        const outputKeyChecker = {
+          ...inputKey,
+          Id: expect.any(String),
+          LastContentUpdate: expect.any(Date),
+          UseCounter: 0,
+        }
+        const currentTime = Date.now();
+        await expect(
+            router.routeRequest([''], inputKey, {
+                userEmail: inputEmail
+            }).then((it: {LastContentUpdate: Date})=> {
+              expect(it.LastContentUpdate.getTime()/1000).toBeCloseTo(currentTime / 1000);
+              return it;
+            })
+        ).resolves.toEqual(outputKeyChecker)
+
+        expect(mockCreationFunction).toBeCalledTimes(2);
+        expect(mockCreationFunction).toBeCalledWith("createKey");
+        expect(mockCreationFunction).toBeCalledWith(
+            inputEmail, inputKey
+        )
+    }
+  );
+
+    it.skip("successfully download limited keys",
+        async () => {
+        expect.assertions(5);
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mockCreationFunction = jest.fn(async (..._args: any[]) => {
+            return getFrontendKey(createDatabaseKey(inputEmail, inputKey))
+        })
+        const mockRepository = new MockKeyRepository(mockCreationFunction);
+        const router = new KeyRouter(mockRepository);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+        const outputKeyChecker = {
+          ...inputKey,
+          Id: expect.any(String),
+          LastContentUpdate: expect.any(Date),
+          UseCounter: 0,
+        }
+        const currentTime = Date.now();
+        await expect(
+            router.routeRequest([''], inputKey, {
+                userEmail: inputEmail
+            }).then((it: {LastContentUpdate: Date})=> {
+              expect(it.LastContentUpdate.getTime()/1000).toBeCloseTo(currentTime / 1000);
+              return it;
+            })
+        ).resolves.toEqual(outputKeyChecker)
+
+        expect(mockCreationFunction).toBeCalledTimes(2);
+        expect(mockCreationFunction).toBeCalledWith("createKey");
+        expect(mockCreationFunction).toBeCalledWith(
+            inputEmail, inputKey
+        )
+    }
+);
+
+  it.skip("handle malformed body", 
+    async () => {
+        return 0
+    }
+  );
+
+  it.skip("handle dynamo single error",
+    async () => {
+        return 0
+    }
+  );
+
+  it.skip("handle dynamo persistant error",
+    async () => {
+        return 0
+    }
+  );
+});
+
+describe('routeRequest to "downloadAndUse', function () {
+    it.skip("successfully download and update key",
+        async () => {
+        expect.assertions(5);
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mockCreationFunction = jest.fn(async (..._args: any[]) => {
+            return getFrontendKey(createDatabaseKey(inputEmail, inputKey))
+        })
+        const mockRepository = new MockKeyRepository(mockCreationFunction);
+        const router = new KeyRouter(mockRepository);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+        const outputKeyChecker = {
+          ...inputKey,
+          Id: expect.any(String),
+          LastContentUpdate: expect.any(Date),
+          UseCounter: 0,
+        }
+        const currentTime = Date.now();
+        await expect(
+            router.routeRequest([''], inputKey, {
+                userEmail: inputEmail
+            }).then((it: {LastContentUpdate: Date})=> {
+              expect(it.LastContentUpdate.getTime()/1000).toBeCloseTo(currentTime / 1000);
+              return it;
+            })
+        ).resolves.toEqual(outputKeyChecker)
+
+        expect(mockCreationFunction).toBeCalledTimes(2);
+        expect(mockCreationFunction).toBeCalledWith("createKey");
+        expect(mockCreationFunction).toBeCalledWith(
+            inputEmail, inputKey
+        )
+    }
+);
+
+  it.skip("handle malformed body", 
+    async () => {
+        return 0
+    }
+  );
+
+  it.skip("handle dynamo single error",
+    async () => {
+        return 0
+    }
+  );
+
+  it.skip("handle dynamo persistant error",
     async () => {
         return 0
     }

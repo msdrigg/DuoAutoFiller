@@ -94,9 +94,9 @@ describe('authorizeUser', function () {
         expect.assertions(1);
 
         const fakeTrial = {
-          ...challenge
+          ...challenge,
+          PasswordInput: "23flk23flkj23f"
         };
-        fakeTrial.PasswordInput = "23flk23flkj23f";
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };

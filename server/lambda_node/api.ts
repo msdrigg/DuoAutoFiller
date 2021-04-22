@@ -7,11 +7,11 @@ import { UserRepository, UserRouter } from "./layers/users";
 
 
 export class PrimaryRouter implements GenericRouter {
-    userRouter: UserRouter;
-    keyRouter: KeyRouter;
-    sessionRouter: SessionRouter;
+    userRouter: GenericRouter;
+    keyRouter: GenericRouter;
+    sessionRouter: GenericRouter;
 
-    constructor(userRouter: UserRouter, keyRouter: KeyRouter, sessionRouter: SessionRouter) {
+    constructor(userRouter: GenericRouter, keyRouter: GenericRouter, sessionRouter: GenericRouter) {
         this.userRouter = userRouter;
         this.keyRouter = keyRouter;
         this.sessionRouter = sessionRouter;
@@ -38,7 +38,7 @@ export class PrimaryRouter implements GenericRouter {
                 return getErrorLambdaResponse(
                     createResponsibleError(
                         ErrorType.PathNotFoundError,
-                        `Route not found for path ${pathParts.join('\\')}`,
+                        `Path not found: ${pathParts.join('/')}`,
                         404
                     )
                 )

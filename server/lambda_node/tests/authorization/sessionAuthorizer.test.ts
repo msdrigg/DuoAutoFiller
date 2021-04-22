@@ -161,32 +161,27 @@ describe('authorizeUser', function () {
 
     it("Authorize session fails with mangled data",
         async () => {
-        expect.assertions(3);
+        expect.assertions(2);
 
-        const cookies = [
+        const cookies1 = [
           "poopyalskjrejd",
           "jlqwekrjdfslkasdf"
         ];
         
-        await expect(authorizeSession(cookies, sessionRepository))
+        await expect(authorizeSession(cookies1, sessionRepository))
           .resolves.toEqual({
             isAuthorized: false
           });
 
-        // Make sure the session has been deleted
-        await expect(documentClient.send(new GetCommand({
-            TableName: TABLE_NAME,
-            Key: {
-                PKCombined: fakeSession.PKCombined,
-                SKCombined: fakeSession.SKCombined
-            }
-        })).then((it: GetCommandOutput) => it.Item)).resolves.toBeUndefined();
+        const cookies2 = [
+          "email=234kjl234@gmail.com",
+          "sessionId=23lk4jlaksdjrf"
+        ];
         
-        // Put it back now that it's gone
-        await expect(documentClient.send(new PutCommand({
-            TableName: TABLE_NAME,
-            Item: fakeSession
-        }))).resolves.toBeTruthy();
+        await expect(authorizeSession(cookies2, sessionRepository))
+          .resolves.toEqual({
+            isAuthorized: false
+          });
       }
     );
 });

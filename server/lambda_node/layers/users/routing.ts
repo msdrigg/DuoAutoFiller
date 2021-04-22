@@ -79,7 +79,7 @@ export class UserRouter implements GenericRouter {
             }
             default: {
                 return getErrorLambdaResponse(
-                    createResponsibleError(ErrorType.ClientRequestError, `Path not found: user/.${routes.join("/")}`, 404)
+                    createResponsibleError(ErrorType.ClientRequestError, `Path not found: user/${routes.join("/")}`, 404)
                 );
             }
         }

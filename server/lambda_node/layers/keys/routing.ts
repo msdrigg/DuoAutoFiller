@@ -75,7 +75,7 @@ export class KeyRouter implements GenericRouter {
             case 'downloadAndUse': {
                 // Increment usageCounter and return the key atomically
 
-                const {error, value } = idValidation.validate(parsedBody)
+                const { error, value } = idValidation.validate(parsedBody)
 
                 if (error !== undefined) {
                     return getErrorLambdaResponse(

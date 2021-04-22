@@ -31,6 +31,9 @@ export class SessionRouter implements GenericRouter {
                 let result: ResultOrError<CoreSession>;
                 if (isSessionAuthorizationContext(authorizer)) {
                     result = await this.repository.getSession(authorizer.userEmail, authorizer.sessionId);
+                    if (isError(result) && result.isRetryable) {
+                        result = await this.repository.getSession(authorizer.userEmail, authorizer.sessionId);
+                    }
                 } else {
                     result = createResponsibleError(ErrorType.ServerError, "No session provided in session authorizer", 500)
                 }
@@ -103,12 +106,23 @@ export class SessionRouter implements GenericRouter {
                     sessionName = request.Name;
                 }
 
-                await this.repository.createSession(
+                let result = await this.repository.createSession(
                     authorizer.userEmail,
                     sessionId,
                     sessionName,
                     expirationDate,
                 )
+                if (isError(result) && result.isRetryable) {
+                    result = await this.repository.createSession(
+                        authorizer.userEmail,
+                        sessionId,
+                        sessionName,
+                        expirationDate,
+                    )
+                }
+                if (isError(result)){
+                    return getErrorLambdaResponse(result);
+                }
 
                 return {
                     cookies: sessionCookies,
