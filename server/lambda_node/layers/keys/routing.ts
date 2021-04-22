@@ -9,7 +9,7 @@ import {
     GenericRouter
 } from "../common";
 import { CreationKey } from "./model";
-import { idValidation, keyCreationValidation, timestampValidation } from "./validator";
+import { idValidation, keyCreationValidation, timestampValidation } from "./validation";
 
 export class KeyRouter implements GenericRouter {
     repository: IKeyRepository;
@@ -30,9 +30,7 @@ export class KeyRouter implements GenericRouter {
         switch (route) {
             case '': {
                 // Posting (updating or adding a key
-                const { error, value } = keyCreationValidation.validate(
-                    parsedBody, { presence: "required" }
-                )
+                const { error, value } = keyCreationValidation.validate(parsedBody)
                 if (error !== undefined) {
                     return getErrorLambdaResponse(
                         createResponsibleError(
@@ -52,9 +50,7 @@ export class KeyRouter implements GenericRouter {
             }
             case 'findSinceTimestamp': {
                 // Find all keys (batch) since a timestamp. If not provided, find all
-                const {error, value } = timestampValidation.validate(
-                    parsedBody
-                )
+                const { error, value } = timestampValidation.validate(parsedBody)
 
                 if (error !== undefined) {
                     return getErrorLambdaResponse(
@@ -79,11 +75,7 @@ export class KeyRouter implements GenericRouter {
             case 'downloadAndUse': {
                 // Increment usageCounter and return the key atomically
 
-                const {error, value } = idValidation.validate(
-                    parsedBody, {
-                        presence: "required"
-                    }
-                )
+                const {error, value } = idValidation.validate(parsedBody)
 
                 if (error !== undefined) {
                     return getErrorLambdaResponse(

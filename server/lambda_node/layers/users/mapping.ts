@@ -1,6 +1,6 @@
-import { CoreUser, UserAuthChallenge, PasswordInfo } from ".";
+import { CoreUser, PasswordInfo } from ".";
 import { httpUtils } from "../common";
-import { HashFunction } from "./model";
+import { HashFunction, UserAuthExternal } from "./model";
 import { DatabaseUser } from "./repository";
 
 
@@ -11,7 +11,7 @@ export function getCoreUser(databaseUser: DatabaseUser): CoreUser {
     };
 }
 
-export function createDatabaseUser(authUser: UserAuthChallenge): DatabaseUser {
+export function createDatabaseUser(authUser: UserAuthExternal): DatabaseUser {
     const passwordSalt = httpUtils.getRandomString(64);
     const hashFunction = HashFunction.DEFAULT;
     const newPasswordInfo: PasswordInfo = {

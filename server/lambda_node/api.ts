@@ -56,7 +56,7 @@ export class PrimaryRouter implements GenericRouter {
  * PUT, or DELETE request respectively, passing in the payload to the
  * DynamoDB API as a JSON body.
  */
-export async function handleMainEvent(
+export async function parseRequest(
     rawPath: string,
     body: string,
     authorizer: UserAuthorizationContext,
@@ -64,7 +64,7 @@ export async function handleMainEvent(
 ): Promise<LambdaResponse> {
     const pathParts = rawPath.split('/').slice(1);
 
-    let parsedBody;
+    let parsedBody: unknown;
     try {
         parsedBody = JSON.parse(body);
     } catch (err) {
@@ -100,5 +100,5 @@ const primaryRouter = new PrimaryRouter(
 )
 
 exports.handler = async (event: APIGatewayRequestEvent, context: LambdaContext): Promise<LambdaResponse> => {
-    return handleMainEvent(event.rawPath, event.body, context.authorizer, primaryRouter);
+    return parseRequest(event.rawPath, event.body, context.authorizer, primaryRouter);
 };

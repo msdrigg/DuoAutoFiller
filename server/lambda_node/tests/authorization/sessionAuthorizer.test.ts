@@ -11,10 +11,11 @@ import {
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { authorizeSession } from '../../layers/authorization';
 import { LambdaAuthorization } from '../../layers/authorization/model';
-import { SessionAuthorizationContext } from '../../layers/common';
+import { constants, httpUtils, SessionAuthorizationContext } from '../../layers/common';
 import { TABLE_NAME } from '../../layers/common/utils/constants';
 import { DatabaseSession, SessionRepository } from '../../layers/sessions/repository';
-import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
+import { cleanupTestDatabase, loadTestData, setupTestDatabase } from '../setup/setupTestDatabase';
+import { getCookieString } from '../../layers/common/utils/httpUtils';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -64,7 +65,12 @@ describe('authorizeUser', function () {
             Item: validSession
         }))).resolves.toBeTruthy()
 
-        await expect(authorizeSession(validSession.PKCombined, validSession.SKCombined.slice(2), sessionRepository))
+        const cookies = [
+          getCookieString(constants.EMAIL_COOKIE_NAME, httpUtils.encodeUnicode(validSession.PKCombined)),
+          getCookieString(constants.SESSION_COOKIE_NAME, validSession.SKCombined.slice(2))
+        ];
+
+        await expect(authorizeSession(cookies, sessionRepository))
           .resolves.toEqual(authorized);
 
         await expect(documentClient.send(new DeleteCommand({
@@ -81,12 +87,18 @@ describe('authorizeUser', function () {
       async () => {
         expect.assertions(1);
 
-        const fakeSession = validSessions[0];
+        const fakeSession = validSessions.find(it => it.Temporal > Date.now());
         fakeSession.PKCombined = "blahbalhsd@ggg.comk";
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
+
+        const cookies = [
+          getCookieString(constants.EMAIL_COOKIE_NAME, httpUtils.encodeUnicode(fakeSession.PKCombined)),
+          getCookieString(constants.SESSION_COOKIE_NAME, fakeSession.SKCombined.slice(2))
+        ];
+        
+        await expect(authorizeSession(cookies, sessionRepository))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -95,12 +107,18 @@ describe('authorizeUser', function () {
         async () => {
         expect.assertions(1);
 
-        const fakeSession = validSessions[0];
-        fakeSession.SKCombined = "S#asdoifuasdjfek";
+        const fakeSession = validSessions.find(it => it.Temporal > Date.now());
+        fakeSession.SKCombined = "S#dlasdflkjcomk";
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
+
+        const cookies = [
+          getCookieString(constants.EMAIL_COOKIE_NAME, httpUtils.encodeUnicode(fakeSession.PKCombined)),
+          getCookieString(constants.SESSION_COOKIE_NAME, fakeSession.SKCombined.slice(2))
+        ];
+        
+        await expect(authorizeSession(cookies, sessionRepository))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -115,7 +133,13 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeSession(fakeSession.PKCombined, fakeSession.SKCombined.slice(2), sessionRepository))
+
+        const cookies = [
+          getCookieString(constants.EMAIL_COOKIE_NAME, httpUtils.encodeUnicode(fakeSession.PKCombined)),
+          getCookieString(constants.SESSION_COOKIE_NAME, fakeSession.SKCombined.slice(2))
+        ];
+        
+        await expect(authorizeSession(cookies, sessionRepository))
           .resolves.toEqual(unAuthorized);
 
         // Make sure the session has been deleted

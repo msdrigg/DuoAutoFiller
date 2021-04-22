@@ -9,7 +9,8 @@ import {
     LambdaResponse,
     UserAuthorizationContext
 } from "../common";
-import { UserAuthChallenge, UserUpdate } from "./model";
+import { UserAuthExternal, UserUpdate } from "./model";
+import { userAuthExternalValidator, userUpdateValidator } from "./validation";
 
 export class UserRouter implements GenericRouter {
     repository: IUserRepository;
@@ -32,11 +33,19 @@ export class UserRouter implements GenericRouter {
         switch (primaryRoute) {
             case 'signup': {
                 // Creating a user
-                const userSubmission = parsedBody as UserAuthChallenge;
+                const { error, value } = userAuthExternalValidator.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
                 const result = this.repository.createUser(
-                    userSubmission.Email,
-                    userSubmission.PasswordInput,
-                    userSubmission.Context,
+                    value as UserAuthExternal
                 );
                 
                 if (isError(result)) {
@@ -50,7 +59,18 @@ export class UserRouter implements GenericRouter {
                 }
             }
             case 'update': {
-                const result = await this.repository.updateUser(userEmailAuthorized, parsedBody as UserUpdate);
+                const { error, value } = userUpdateValidator.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const result = await this.repository.updateUser(userEmailAuthorized, value as UserUpdate);
                 if (isError(result)) {
                     return getErrorLambdaResponse(result);
                 } else {

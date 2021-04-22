@@ -9,6 +9,8 @@ import {
 import { KeyRouter, CoreKey, IKeyRepository, KeyContext } from '../../layers/keys';
 import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
 import { ResultOrError } from '../../layers/common';
+import { CreationKey } from '../../layers/keys/model';
+import { createDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
 
 
 const config: DynamoDBClientConfig = {
@@ -24,16 +26,13 @@ const documentClient = DynamoDBDocumentClient.from(new DynamoDBClient(config));
 const testDataModel = loadTestData('./tests/setup/testData/AutoAuthenticateDatabase.json');
 
 const inputEmail = "fakeEmail1124309@fake.com";
-const inputKey: CoreKey = {
-  Id: "w3ljrwr",
+const inputKey: CreationKey = {
   Context :{
     Name: "Bro",
     Site: "bro.com",
     CreationDate: Date.now()
   },
-  LastContentUpdate: new Date(),
   Key: "32i4ufdlkfj",
-  UseCounter: 0
 };
 
 class MockKeyRepository implements IKeyRepository {
@@ -95,26 +94,36 @@ describe('routeRequest with unknown route', function () {
 describe('routeRequest to blank path', function () {
     it("successfully create a key",
         async () => {
-        expect.assertions(4);
+        expect.assertions(5);
         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mockCreationFunction = jest.fn(async (..._args: any[]) => {
-            return inputKey
+            return getFrontendKey(createDatabaseKey(inputEmail, inputKey))
         })
         const mockRepository = new MockKeyRepository(mockCreationFunction);
         const router = new KeyRouter(mockRepository);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
+        const outputKeyChecker = {
+          ...inputKey,
+          Id: expect.any(String),
+          LastContentUpdate: expect.any(Date),
+          UseCounter: 0,
+        }
+        const currentTime = Date.now();
         await expect(
-            router.routeRequest([''], JSON.stringify(inputKey), {
+            router.routeRequest([''], inputKey, {
                 userEmail: inputEmail
+            }).then((it: {LastContentUpdate: Date})=> {
+              expect(it.LastContentUpdate.getTime()/1000).toBeCloseTo(currentTime / 1000);
+              return it;
             })
-        ).resolves.toEqual(inputKey)
+        ).resolves.toEqual(outputKeyChecker)
 
         expect(mockCreationFunction).toBeCalledTimes(2);
         expect(mockCreationFunction).toBeCalledWith("createKey");
         expect(mockCreationFunction).toBeCalledWith(
-            inputEmail, {...inputKey, LastContentUpdate: expect.any(Date)}
+            inputEmail, inputKey
         )
     }
 );

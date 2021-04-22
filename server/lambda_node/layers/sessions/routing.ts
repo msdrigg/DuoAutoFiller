@@ -12,7 +12,8 @@ import {
     constants,
     GenericRouter
 } from "../common";
-import { InputSession } from "./model";
+import { SessionCreation } from "./model";
+import { sessionCreationValidation } from "./validation";
 
 export class SessionRouter implements GenericRouter {
     repository: ISessionRepository;
@@ -22,14 +23,6 @@ export class SessionRouter implements GenericRouter {
     }
 
     async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
-        let userEmailAuthorized: string;
-
-        if (routes[0] == "signup") {
-            userEmailAuthorized = undefined;
-        } else {
-            userEmailAuthorized = authorizer.userEmail;
-        }
-
         const primaryRoute = routes[0];
 
         switch (primaryRoute) {
@@ -37,7 +30,7 @@ export class SessionRouter implements GenericRouter {
                 // Download the session key
                 let result: ResultOrError<CoreSession>;
                 if (isSessionAuthorizationContext(authorizer)) {
-                    result = await this.repository.getSession(userEmailAuthorized, authorizer.sessionId);
+                    result = await this.repository.getSession(authorizer.userEmail, authorizer.sessionId);
                 } else {
                     result = createResponsibleError(ErrorType.ServerError, "No session provided in session authorizer", 500)
                 }
@@ -58,7 +51,18 @@ export class SessionRouter implements GenericRouter {
                 let sessionName: string;
                 const sessionId = httpUtils.getRandomString(32);
                 let expirationDate: Date;
-                const request = parsedBody as InputSession;
+                const { error, value } = sessionCreationValidation.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const request = value as SessionCreation;
 
                 if (request.Length == 0) {
                     // Use browser session. Validate for 30 days
@@ -70,7 +74,7 @@ export class SessionRouter implements GenericRouter {
 
                     sessionCookies = [
                         httpUtils.getCookieString(constants.SESSION_COOKIE_NAME, sessionId, expirationDate),
-                        httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, userEmailAuthorized, expirationDate)
+                        httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, authorizer.userEmail, expirationDate)
                     ];
                     sessionName = "TEMPORARY";
 
@@ -92,7 +96,7 @@ export class SessionRouter implements GenericRouter {
                         ),
                         httpUtils.getCookieString(
                             constants.EMAIL_COOKIE_NAME,
-                            userEmailAuthorized,
+                            authorizer.userEmail,
                             expirationDate
                         )
                     ];
@@ -100,7 +104,7 @@ export class SessionRouter implements GenericRouter {
                 }
 
                 await this.repository.createSession(
-                    userEmailAuthorized,
+                    authorizer.userEmail,
                     sessionId,
                     sessionName,
                     expirationDate,

@@ -3,18 +3,22 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayRequestEvent, LambdaContext, httpUtils, isError } from "../common";
 import { UserRepository, IUserRepository } from "../users";
 import { LambdaAuthorization } from "./model";
+import { authorizationHeaderStringValidation, emailValidator, passwordHashValidator } from "./validation";
 
 
-export async function authorizeUser(authorization: string, userRepository: IUserRepository): Promise<LambdaAuthorization> {
-    let authString: string;
-    if (authorization !== undefined) {
-        // TODO: Validate incoming authorization headers
-        authString = httpUtils.decodeUnicode(authorization.split(" ")[1]);
-    } else {
+export async function authorizeUser(userRepository: IUserRepository, authorizationHeader?: string): Promise<LambdaAuthorization> {
+    if (authorizationHeader === undefined) {
         return {
             isAuthorized: false
         }
     }
+    const validatedHeader = authorizationHeaderStringValidation.validate(authorizationHeader);
+    if (validatedHeader.error !== undefined) {
+        return {
+            isAuthorized: false
+        }
+    }
+    const authString = httpUtils.decodeUnicode(validatedHeader.value.split(" ")[1]);
 
     const authParts = authString.split(":");
 
@@ -24,8 +28,23 @@ export async function authorizeUser(authorization: string, userRepository: IUser
         }
     }
 
-    const userEmail = authParts[0];
-    const userPasswordInput = authParts[1];
+    const [ userEmailUnvalidated, userPasswordUnvalidated ] = authParts;
+
+    const validatedEmail = emailValidator.validate(userEmailUnvalidated);
+    if (validatedEmail.error !== undefined) {
+        return {
+            isAuthorized: false
+        }
+    }
+    const userEmail = validatedEmail.value as string;
+
+    const validatedPassword = passwordHashValidator.validate(userPasswordUnvalidated);
+    if (validatedPassword.error !== undefined) {
+        return {
+            isAuthorized: false
+        }
+    }
+    const userPasswordInput = validatedPassword.value as string;
 
     return await userRepository.getAuthUser(userEmail).then( async result => {
         // If we have retryable error, retry once immediately
@@ -75,5 +94,5 @@ const userRepository = new UserRepository(dynamo);
 
 exports.handler = async (event: APIGatewayRequestEvent, _context: LambdaContext): Promise<LambdaAuthorization> => {
     // Authorize user based off Authorization cookie with email (b64) and password
-    return authorizeUser(event.headers.Authorization, userRepository);
+    return authorizeUser(userRepository, event.headers.Authorization);
 }

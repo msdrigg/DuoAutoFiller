@@ -20,6 +20,7 @@ import {
     getResponsibleError,
     getResponsibleUnknownError
 } from "../common";
+import { UserAuthExternal } from "./model";
 
 /**
  * Key respository for testing purposes
@@ -32,9 +33,7 @@ export interface IUserRepository {
         userEmail: string,
     ): Promise<ResultOrError<UserAuthVerifier>>
     createUser(
-        userEmail: string,
-        passwordHash: string,
-        useContext: BaseContext,
+        user: UserAuthExternal
     ): Promise<ResultOrError<CoreUser>>
     updateUser(
         userEmail: string,
@@ -47,7 +46,7 @@ export interface IUserRepository {
 
 export type DatabaseUser = DatabaseRow & {
     PasswordInfo: PasswordInfo,
-    Context: {[k: string]: string | number | null},
+    Context: BaseContext,
     Temporal: number
 }
 
@@ -128,12 +127,8 @@ export class UserRepository implements IUserRepository {
      * @throws {typedefs.DynamoError} Any dynamo error creating the user
      * @returns {typedefs.FrontendUser|undefined} The user created, undefined if the user fails to be created
      */
-    async createUser(userEmail: string, passwordHash: string, Context: BaseContext): Promise<ResultOrError<CoreUser>> {
-        const backendUser = createDatabaseUser({
-            Email: userEmail,
-            PasswordInput: passwordHash,
-            Context: Context
-        })
+    async createUser(user: UserAuthExternal): Promise<ResultOrError<CoreUser>> {
+        const backendUser = createDatabaseUser(user)
 
         const putCommand: PutCommand = new PutCommand({
             TableName: constants.TABLE_NAME,
@@ -169,7 +164,7 @@ export class UserRepository implements IUserRepository {
     async updateUser(userEmail: string, changes: UserUpdate): Promise<ResultOrError<CoreUser>>{
         // For updates to email or psw, we need to re-encrypt all encryptedData,
         // invalidate all sessions, and change user password hash and email
-        if (!changes.Context && !changes.Email && !changes.PasswordHash) {
+        if (!changes.Context && !changes.Email && !changes.PasswordInput) {
             return createResponsibleError(ErrorType.ClientRequestError, "No user updates given in request", 400)
         }
 
@@ -224,7 +219,7 @@ export class UserRepository implements IUserRepository {
             // Most of the steps are the same, so we don't repeat most steps twice
             throw new Error("Changing email or password is not yet implemented");
 
-        } else if (changes.PasswordHash) {
+        } else if (changes.PasswordInput) {
             // NOTE: If we change the email, we automatically change the password hash,
             // so don't do this step if email has already changed
 

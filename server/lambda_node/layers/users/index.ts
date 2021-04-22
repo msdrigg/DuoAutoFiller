@@ -3,7 +3,7 @@ export { UserRouter } from "./routing";
 export {
     CoreUser,
     UserUpdate,
-    UserAuthChallenge,
+    UserAuthExternal,
     UserAuthVerifier,
     PasswordInfo
 } from "./model";

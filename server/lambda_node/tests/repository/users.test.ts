@@ -13,7 +13,7 @@ import {
 } from "@aws-sdk/util-dynamodb";
 import { createHmac } from "crypto";
 import { isError, createResponsibleError, ErrorType, ResponsibleError } from '../../layers/common';
-import { CoreUser, UserAuthVerifier, UserUpdate } from '../../layers/users';
+import { CoreUser, UserAuthExternal, UserAuthVerifier, UserUpdate } from '../../layers/users';
 import { getCoreUser } from '../../layers/users/mapping';
 import { DatabaseUser, UserRepository } from '../../layers/users/repository';
 import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
@@ -47,25 +47,21 @@ describe('createUser', function () {
         expect.assertions(3);
 
         // Get valid frontendUser
-        const frontUser = {
+        const userInput: UserAuthExternal = {
           Email: "validEmail@address.com",
-          PasswordHash: "ase423lk4fdj",
+          PasswordInput: "ase423lk4fdj",
           Context: {name: "valid man"},
         };
-        await expect(userRepository.createUser(
-          frontUser.Email,
-          frontUser.PasswordHash,
-          frontUser.Context
-        )).resolves.toStrictEqual({
-          Email: frontUser.Email,
-          Context: frontUser.Context
+        await expect(userRepository.createUser(userInput)).resolves.toStrictEqual({
+          Email: userInput.Email,
+          Context: userInput.Context
         });
 
         await expect(userRepository.getUser(
-          frontUser.Email
+          userInput.Email
         )).resolves.toEqual({
-          Email: frontUser.Email,
-          Context: frontUser.Context
+          Email: userInput.Email,
+          Context: userInput.Context
         });
 
         //console.log(JSON.stringify(testDataModel, null, 2));
@@ -74,7 +70,7 @@ describe('createUser', function () {
             new DeleteCommand({
               TableName: testDataModel.TableName,
               Key: {
-                PKCombined: frontUser.Email,
+                PKCombined: userInput.Email,
                 SKCombined: "M#"
               }
             })
@@ -87,26 +83,22 @@ describe('createUser', function () {
       async () => {
         expect.assertions(3);
         // Get valid frontendUser
-        const frontUser = {
+        const userInput: UserAuthExternal = {
           Email: "validEmail@address.com",
-          PasswordHash: "ase423lk4fdj",
+          PasswordInput: "ase423lk4fdj",
           Context: {name: "valid man"},
         };
-        await expect(userRepository.createUser(
-          frontUser.Email,
-          frontUser.PasswordHash,
-          frontUser.Context
-        )).resolves.toStrictEqual({
-          Email: frontUser.Email,
-          Context: frontUser.Context
+        await expect(userRepository.createUser(userInput)).resolves.toStrictEqual({
+          Email: userInput.Email,
+          Context: userInput.Context
         });
 
         await expect(userRepository.getAuthUser(
-          frontUser.Email
+          userInput.Email
         ).then(result => {
           if (!isError(result)) {
             const hash = createHmac(result.PasswordInfo.HashFunction, result.PasswordInfo.Salt);
-            hash.update(frontUser.PasswordHash);
+            hash.update(userInput.PasswordInput);
             const expectedHash = hash.digest('hex');
             return expectedHash == result.PasswordInfo.StoredHash;
           } else {
@@ -119,7 +111,7 @@ describe('createUser', function () {
             new DeleteCommand({
               TableName: testDataModel.TableName,
               Key: {
-                PKCombined: frontUser.Email,
+                PKCombined: userInput.Email,
                 SKCombined: "M#"
               }
             })
@@ -134,9 +126,9 @@ describe('createUser', function () {
         
         // Get a frontendUser from the datamodel
         const databaseUser = validUsers[0];
-        const frontUser = {
+        const userInput: UserAuthExternal = {
           Email: databaseUser.PKCombined,
-          PasswordHash: "ase423lk4fdj",
+          PasswordInput: "ase423lk4fdj",
           Context: {
             Name: "valid man"
           },
@@ -146,11 +138,7 @@ describe('createUser', function () {
         const errorResponse = createResponsibleError(ErrorType.DatabaseError, "User with provided email already exists", 409) as any;
         errorResponse.reason = expect.any(Error);
         
-        await expect(userRepository.createUser(
-          frontUser.Email,
-          frontUser.PasswordHash,
-          frontUser.Context
-        )).resolves.toMatchObject(errorResponse);
+        await expect(userRepository.createUser(userInput)).resolves.toMatchObject(errorResponse);
       }
     );
 });

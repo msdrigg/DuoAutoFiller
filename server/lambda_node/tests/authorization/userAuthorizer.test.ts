@@ -9,8 +9,9 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { authorizeUser } from '../../layers/authorization';
 import { LambdaAuthorization } from '../../layers/authorization/model';
-import { UserAuthChallenge, UserRepository } from '../../layers/users';
+import { UserAuthExternal, UserRepository } from '../../layers/users';
 import { loadTestData, setupTestDatabase, cleanupTestDatabase } from '../setup/setupTestDatabase';
+import { httpUtils } from '../../layers/common';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -33,18 +34,14 @@ afterAll(() => {
 }, 10000)
 
 describe('authorizeUser', function () {
-    const challenge: UserAuthChallenge = {
+    const challenge: UserAuthExternal = {
       Email: "validEmail@address.com",
       PasswordInput: "ase423lk4fdj",
       Context: {name: "valid man"},
     };
 
     beforeAll(() => {
-      return userRepository.createUser(
-        challenge.Email,
-        challenge.PasswordInput,
-        challenge.Context
-      )
+      return userRepository.createUser(challenge);
     })
 
     afterAll(() => {
@@ -69,7 +66,8 @@ describe('authorizeUser', function () {
             userEmail: challenge.Email
           }
         };
-        await expect(authorizeUser(challenge, userRepository))
+        const header = `Basic ${httpUtils.encodeUnicode(challenge.Email + ":" + challenge.PasswordInput)}`
+        await expect(authorizeUser(userRepository, header))
           .resolves.toEqual(authorized);
       }
     );
@@ -85,7 +83,8 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeUser(fakeTrial, userRepository))
+        const header = `Basic ${httpUtils.encodeUnicode(fakeTrial.Email + ":" + fakeTrial.PasswordInput)}`
+        await expect(authorizeUser(userRepository, header))
           .resolves.toEqual(unAuthorized);
       }
     );
@@ -101,7 +100,8 @@ describe('authorizeUser', function () {
         const unAuthorized: LambdaAuthorization = {
           isAuthorized: false,
         };
-        await expect(authorizeUser(fakeTrial, userRepository))
+        const header = `Basic ${httpUtils.encodeUnicode(fakeTrial.Email + ":" + fakeTrial.PasswordInput)}`
+        await expect(authorizeUser(userRepository, header))
           .resolves.toEqual(unAuthorized);
       }
     );

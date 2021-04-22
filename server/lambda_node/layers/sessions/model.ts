@@ -14,6 +14,4 @@ export type SessionContext  = {
 export type SessionCreation = {
     Length: number,
     Name: string, // Seconds
-    Id: string,
-    Key: string
 }
