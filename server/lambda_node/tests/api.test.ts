@@ -1,5 +1,5 @@
 import {describe, expect, it, jest } from '@jest/globals';
-import { PrimaryRouter } from '../api';
+import { parseRequest, PrimaryRouter } from '../api';
 import { GenericRouter, LambdaResponse, UserAuthorizationContext } from '../layers/common';
 import { OK_MODEL } from '../layers/common/utils/constants';
 
@@ -11,7 +11,7 @@ class MockSecondaryRouter_Key implements GenericRouter {
     }
     async routeRequest(pathParts: string[], body: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         this.mockFunction("key");
-        this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
+        await this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
         return OK_MODEL;
     }
 }
@@ -23,7 +23,7 @@ class MockSecondaryRouter_Session implements GenericRouter {
     }
     async routeRequest(pathParts: string[], body: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         this.mockFunction("session");
-        this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
+        await this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
         return OK_MODEL;
     }
 }
@@ -35,11 +35,20 @@ class MockSecondaryRouter_User implements GenericRouter {
     }
     async routeRequest(pathParts: string[], body: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         this.mockFunction("user");
-        this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
+        await this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
         return OK_MODEL;
     }
 }
 
+class MockGenericRouter implements GenericRouter {
+    mockFunction: (...args: unknown[]) => unknown;
+    constructor(mockFunction: (...args: unknown[])=>unknown) {
+        this.mockFunction = mockFunction;
+    }
+    async routeRequest(pathParts: string[], body: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
+        return await this.mockFunction(pathParts, body, authorizer) as Promise<LambdaResponse>;
+    }
+}
 
 describe('primaryRouter route request with unknown route', function () {
     it("returns error as expected",
@@ -55,47 +64,45 @@ describe('primaryRouter route request with unknown route', function () {
                 "content-type": "application/json"
             }
         }
-        expect(nullRequestRouter.routeRequest(pathFail, "hi", {
+        await expect(nullRequestRouter.routeRequest(pathFail, "hi", {
             userEmail: "HI"
         })).resolves.toEqual(expectedError)
     });
 });
 
 describe('request parser parse request', function () {
-    it.skip("fails with invalid json",
+    it("fails with invalid json",
       async () => {
-        expect.assertions(1);
-        const nullRequestRouter = new PrimaryRouter(null, null, null);
+        expect.assertions(2);
+        const mockFn = jest.fn(async () => undefined);
+        const mockPrimaryRouter = new MockGenericRouter(mockFn)
         
-        const pathFail = ["poop", "hi"]
         const expectedError = {
-            statusCode: 404,
-            body: expect.stringMatching("^.*\\\"message\\\":\\\"Path not found: poop/hi\\\".*$"),
+            statusCode: 400,
+            body: expect.stringMatching("^.*\\\"message\\\":\\\"Error parsing JSON body: .*$"),
             headers: {
                 "content-type": "application/json"
             }
         }
-        expect(nullRequestRouter.routeRequest(pathFail, "hi", {
-            userEmail: "HI"
-        })).resolves.toEqual(expectedError)
+        await expect(parseRequest("poop", "fakeJSON:lsdfke", {
+            userEmail: "hi@gmail.com"
+        }, mockPrimaryRouter)).resolves.toEqual(expectedError)
+        expect(mockFn).toBeCalledTimes(0)
     });
 
-    it.skip("successfully parses json and path",
+    it("successfully parses json and path",
       async () => {
-        expect.assertions(1);
-        const nullRequestRouter = new PrimaryRouter(null, null, null);
+        expect.assertions(2);
         
-        const pathFail = ["poop", "hi"]
-        const expectedError = {
-            statusCode: 404,
-            body: expect.stringMatching("^.*\\\"message\\\":\\\"Path not found: poop/hi\\\".*$"),
-            headers: {
-                "content-type": "application/json"
-            }
+        const output = {
+            hi: "Brotest"
         }
-        expect(nullRequestRouter.routeRequest(pathFail, "hi", {
-            userEmail: "HI"
-        })).resolves.toEqual(expectedError)
+        const mockFn = jest.fn(async () => output);
+        const mockPrimaryRouter = new MockGenericRouter(mockFn)
+        await expect(parseRequest("poop", "{\"RealJSON\":\"NotfakeJSON:lsdfke\"}", {
+            userEmail: "hi@gmail.com"
+        }, mockPrimaryRouter)).resolves.toEqual(output)
+        expect(mockFn).toBeCalledTimes(1)
     });
 });
 
