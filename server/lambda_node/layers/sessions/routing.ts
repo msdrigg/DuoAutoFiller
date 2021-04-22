@@ -12,6 +12,8 @@ import {
     constants,
     GenericRouter
 } from "../common";
+import { SessionCreation } from "./model";
+import { sessionCreationValidation } from "./validation";
 
 export class SessionRouter implements GenericRouter {
     repository: ISessionRepository;
@@ -20,15 +22,7 @@ export class SessionRouter implements GenericRouter {
         this.repository = sessionRepository
     }
 
-    async routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
-        let userEmailAuthorized: string;
-
-        if (routes[0] == "signup") {
-            userEmailAuthorized = undefined;
-        } else {
-            userEmailAuthorized = authorizer.userEmail;
-        }
-
+    async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         const primaryRoute = routes[0];
 
         switch (primaryRoute) {
@@ -36,7 +30,10 @@ export class SessionRouter implements GenericRouter {
                 // Download the session key
                 let result: ResultOrError<CoreSession>;
                 if (isSessionAuthorizationContext(authorizer)) {
-                    result = await this.repository.getSession(userEmailAuthorized, authorizer.sessionId);
+                    result = await this.repository.getSession(authorizer.userEmail, authorizer.sessionId);
+                    if (isError(result) && result.isRetryable) {
+                        result = await this.repository.getSession(authorizer.userEmail, authorizer.sessionId);
+                    }
                 } else {
                     result = createResponsibleError(ErrorType.ServerError, "No session provided in session authorizer", 500)
                 }
@@ -53,14 +50,24 @@ export class SessionRouter implements GenericRouter {
                 // Login should include a session length in seconds and session name
                 // If session sends 0 for session length,
                 //     do a session cookie but still validate it for 30 days
-                const request = JSON.parse(body);
-
                 let sessionCookies: Array<string>;
                 let sessionName: string;
                 const sessionId = httpUtils.getRandomString(32);
                 let expirationDate: Date;
+                const { error, value } = sessionCreationValidation.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const request = value as SessionCreation;
 
-                if (request.sessionLength == 0) {
+                if (request.Length == 0) {
                     // Use browser session. Validate for 30 days
                     const expirationTimeout = constants.MAX_SESSION_LENGTH_SECONDS;
                     const expirationSeconds = Math.floor(
@@ -70,14 +77,14 @@ export class SessionRouter implements GenericRouter {
 
                     sessionCookies = [
                         httpUtils.getCookieString(constants.SESSION_COOKIE_NAME, sessionId, expirationDate),
-                        httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, userEmailAuthorized, expirationDate)
+                        httpUtils.getCookieString(constants.EMAIL_COOKIE_NAME, authorizer.userEmail, expirationDate)
                     ];
                     sessionName = "TEMPORARY";
 
                 } else {
                     const expirationTimeoutSeconds = Math.min(
                         constants.MAX_SESSION_LENGTH_SECONDS, 
-                        request.sessionLength
+                        request.Length
                     );
                     const expirationSeconds = Math.floor(
                         (new Date()).getTime() / 1000 + expirationTimeoutSeconds
@@ -92,19 +99,30 @@ export class SessionRouter implements GenericRouter {
                         ),
                         httpUtils.getCookieString(
                             constants.EMAIL_COOKIE_NAME,
-                            userEmailAuthorized,
+                            authorizer.userEmail,
                             expirationDate
                         )
                     ];
-                    sessionName = request.sessionName;
+                    sessionName = request.Name;
                 }
 
-                await this.repository.createSession(
-                    userEmailAuthorized,
+                let result = await this.repository.createSession(
+                    authorizer.userEmail,
                     sessionId,
                     sessionName,
                     expirationDate,
                 )
+                if (isError(result) && result.isRetryable) {
+                    result = await this.repository.createSession(
+                        authorizer.userEmail,
+                        sessionId,
+                        sessionName,
+                        expirationDate,
+                    )
+                }
+                if (isError(result)){
+                    return getErrorLambdaResponse(result);
+                }
 
                 return {
                     cookies: sessionCookies,

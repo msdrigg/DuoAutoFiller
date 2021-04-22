@@ -1,3 +1,3 @@
 export type BaseContext = {
-    [k: string]: string | number | null
+    [k: string]: string | number | null | boolean
 }

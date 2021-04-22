@@ -5,7 +5,19 @@ import { CoreSession, ISessionRepository, SessionRepository } from "../sessions"
 import { LambdaAuthorization } from "./model";
 
 
-export async function authorizeSession(email: string, sessionId: string, sessionRepository: ISessionRepository): Promise<LambdaAuthorization> {
+export async function authorizeSession(cookies: Array<string>, sessionRepository: ISessionRepository): Promise<LambdaAuthorization> {
+    const emailEncoded = httpUtils.getCookieValue(cookies, constants.EMAIL_COOKIE_NAME);
+    const sessionId = httpUtils.getCookieValue(cookies, constants.SESSION_COOKIE_NAME);
+
+    if (emailEncoded === undefined || sessionId === undefined) {
+        // We can't authorize if there isn't any email or session provided
+        return {
+            isAuthorized: false
+        }
+    }
+
+    const email = httpUtils.decodeUnicode(emailEncoded);
+
     return await sessionRepository.getSession(email, sessionId).then( async (result: ResultOrError<CoreSession>): Promise<ResultOrError<CoreSession>> => {
             if (isError(result) && result.isRetryable){
                 return sessionRepository.getSession(email, sessionId)
@@ -55,18 +67,5 @@ const sessionRepository = new SessionRepository(dynamo);
 
 exports.handler = async (event: APIGatewayRequestEvent, _context: LambdaContext): Promise<LambdaAuthorization> => {
     // Authorize session based off session existing, and session cookie header
-
-    const emailEncoded = httpUtils.getCookieValue(event.cookies, constants.EMAIL_COOKIE_NAME);
-    const sessionId = httpUtils.getCookieValue(event.cookies, constants.SESSION_COOKIE_NAME);
-
-    if (emailEncoded === undefined || sessionId === undefined) {
-        // We can't authorize if there isn't any email or session provided
-        return {
-            isAuthorized: false
-        }
-    }
-
-    const email = httpUtils.decodeUnicode(emailEncoded);
-
-    return authorizeSession(email, sessionId, sessionRepository);
+    return authorizeSession(event.cookies, sessionRepository);
 }

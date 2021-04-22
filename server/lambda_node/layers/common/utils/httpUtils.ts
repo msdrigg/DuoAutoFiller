@@ -1,4 +1,6 @@
 import * as crypto from "crypto";
+import btoa = require("btoa");
+import atob = require("atob");
 
 /**
  * Decodes b64 string to unicode
@@ -76,7 +78,7 @@ export function getCookieValue(cookies: Array<string>, cookieName: string): stri
  * 
  * @returns {string} The cookie string header value
  */
-export function getCookieString(cookieName: string, cookieValue: string, expirationDate: Date): string {
+export function getCookieString(cookieName: string, cookieValue: string, expirationDate?: Date): string {
     const baseCookieString = `${cookieName}=${cookieValue};`;
     if (expirationDate === undefined) {
         return baseCookieString;

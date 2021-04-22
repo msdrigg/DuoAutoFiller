@@ -16,7 +16,9 @@ export enum ErrorType {
     RoutingError = "RoutingError",
     UnknownError = "UnknownError",
     ClientRequestError = "ClientRequestError",
-    ClientRouteError = "ClientRouteError",
+    BodyValidationError = "BodyValidationError",
+    DatabaseItemNotFoundError = "DatabaseItemNotFound",
+    PathNotFoundError = "PathNotFoundError",
     ConnectionError = "ConnectionError",
     ServerError = "ServerError",
     DatabaseError = "DatabaseError"

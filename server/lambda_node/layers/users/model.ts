@@ -2,16 +2,15 @@ import { BaseContext } from "../common"
 
 export type CoreUser = {
     Email: string,
-    Context: BaseContext
+    Context?: BaseContext
 }
 
 export type UserAuthVerifier = CoreUser & {
     PasswordInfo: PasswordInfo,
 }
 
-export type UserAuthChallenge = Omit<CoreUser, "Context"> & {
+export type UserAuthExternal = CoreUser & {
     PasswordInput: string,
-    Context?: BaseContext
 }
 
 export type PasswordInfo = {
@@ -26,7 +25,7 @@ export enum HashFunction {
 }
 
 export type UserUpdate = {
-    Context?: { [k: string]: string | number | null }
+    Context?: BaseContext,
     Email?: string,
-    PasswordHash?: string,
+    PasswordInput?: string,
 }

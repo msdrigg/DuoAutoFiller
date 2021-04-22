@@ -19,6 +19,7 @@ import { TABLE_NAME } from '../../layers/common/utils/constants';
 import { CoreKey, KeyContext } from '../../layers/keys';
 import { getDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
 import { DatabaseKey, KeyRepository } from '../../layers/keys/repository';
+import { CreationKey } from '../../layers/keys/model';
 
 const config: DynamoDBClientConfig = {
     region: "us-east-1",
@@ -49,35 +50,47 @@ afterAll(() => {
 describe('createKey', function () {
     it("Creates key successfully",
       async () => {
-        expect.assertions(3);
+        expect.assertions(5);
 
         // Get valid inputKey
-        const userEmail = "msd@gemail.com"
-        const inputKey: CoreKey = {
+        const userEmail = "msd@gail.com"
+        const inputKey: CreationKey = {
           Key: "23948fsdkf",
-          Id: "203974fjsldf",
           Context: {
               Name: "testKey",
               Site: "newste",
               CreationDate: new Date().getTime()
            },
           UseCounter: 0,
-          LastContentUpdate: new Date()
         };
-        // Assert that they key creation functino returns input key
-        await expect(keyRepository.createKey(userEmail, inputKey))
-            .resolves.toStrictEqual(inputKey);
+        const outputKeyChecker = {
+          ...inputKey,
+          Id: expect.any(String),
+          LastContentUpdate: expect.any(Date)
+        }
+        const lastContentUpdate = new Date();
+        // Assert that they key creation function returns input key
+        let createdKey: CoreKey;
+        await expect(keyRepository.createKey(userEmail, inputKey).then((x: CoreKey)=>{
+          expect(x.LastContentUpdate.getTime()/1000).toBeCloseTo(lastContentUpdate.getTime()/1000);
+          createdKey = x;
+          return x
+        })).resolves.toEqual(outputKeyChecker);
 
         // Assert that the key can be found in the database
         await expect(documentClient.send(new GetCommand({
             TableName: TABLE_NAME,
             Key: {
                 PKCombined: userEmail,
-                SKCombined: "K#" + inputKey.Id
+                SKCombined: "K#" + createdKey.Id
             }
         })).then(it => {
           return it.Item
-        })).resolves.toStrictEqual(getDatabaseKey(userEmail, inputKey));
+        }).then((it: DatabaseKey) => getFrontendKey(it) ).then((x: CoreKey)=>{
+          expect(x.LastContentUpdate.getTime()/1000).toBeCloseTo(lastContentUpdate.getTime()/1000);
+          return x
+        })).resolves.toEqual(outputKeyChecker);
+
 
         // Assert that we can delete the new key
         await expect(
@@ -86,7 +99,7 @@ describe('createKey', function () {
               TableName: testDataModel.TableName,
               Key: {
                 PKCombined: userEmail,
-                SKCombined: "K#" + inputKey.Id
+                SKCombined: "K#" + createdKey.Id
               }
             })
           )

@@ -11,7 +11,8 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { CoreKey, KeyContext } from ".";
 import { ResultOrError, DatabaseRow, constants, getResponsibleError } from "../common";
-import { getDatabaseKey, getFrontendKey } from "./mapping";
+import { createDatabaseKey, getFrontendKey } from "./mapping";
+import { CreationKey } from "./model";
 
 /**
  * Key respository for testing purposes
@@ -19,7 +20,7 @@ import { getDatabaseKey, getFrontendKey } from "./mapping";
 export interface IKeyRepository {
     createKey(
         userEmail: string,
-        frontendKey: CoreKey
+        frontendKey: CreationKey
     ): Promise<ResultOrError<CoreKey>>
     getKeysSinceTime(
         userEmail: string,
@@ -68,15 +69,15 @@ export class KeyRepository implements IKeyRepository {
      */
     async createKey(
         userEmail: string,
-        frontendKey: CoreKey,
+        frontendKey: CreationKey,
     ): Promise<ResultOrError<CoreKey>> {
-        const databaseKey: DatabaseKey = getDatabaseKey(userEmail, frontendKey);
+        const databaseKey: DatabaseKey = createDatabaseKey(userEmail, frontendKey);
         const commandInput: PutCommandInput = {
             TableName: constants.TABLE_NAME,
             Item: databaseKey
         }
         return await this.dynamo.send(new PutCommand(commandInput))
-            .then(_result => frontendKey)
+            .then(_result => getFrontendKey(databaseKey))
             .catch(err => getResponsibleError(err));
     }
 

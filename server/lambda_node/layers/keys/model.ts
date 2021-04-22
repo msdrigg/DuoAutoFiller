@@ -13,3 +13,9 @@ export type KeyContext = {
     Site: string,
     CreationDate: number
 } & BaseContext
+
+export type CreationKey = {
+    Key: string,
+    Context: KeyContext,
+    UseCounter?: number,
+}

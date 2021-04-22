@@ -9,6 +9,8 @@ import {
     LambdaResponse,
     UserAuthorizationContext
 } from "../common";
+import { UserAuthExternal, UserUpdate } from "./model";
+import { userAuthExternalValidator, userUpdateValidator } from "./validation";
 
 export class UserRouter implements GenericRouter {
     repository: IUserRepository;
@@ -17,7 +19,7 @@ export class UserRouter implements GenericRouter {
         this.repository = userRepository
     }
 
-    async routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
+    async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         let userEmailAuthorized: string;
 
         if (routes[0] == "signup") {
@@ -31,11 +33,19 @@ export class UserRouter implements GenericRouter {
         switch (primaryRoute) {
             case 'signup': {
                 // Creating a user
-                const userSubmission = JSON.parse(body);
+                const { error, value } = userAuthExternalValidator.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
                 const result = this.repository.createUser(
-                    userSubmission.Email,
-                    userSubmission.PasswordHash,
-                    userSubmission.Context,
+                    value as UserAuthExternal
                 );
                 
                 if (isError(result)) {
@@ -49,8 +59,18 @@ export class UserRouter implements GenericRouter {
                 }
             }
             case 'update': {
-                const input = JSON.parse(body);
-                const result = await this.repository.updateUser(userEmailAuthorized, input);
+                const { error, value } = userUpdateValidator.validate(parsedBody);
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const result = await this.repository.updateUser(userEmailAuthorized, value as UserUpdate);
                 if (isError(result)) {
                     return getErrorLambdaResponse(result);
                 } else {
@@ -59,7 +79,7 @@ export class UserRouter implements GenericRouter {
             }
             default: {
                 return getErrorLambdaResponse(
-                    createResponsibleError(ErrorType.ClientRequestError, `Path not found: user/.${routes.join("/")}`, 404)
+                    createResponsibleError(ErrorType.ClientRequestError, `Path not found: user/${routes.join("/")}`, 404)
                 );
             }
         }
