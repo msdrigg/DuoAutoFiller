@@ -2,13 +2,14 @@ import { IKeyRepository, CoreKey } from ".";
 import {
     UserAuthorizationContext,
     LambdaResponse,
-    ResultOrError,
     isError,
     getErrorLambdaResponse,
     createResponsibleError,
     ErrorType,
     GenericRouter
 } from "../common";
+import { CreationKey } from "./model";
+import { idValidation, keyCreationValidation, timestampValidation } from "./validator";
 
 export class KeyRouter implements GenericRouter {
     repository: IKeyRepository;
@@ -17,7 +18,7 @@ export class KeyRouter implements GenericRouter {
         this.repository = keyRepository
     }
 
-    async routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
+    async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         // Route users requests 
         let route = "";
         if (routes.length > 0) {
@@ -29,8 +30,20 @@ export class KeyRouter implements GenericRouter {
         switch (route) {
             case '': {
                 // Posting (updating or adding a key
-                const frontendKey = JSON.parse(body);
-                const response: ResultOrError<CoreKey> = await this.repository.createKey(userEmailAuthorized, frontendKey);
+                const { error, value } = keyCreationValidation.validate(
+                    parsedBody, { presence: "required" }
+                )
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const response = await this.repository.createKey(userEmailAuthorized, value as CreationKey);
                 if (isError(response)) {
                     return getErrorLambdaResponse(response);
                 } else {
@@ -39,9 +52,22 @@ export class KeyRouter implements GenericRouter {
             }
             case 'findSinceTimestamp': {
                 // Find all keys (batch) since a timestamp. If not provided, find all
-                const timestamp = JSON.parse(body).timestamp;
+                const {error, value } = timestampValidation.validate(
+                    parsedBody
+                )
 
-                const dateTime = timestamp && Date.parse(timestamp) || timestamp
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
+                const timestamp = value.timestamp as string;
+                const dateTime = timestamp ? new Date(Date.parse(timestamp)) : undefined;
                 
                 const response = await this.repository.getKeysSinceTime(userEmailAuthorized, dateTime);
                 if (isError(response)) {
@@ -52,10 +78,25 @@ export class KeyRouter implements GenericRouter {
             }
             case 'downloadAndUse': {
                 // Increment usageCounter and return the key atomically
-                const requestBody = JSON.parse(body);
-                const keyId = requestBody.id;
+
+                const {error, value } = idValidation.validate(
+                    parsedBody, {
+                        presence: "required"
+                    }
+                )
+
+                if (error !== undefined) {
+                    return getErrorLambdaResponse(
+                        createResponsibleError(
+                            ErrorType.BodyValidationError,
+                            `Body validation error: ${error.message}`,
+                            400,
+                            error
+                        )
+                    )
+                }
                 
-                const result = await this.repository.getAndIncrement(userEmailAuthorized, keyId);
+                const result = await this.repository.getAndIncrement(userEmailAuthorized, value.Id as string );
                 if (isError(result)) {
                     return getErrorLambdaResponse(result);
                 } else {

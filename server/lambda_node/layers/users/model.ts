@@ -9,7 +9,7 @@ export type UserAuthVerifier = CoreUser & {
     PasswordInfo: PasswordInfo,
 }
 
-export type UserAuthChallenge = Omit<CoreUser, "Context"> & {
+export type UserAuthExternal = Omit<CoreUser, "Context"> & {
     PasswordInput: string,
     Context?: BaseContext
 }
@@ -26,7 +26,7 @@ export enum HashFunction {
 }
 
 export type UserUpdate = {
-    Context?: { [k: string]: string | number | null }
+    Context?: BaseContext,
     Email?: string,
     PasswordHash?: string,
 }

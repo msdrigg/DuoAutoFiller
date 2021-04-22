@@ -1,4 +1,6 @@
 import { CoreKey } from "."
+import { httpUtils } from "../common"
+import { CreationKey } from "./model"
 import { DatabaseKey } from "./repository"
 
 
@@ -19,6 +21,17 @@ export function getDatabaseKey(userEmail: string, frontendKey: CoreKey): Databas
         UseCounter: frontendKey.UseCounter,
         Temporal: frontendKey.LastContentUpdate.getTime(),
         SKCombined: "K#" + frontendKey.Id,
+        PKCombined: userEmail
+    }
+}
+
+export function createDatabaseKey(userEmail: string, frontendKey: CreationKey): DatabaseKey {
+    return {
+        Context: frontendKey.Context, 
+        Key: frontendKey.Key,
+        UseCounter: frontendKey.UseCounter || 0,
+        Temporal: Date.now(),
+        SKCombined: "K#" + httpUtils.getRandomString(64),
         PKCombined: userEmail
     }
 }

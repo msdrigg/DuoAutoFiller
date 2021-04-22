@@ -10,3 +10,10 @@ export type CoreSession = {
 export type SessionContext  = {
     Name: string
 } & BaseContext
+
+export type SessionCreation = {
+    Length: number,
+    Name: string, // Seconds
+    Id: string,
+    Key: string
+}

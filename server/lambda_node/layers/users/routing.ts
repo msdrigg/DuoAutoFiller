@@ -9,6 +9,7 @@ import {
     LambdaResponse,
     UserAuthorizationContext
 } from "../common";
+import { UserAuthChallenge, UserUpdate } from "./model";
 
 export class UserRouter implements GenericRouter {
     repository: IUserRepository;
@@ -17,7 +18,7 @@ export class UserRouter implements GenericRouter {
         this.repository = userRepository
     }
 
-    async routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
+    async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         let userEmailAuthorized: string;
 
         if (routes[0] == "signup") {
@@ -31,10 +32,10 @@ export class UserRouter implements GenericRouter {
         switch (primaryRoute) {
             case 'signup': {
                 // Creating a user
-                const userSubmission = JSON.parse(body);
+                const userSubmission = parsedBody as UserAuthChallenge;
                 const result = this.repository.createUser(
                     userSubmission.Email,
-                    userSubmission.PasswordHash,
+                    userSubmission.PasswordInput,
                     userSubmission.Context,
                 );
                 
@@ -49,8 +50,7 @@ export class UserRouter implements GenericRouter {
                 }
             }
             case 'update': {
-                const input = JSON.parse(body);
-                const result = await this.repository.updateUser(userEmailAuthorized, input);
+                const result = await this.repository.updateUser(userEmailAuthorized, parsedBody as UserUpdate);
                 if (isError(result)) {
                     return getErrorLambdaResponse(result);
                 } else {

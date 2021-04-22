@@ -12,6 +12,7 @@ import {
     constants,
     GenericRouter
 } from "../common";
+import { InputSession } from "./model";
 
 export class SessionRouter implements GenericRouter {
     repository: ISessionRepository;
@@ -20,7 +21,7 @@ export class SessionRouter implements GenericRouter {
         this.repository = sessionRepository
     }
 
-    async routeRequest(routes: Array<string>, body: string, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
+    async routeRequest(routes: Array<string>, parsedBody: unknown, authorizer: UserAuthorizationContext): Promise<LambdaResponse> {
         let userEmailAuthorized: string;
 
         if (routes[0] == "signup") {
@@ -53,14 +54,13 @@ export class SessionRouter implements GenericRouter {
                 // Login should include a session length in seconds and session name
                 // If session sends 0 for session length,
                 //     do a session cookie but still validate it for 30 days
-                const request = JSON.parse(body);
-
                 let sessionCookies: Array<string>;
                 let sessionName: string;
                 const sessionId = httpUtils.getRandomString(32);
                 let expirationDate: Date;
+                const request = parsedBody as InputSession;
 
-                if (request.sessionLength == 0) {
+                if (request.Length == 0) {
                     // Use browser session. Validate for 30 days
                     const expirationTimeout = constants.MAX_SESSION_LENGTH_SECONDS;
                     const expirationSeconds = Math.floor(
@@ -77,7 +77,7 @@ export class SessionRouter implements GenericRouter {
                 } else {
                     const expirationTimeoutSeconds = Math.min(
                         constants.MAX_SESSION_LENGTH_SECONDS, 
-                        request.sessionLength
+                        request.Length
                     );
                     const expirationSeconds = Math.floor(
                         (new Date()).getTime() / 1000 + expirationTimeoutSeconds
@@ -96,7 +96,7 @@ export class SessionRouter implements GenericRouter {
                             expirationDate
                         )
                     ];
-                    sessionName = request.sessionName;
+                    sessionName = request.Name;
                 }
 
                 await this.repository.createSession(
