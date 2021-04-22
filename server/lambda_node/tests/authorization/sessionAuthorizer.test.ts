@@ -158,4 +158,35 @@ describe('authorizeUser', function () {
         }))).resolves.toBeTruthy();
       }
     );
+
+    it("Authorize session fails with mangled data",
+        async () => {
+        expect.assertions(3);
+
+        const cookies = [
+          "poopyalskjrejd",
+          "jlqwekrjdfslkasdf"
+        ];
+        
+        await expect(authorizeSession(cookies, sessionRepository))
+          .resolves.toEqual({
+            isAuthorized: false
+          });
+
+        // Make sure the session has been deleted
+        await expect(documentClient.send(new GetCommand({
+            TableName: TABLE_NAME,
+            Key: {
+                PKCombined: fakeSession.PKCombined,
+                SKCombined: fakeSession.SKCombined
+            }
+        })).then((it: GetCommandOutput) => it.Item)).resolves.toBeUndefined();
+        
+        // Put it back now that it's gone
+        await expect(documentClient.send(new PutCommand({
+            TableName: TABLE_NAME,
+            Item: fakeSession
+        }))).resolves.toBeTruthy();
+      }
+    );
 });
