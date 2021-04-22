@@ -1,4 +1,5 @@
 # AutoAuthenticate
+![test indicator](https://github.com/msdrigg/AutoAuthenticate/actions/workflows/node.js.yml/badge.svg)
 ## Project Goals
 This project is a browser extension that can provide auto-authentication keys. 
 This product will provide Time-based one time passcodes, RSA SecureID passcodes, Yubikey passcodes and any other algorithms I can think to implement
