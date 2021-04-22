@@ -1,5 +1,6 @@
 Prototypes/
 node_modules/
+coverage/
 
 
 # Rust
