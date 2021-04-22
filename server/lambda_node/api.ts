@@ -102,3 +102,4 @@ const primaryRouter = new PrimaryRouter(
 exports.handler = async (event: APIGatewayRequestEvent, context: LambdaContext): Promise<LambdaResponse> => {
     return parseRequest(event.rawPath, event.body, context.authorizer, primaryRouter);
 };
+ 
