@@ -1,6 +1,6 @@
 import {describe, expect, it, jest } from '@jest/globals';
 import { KeyRouter, CoreKey, IKeyRepository, KeyContext } from '../../layers/keys';
-import { ResultOrError } from '../../layers/common';
+import { createResponsibleError, ErrorType, getErrorLambdaResponse, ResultOrError } from '../../layers/common';
 import { CreationKey } from '../../layers/keys/model';
 import { createDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
 
@@ -89,7 +89,7 @@ describe('routeRequest to blank path', function () {
             router.routeRequest([''], inputKey, {
                 userEmail: inputEmail
             }).then((it: {LastContentUpdate: Date})=> {
-              expect(it.LastContentUpdate.getTime()/1000).toBeCloseTo(currentTime / 1000);
+              expect(it.LastContentUpdate.getTime()/10000).toBeCloseTo(currentTime / 10000);
               return it;
             })
         ).resolves.toEqual(outputKeyChecker)
@@ -251,9 +251,58 @@ describe('routeRequest to "downloadAndUse', function () {
     }
 );
 
-  it.skip("handle malformed body", 
+  it("handle malformed body", 
     async () => {
-        return 0
+        expect.assertions(4);
+        const mockFn = jest.fn(async (..._args: any[]) => {
+            return null;
+        })
+        const mockRepository = new MockKeyRepository(mockFn);
+        const router = new KeyRouter(mockRepository);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+        const outputError = 
+          createResponsibleError(
+              ErrorType.BodyValidationError,
+              "hi",
+              400,
+              new Error("Hi"),
+          );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const outputResponse: any = getErrorLambdaResponse(
+          outputError
+        )
+        outputResponse.body = expect.any(String)
+        await expect(
+            router.routeRequest([''], {
+              Key: 10
+            }, {
+                userEmail: inputEmail
+            })
+        ).resolves.toEqual(
+          outputResponse
+        );
+        await expect(
+            router.routeRequest([''], {
+              Context: "pee",
+            }, {
+                userEmail: inputEmail
+            })
+        ).resolves.toEqual(
+          outputResponse
+        );
+        await expect(
+            router.routeRequest([''], {
+              Key: {
+                hi:'hi'
+              },
+            }, {
+                userEmail: inputEmail
+            })
+        ).resolves.toEqual(
+          outputResponse
+        );
+        expect(mockFn).toBeCalledTimes(0)
     }
   );
 

@@ -1,5 +1,5 @@
 import {describe, expect, it, jest } from '@jest/globals';
-import { ResultOrError } from '../../layers/common';
+import { createResponsibleError, ErrorType, getErrorLambdaResponse, ResultOrError } from '../../layers/common';
 import { CreationKey } from '../../layers/keys/model';
 import { createDatabaseKey, getFrontendKey } from '../../layers/keys/mapping';
 import { CoreSession, ISessionRepository, SessionRouter } from '../../layers/sessions';
@@ -90,12 +90,6 @@ describe('routeRequest to resfreshSession', function () {
             expect(mockCreationFunction).toBeCalledWith(
                 inputEmail, inputKey
             )
-        }
-    );
-
-    it.skip("handle malformed body", 
-        async () => {
-            return 0
         }
     );
 
@@ -222,9 +216,58 @@ describe('routeRequest to login', function () {
         }
     );
 
-    it.skip("handle malformed body", 
+    it("handle malformed body", 
         async () => {
-            return 0
+            expect.assertions(4);
+            const mockFn = jest.fn(async (..._args: any[]) => {
+                return null;
+            })
+            const mockRepository = new MockKeyRepository(mockFn);
+            const router = new SessionRouter(mockRepository);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+            const outputError = 
+            createResponsibleError(
+                ErrorType.BodyValidationError,
+                "hi",
+                400,
+                new Error("Hi"),
+            );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const outputResponse: any = getErrorLambdaResponse(
+            outputError
+            )
+            outputResponse.body = expect.any(String)
+            await expect(
+                router.routeRequest(['login'], {
+                Length: 10
+                }, {
+                    userEmail: inputEmail
+                })
+            ).resolves.toEqual(
+            outputResponse
+            );
+            await expect(
+                router.routeRequest(['login'], {
+                Name: 10,
+                }, {
+                    userEmail: inputEmail
+                })
+            ).resolves.toEqual(
+            outputResponse
+            );
+            await expect(
+                router.routeRequest(['login'], {
+                Name: {
+                    hi:'hi'
+                },
+                }, {
+                    userEmail: inputEmail
+                })
+            ).resolves.toEqual(
+            outputResponse
+            );
+            expect(mockFn).toBeCalledTimes(0)
         }
     );
 

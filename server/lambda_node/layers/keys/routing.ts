@@ -29,7 +29,7 @@ export class KeyRouter implements GenericRouter {
 
         switch (route) {
             case '': {
-                // Posting (updating or adding a key
+                // Posting (updating or adding) a key
                 const { error, value } = keyCreationValidation.validate(parsedBody)
                 if (error !== undefined) {
                     return getErrorLambdaResponse(
